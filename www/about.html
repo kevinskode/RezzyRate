@@ -26,27 +26,32 @@
       display:flex; flex-direction:column;
     }
 
-    /* Top bar */
-    .topbar{
-      position:sticky; top:0; z-index:10; backdrop-filter:saturate(1.2) blur(6px);
-      background:color-mix(in oklab, var(--panel) 86%, transparent);
-      border-bottom:1px solid var(--border);
+    /* ====== TOP BAR: identical to index.html ====== */
+    .container{max-width:1100px; margin:0 auto; padding:20px clamp(16px,3vw,24px)}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:clamp(32px,4vw,55px);
+      height:clamp(32px,4vw,55px);
+      border-radius:12px;
+      object-fit:cover;
+      display:block;
+      box-shadow:0 2px 10px rgba(79,70,229,.25);
+      border:1px solid var(--border);
+      background:transparent;
     }
-    .wrap{max-width:var(--content-max); margin:0 auto; padding:14px 18px}
-    .nav{display:flex; align-items:center; justify-content:space-between; gap:14px}
-    .brand{display:flex; align-items:center; gap:12px; text-decoration:none}
-    .logo{height:22px; width:auto; display:block}
-    .links{display:flex; gap:10px; flex-wrap:wrap}
-    .link{padding:8px 12px; border-radius:10px; text-decoration:none; color:var(--text); font-weight:500}
-    .link.active, .link:hover{background:color-mix(in oklab, var(--accent) 12%, var(--panel));}
+    h1{margin:0;font-size:clamp(18px,2.4vw,22px);font-weight:700}
+    .helper{font-size:12px;color:var(--muted)}
+    .badges{display:flex;gap:8px;align-items:center}
+    .badge{font-size:12px;padding:6px 10px;border-radius:9999px;background:var(--panel);border:1px solid var(--border);color:var(--muted)}
 
+    /* ====== Page content ====== */
     main{flex:1}
-    .container{max-width:var(--content-max); margin:24px auto; padding:0 18px}
+    .wrap{max-width:var(--content-max); margin:0 auto; padding:0 18px}
     .panel{
       background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
-      box-shadow:var(--shadow); padding:28px; overflow:hidden;
+      box-shadow:var(--shadow); padding:28px; overflow:hidden; margin-top:6px;
     }
-    h1{font-size:28px; margin:0}
     .sub{color:var(--muted); margin:8px 0 18px}
     .grid{display:grid; gap:18px}
     .grid-2{grid-template-columns:1fr}
@@ -65,28 +70,27 @@
       display:flex; gap:14px; justify-content:space-between; flex-wrap:wrap}
     .foot a{color:inherit; text-decoration:none; padding:6px 10px; border-radius:10px}
     .foot a:hover{background:color-mix(in oklab, var(--accent) 10%, var(--panel)); color:var(--text)}
-    .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <img class="logo" src="logo.png" alt="Rezzy logo" />
-      <div>
-        <h1>Rezzy Rate</h1>
-        <div class="helper">The smart resume checker</div>
+  <div class="container">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Rezzy Rate home">
+        <img class="logo" src="logo.png" alt="Rezzy logo" />
+        <div>
+          <h1>Rezzy Rate</h1>
+          <div class="helper">The smart resume checker</div>
+        </div>
+      </a>
+      <div class="badges">
+        <span class="badge" id="freeBadge">Free scans left today: 0</span>
+        <span class="badge" id="creditBadge">Paid credits: 0</span>
       </div>
-    </div>
-    <div class="badges">
-      <span class="badge" id="freeBadge">Free credits left today: 1</span>
-      <span class="badge" id="creditBadge">Paid credits: 0</span>
-    </div>
-  </header>
+    </header>
 
-  <main>
-    <div class="container">
+    <main class="wrap">
       <section class="panel">
-        <h1>About Rezzy Rate</h1>
+        <h1 style="margin:0 0 6px">About Rezzy Rate</h1>
         <p class="sub">A fast, friendly resume checker that highlights what matters to recruiters and ATS.</p>
 
         <div class="grid grid-2">
@@ -107,17 +111,37 @@
           </div>
         </div>
       </section>
-    </div>
-  </main>
+    </main>
 
-  <footer>
-    <div class="foot">
-      <span>© <script>document.write(new Date().getFullYear())</script> Rezzy Rate</span>
-      <span>
-        <a href="about.html">About</a>
-        <a href="privacy.html">Privacy</a>
-      </span>
-    </div>
-  </footer>
+    <footer>
+      <div class="foot">
+        <span>© <script>document.write(new Date().getFullYear())</script> Rezzy Rate</span>
+        <span>
+          <a href="about.html">About</a>
+          <a href="privacy.html">Privacy</a>
+        </span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Small shared-meter script so pills match index -->
+  <script>
+    const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_credits', unlimitedUntil:'rc_unlimited_until' };
+    const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+    function isUnlimited(){ const until = parseInt(localStorage.getItem(LS_KEYS.unlimitedUntil)||'0',10); return Date.now() < until; }
+    function readMeter(){
+      const today = todayStr();
+      const last = localStorage.getItem(LS_KEYS.lastDate);
+      if (last !== today){ localStorage.setItem(LS_KEYS.lastDate, today); localStorage.setItem(LS_KEYS.dailyUsed, '0'); }
+      const freeUsed = parseInt(localStorage.getItem(LS_KEYS.dailyUsed)||'0',10);
+      const credits  = parseInt(localStorage.getItem(LS_KEYS.credits)||'0',10);
+      return { freeLeft: Math.max(0, 1 - freeUsed), credits };
+    }
+    (function updateHeader(){
+      const {freeLeft, credits} = readMeter();
+      document.getElementById('creditBadge').textContent = `Paid credits: ${credits}`;
+      document.getElementById('freeBadge').textContent = isUnlimited() ? 'Free scans left today: ∞ (temp)' : `Free scans left today: ${freeLeft}`;
+    })();
+  </script>
 </body>
 </html>
