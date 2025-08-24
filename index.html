@@ -20,7 +20,7 @@
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
     .brand{display:flex;align-items:center;gap:12px}
 
-    /* NEW: real logo image */
+    /* Logo image */
     .logo{
       width:clamp(32px,4vw,44px);
       height:clamp(32px,4vw,44px);
@@ -109,13 +109,14 @@
     .file-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px dashed var(--border);border-radius:12px;font-size:12px;background:var(--panel)}
     .file-pill input[type="file"]{display:none}
     .file-btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--panel);font-size:12px}
+
     .dropzone{flex:1 1 260px;border:1px dashed var(--border);border-radius:12px;padding:10px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
     .dropzone.drag{border-color:#60a5fa;background:rgba(99,102,241,.06);color:#4f46e5}
     .spinner{display:none;width:16px;height:16px;border-radius:50%;border:2px solid #c7d2fe;border-top-color:#4f46e5;animation:spin 1s linear infinite}
     .spinner.show{display:inline-block}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* --- Top Fixes grid & card content (pill first, title under) --- */
+    /* --- Top Fixes grid & card content --- */
     .list-tight{
       display:grid;
       grid-template-columns:1fr;
@@ -147,6 +148,57 @@
       .list-tight li{ background:rgba(99,102,241,.10); }
       .list-tight li::before{ background:var(--panel); color:var(--muted); }
     }
+
+    /* ---- Custom color for Browse + Clear ---- */
+    #btnPick, #btnClear{
+      background:#a9bae136;
+      background:rgba(169,186,225,0.21);
+      border-color:#a9bae136;
+    }
+    #btnPick:hover, #btnClear:hover{ filter:brightness(1.05); }
+
+    /* ---- Buy scan buttons: structured label + price chip ---- */
+    .buy-btn{
+      background:#19ff0099;
+      border-color:#19ff0099;
+      color:#fff;
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      padding:4px 14px;
+      border-radius:14px;
+      font-weight:700;
+      box-shadow:0 8px 18px rgba(25,255,0,.15), inset 0 -2px 0 rgba(0,0,0,.12);
+      transition:transform .12s ease, box-shadow .2s ease, filter .15s ease;
+    }
+    .buy-btn:hover{ transform:translateY(-1px); box-shadow:0 12px 26px rgba(25,255,0,.22), inset 0 -2px 0 rgba(0,0,0,.12); }
+    .buy-btn:active{ transform:translateY(0); }
+    .buy-btn .btn-label{ font-weight:800; letter-spacing:.01em; }
+    .buy-btn .btn-price{
+      font-size:12px;
+      font-weight:800;
+      padding:4px 8px;
+      line-height:1;
+      border-radius:9999px;
+      background:rgba(255,255,255,.18);
+      color:#fff;
+    }
+    @media (prefers-color-scheme: dark){
+      .buy-btn .btn-price{ background:rgba(255,255,255,.22); }
+    }
+
+    /* keep id-based overrides (same color) */
+    #btnBuy1Top, #btnBuy10Top, #btnBuy20Top,
+    #btnBuy1Modal, #btnBuy10Modal, #btnBuy20Modal{
+      background:#19ff0099;
+      border-color:#19ff0099;
+      color:#ffffff;
+      box-shadow:none;
+    }
+    #btnBuy1Top:hover, #btnBuy10Top:hover, #btnBuy20Top:hover,
+    #btnBuy1Modal:hover, #btnBuy10Modal:hover, #btnBuy20Modal:hover{
+      filter:brightness(1.06);
+    }
   </style>
 
   <!-- PDF.js + Mammoth for client-side parsing -->
@@ -158,7 +210,6 @@
   <div class="container">
     <header class="topbar">
       <div class="brand">
-        <!-- NEW: use the provided logo -->
         <img class="logo" src="logo.png" alt="Rezzy logo" />
         <div>
           <h1>Rezzy Rate</h1>
@@ -218,12 +269,12 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
 
         <div class="actions" style="margin-top:6px">
           <button class="btn-primary" onclick="analyze()">Analyze</button>
-          <button class="btn-secondary" onclick="clearAll()">Clear</button>
+          <button id="btnClear" class="btn-secondary" onclick="clearAll()">Clear</button>
           <span class="spacer"></span>
           <div class="pricing-buttons">
-            <button id="btnBuy1Top"  class="btn-secondary btn-compact" onclick="openPaywall(1)">Buy 1 credit ($0.49)</button>
-            <button id="btnBuy10Top" class="btn-secondary btn-compact" onclick="openPaywall(10)">Buy 10 credits ($3.99)</button>
-            <button id="btnBuy20Top" class="btn-secondary btn-compact" onclick="openPaywall(20)">Buy 20 credits ($5.99)</button>
+            <button id="btnBuy1Top"  class="btn-secondary btn-compact buy-btn" onclick="openPaywall(1)"></button>
+            <button id="btnBuy10Top" class="btn-secondary btn-compact buy-btn" onclick="openPaywall(10)"></button>
+            <button id="btnBuy20Top" class="btn-secondary btn-compact buy-btn" onclick="openPaywall(20)"></button>
           </div>
         </div>
       </section>
@@ -246,9 +297,9 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       </p>
       <div class="actions">
         <div class="pricing-buttons">
-          <button id="btnBuy1Modal"  class="btn-primary btn-compact" onclick="startCheckout(1)">Buy 1 scan — $0.49</button>
-          <button id="btnBuy10Modal" class="btn-primary btn-compact" onclick="startCheckout(10)">Buy 10 scans — $3.99</button>
-          <button id="btnBuy20Modal" class="btn-primary btn-compact" onclick="startCheckout(20)">Buy 20 scans — $5.99</button>
+          <button id="btnBuy1Modal"  class="btn-primary btn-compact buy-btn" onclick="startCheckout(1)"></button>
+          <button id="btnBuy10Modal" class="btn-primary btn-compact buy-btn" onclick="startCheckout(10)"></button>
+          <button id="btnBuy20Modal" class="btn-primary btn-compact buy-btn" onclick="startCheckout(20)"></button>
         </div>
         <span class="spacer"></span>
         <button class="btn-secondary btn-compact" onclick="closePaywall()">Close</button>
@@ -263,14 +314,25 @@ const PRICES = { single: 0.49, pack10: 3.99, pack20: 5.99 };
 const fmt = n => `$${n.toFixed(2)}`;
 function updatePricingUI(){
   const p1 = fmt(PRICES.single), p10 = fmt(PRICES.pack10), p20 = fmt(PRICES.pack20);
+
   const lead = document.getElementById('paywallLeadText');
   if (lead) lead.innerHTML = `You used your free daily scan. Buy additional scans for <strong>${p1}</strong> or save with a pack.`;
-  const b1m = document.getElementById('btnBuy1Modal');  if (b1m)  b1m.textContent  = `Buy 1 scan — ${p1}`;
-  const b10m = document.getElementById('btnBuy10Modal'); if (b10m) b10m.textContent = `Buy 10 scans — ${p10}`;
-  const b20m = document.getElementById('btnBuy20Modal'); if (b20m) b20m.textContent = `Buy 20 scans — ${p20}`;
-  const b1t = document.getElementById('btnBuy1Top');   if (b1t)  b1t.textContent  = `Buy 1 scan (${p1})`;
-  const b10t = document.getElementById('btnBuy10Top'); if (b10t) b10t.textContent = `Buy 10 scans (${p10})`;
-  const b20t = document.getElementById('btnBuy20Top'); if (b20t) b20t.textContent = `Buy 20 scans (${p20})`;
+
+  const setBtn = (id, qty, price) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = `<span class="btn-label"> ${qty} ${qty===1?'Scan':'Scans'}</span><span class="btn-price">${price}</span>`;
+  };
+
+  // Top buttons
+  setBtn('btnBuy1Top', 1,  p1);
+  setBtn('btnBuy10Top',10, p10);
+  setBtn('btnBuy20Top',20, p20);
+
+  // Modal buttons
+  setBtn('btnBuy1Modal', 1,  p1);
+  setBtn('btnBuy10Modal',10, p10);
+  setBtn('btnBuy20Modal',20, p20);
 }
 
 /* ===== Metering & Paywall ===== */
