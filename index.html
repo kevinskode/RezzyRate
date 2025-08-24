@@ -82,6 +82,22 @@
       .pill.bad{background:#2a1517;color:#fca5a5;border-color:rgba(251,113,133,.25)}
     }
 
+    /* Priority pills — blue scale by urgency (NEW) */
+    .pill.p-high{  /* Quick win (strongest blue) */
+      background:#1788c1; border-color:#93c5fd; color:#153ab0;
+    }
+    .pill.p-med{   /* Worth doing (medium blue) */
+      background:#5b93b1; border-color:#a5b4fc; color:#6e68c1;
+    }
+    .pill.p-low{   /* Nice to have (lightest blue) */
+      background:#8ba4af; border-color:#c7d2fe; color:#e5aacc;
+    }
+    @media (prefers-color-scheme: dark){
+      .pill.p-high{ background:rgba(37,99,235,.24);  border-color:rgba(59,130,246,.45);  color:#dbeafe; }
+      .pill.p-med{  background:rgba(99,102,241,.22); border-color:rgba(129,140,248,.38); color:#e0e7ff; }
+      .pill.p-low{  background:rgba(99,102,241,.14); border-color:rgba(129,140,248,.28); color:#c7d2fe; }
+    }
+
     .progress{height:8px;border-radius:9999px;background:#f1f5f9;border:1px solid var(--border);overflow:hidden}
     @media(prefers-color-scheme:dark){.progress{background:#0b1220}}
     .progress-bar{height:100%;border-radius:9999px;background:linear-gradient(90deg,#818cf8,#4f46e5);width:0;transition:width .8s cubic-bezier(.2,.7,.2,1)}
@@ -271,8 +287,6 @@
         <h2 class="card-title">Check to see if your resume is industry ready</h2>
         <p class="card-sub">Paste your resume and the job description. Or upload a file — we’ll extract the text and score it.</p>
 
-    
-
         <!-- Upload row -->
         <div class="upload-row">
           <label class="file-pill" style="cursor:pointer">
@@ -282,13 +296,14 @@
           <button id="btnPick" class="file-btn" type="button">Browse</button>
           <div id="dropzone" class="dropzone">or drag & drop your resume here</div>
 
-          <!-- New visual status (LED + spinner). The text is sr-only for a11y. -->
+          <!-- Visual status (LED + spinner). The text is sr-only for a11y. -->
           <span class="helper" id="scanStatus" style="display:flex;align-items:center;gap:8px">
             <span class="statusled ready" id="statusLed" aria-hidden="true"></span>
             <span class="spinner" id="scanSpinner" aria-hidden="true"></span>
             <span id="scanText" class="sr-only">Ready</span>
           </span>
         </div>
+
         <label>Paste Resume Text</label>
         <textarea id="resume" rows="12">JOHN DOE
 Detroit, MI • john.doe@email.com • (313) 555-1212
@@ -495,10 +510,11 @@ function friendlyFixes(result, fre){
   const totalKW = result.totalKeywords || (present.length + missing.length);
   const perKw = totalKW ? Math.max(1, Math.round(40/totalKW)) : 0;
 
-  const tag = p =>
-    p === 'high' ? '<span class="pill good">Quick win</span>' :
-    p === 'med'  ? '<span class="pill">Worth doing</span>' :
-                   '<span class="pill">Nice to have</span>';
+  /* UPDATED: blue urgency pills */
+  const tag = (p) =>
+    p === 'high' ? '<span class="pill p-high">Quick win</span>' :
+    p === 'med'  ? '<span class="pill p-med">Worth doing</span>' :
+                   '<span class="pill p-low">Nice to have</span>';
 
   const addTip = (priority,title,body) =>
     tips.push(`<li>
@@ -656,7 +672,7 @@ function analyze(){
   const sectionPills = Object.entries(result.sectionPresence)
     .map(([name,isOn])=>`<span class="pill ${isOn?'good':'bad'}">${name}</span>`).join('');
 
-  const fixes = friendlyFixes(result, fre).join('') || '<li><div class="fix-row"><span class="pill good">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Consider tailoring a couple bullets to the job post.</p></li>';
+  const fixes = friendlyFixes(result, fre).join('') || '<li><div class="fix-row"><span class="pill p-low">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Consider tailoring a couple bullets to the job post.</p></li>';
 
   const out=document.getElementById('results');
   out.innerHTML=`
