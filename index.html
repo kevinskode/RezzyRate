@@ -32,6 +32,19 @@
       background:transparent;
     }
 
+    /* --- Buy scan buttons: neon green --- */
+    #btnBuy1Top, #btnBuy10Top, #btnBuy20Top,
+    #btnBuy1Modal, #btnBuy10Modal, #btnBuy20Modal{
+      background:#19ff0099;          /* requested color */
+      border-color:#19ff0099;
+      color:#ffffff;                  /* readable text on green */
+      box-shadow:none;
+    }
+    #btnBuy1Top:hover, #btnBuy10Top:hover, #btnBuy20Top:hover,
+    #btnBuy1Modal:hover, #btnBuy10Modal:hover, #btnBuy20Modal:hover{
+      filter:brightness(1.06);
+    }
+
     h1{margin:0;font-size:clamp(18px,2.4vw,22px);font-weight:700}
     .helper{font-size:12px;color:var(--muted)}
     .badges{display:flex;gap:8px;align-items:center}
@@ -175,13 +188,8 @@
     .buy-btn:active{ transform:translateY(0); }
     .buy-btn .btn-label{ font-weight:800; letter-spacing:.01em; }
     .buy-btn .btn-price{
-      font-size:12px;
-      font-weight:800;
-      padding:4px 8px;
-      line-height:1;
-      border-radius:9999px;
-      background:rgba(255,255,255,.18);
-      color:#fff;
+      font-size:12px; font-weight:800; padding:4px 8px; line-height:1;
+      border-radius:9999px; background:rgba(255,255,255,.18); color:#fff;
     }
     @media (prefers-color-scheme: dark){
       .buy-btn .btn-price{ background:rgba(255,255,255,.22); }
@@ -190,14 +198,50 @@
     /* keep id-based overrides (same color) */
     #btnBuy1Top, #btnBuy10Top, #btnBuy20Top,
     #btnBuy1Modal, #btnBuy10Modal, #btnBuy20Modal{
-      background:#19ff0099;
-      border-color:#19ff0099;
-      color:#ffffff;
-      box-shadow:none;
+      background:#19ff0099; border-color:#19ff0099; color:#ffffff; box-shadow:none;
     }
     #btnBuy1Top:hover, #btnBuy10Top:hover, #btnBuy20Top:hover,
-    #btnBuy1Modal:hover, #btnBuy10Modal:hover, #btnBuy20Modal:hover{
-      filter:brightness(1.06);
+    #btnBuy1Modal:hover, #btnBuy10Modal:hover, #btnBuy20Modal:hover{ filter:brightness(1.06); }
+
+    /* ---- Visual status LED (empty by default, solid on success) ---- */
+    .statusled{
+      width:12px; height:12px; border-radius:9999px;
+      background:transparent;                           /* empty */
+      border:2px solid rgba(148,163,184,.55);           /* subtle outline */
+      box-shadow:none;
+      transition:
+        background-color .2s ease,
+        border-color .2s ease,
+        transform .2s ease,
+        opacity .2s ease,
+        box-shadow .25s ease;
+    }
+    .statusled.ready{
+      background:transparent;
+      border-color:rgba(148,163,184,.55);
+    }
+    .statusled.scanning{
+      background:transparent;
+      border-color:#60a5fa;
+      animation:pulse 1.2s infinite;
+      box-shadow:0 0 0 3px rgba(96,165,250,.18);
+    }
+    .statusled.done{
+      background:#10b981;
+      border-color:#10b981;
+      box-shadow:0 0 0 3px rgba(16,185,129,.26), 0 0 12px rgba(16,185,129,.35);
+    }
+    .statusled.error{
+      background:#ef4444;
+      border-color:#ef4444;
+      box-shadow:0 0 0 3px rgba(239,68,68,.22), 0 0 12px rgba(239,68,68,.40);
+    }
+    @keyframes pulse{ 0%{transform:scale(1)} 70%{transform:scale(1.18)} 100%{transform:scale(1)} }
+
+    /* Screen-reader only helper */
+    .sr-only{
+      position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+      overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
     }
   </style>
 
@@ -237,9 +281,12 @@
           </label>
           <button id="btnPick" class="file-btn" type="button">Browse</button>
           <div id="dropzone" class="dropzone">or drag & drop your resume here</div>
-          <span class="helper" id="scanStatus" style="display:flex;align-items:center;gap:6px">
-            <span class="spinner" id="scanSpinner"></span>
-            <span id="scanText">Idle</span>
+
+          <!-- New visual status (LED + spinner). The text is sr-only for a11y. -->
+          <span class="helper" id="scanStatus" style="display:flex;align-items:center;gap:8px">
+            <span class="statusled ready" id="statusLed" aria-hidden="true"></span>
+            <span class="spinner" id="scanSpinner" aria-hidden="true"></span>
+            <span id="scanText" class="sr-only">Ready</span>
           </span>
         </div>
 
@@ -321,7 +368,7 @@ function updatePricingUI(){
   const setBtn = (id, qty, price) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.innerHTML = `<span class="btn-label"> ${qty} ${qty===1?'Scan':'Scans'}</span><span class="btn-price">${price}</span>`;
+    el.innerHTML = `<span class="btn-label">${qty} ${qty===1?'Scan':'Scans'}</span><span class="btn-price">${price}</span>`;
   };
 
   // Top buttons
@@ -685,9 +732,22 @@ dropzone.addEventListener('drop', e=>{
   if (f) handleResumeFile(f);
 });
 
+/* Updated to drive the LED states based on your existing calls */
 function setScanStatus(msg, spinning=false){
-  scanText.textContent = msg;
-  scanSpinner.classList.toggle('show', !!spinning);
+  const led = document.getElementById('statusLed');
+  const spin = document.getElementById('scanSpinner');
+  const txt  = document.getElementById('scanText');
+
+  const m = String(msg||'').toLowerCase();
+  let state = 'ready';
+  if (spinning) state = 'scanning';
+  else if (/(error|unsupported|fail)/.test(m)) state = 'error';
+  else if (/(extracted|success|done|✓|scored)/.test(m)) state = 'done';
+
+  led.classList.remove('ready','scanning','done','error');
+  led.classList.add(state);
+  spin.classList.toggle('show', !!spinning);
+  txt.textContent = msg; // keep for screen readers (hidden)
 }
 
 async function handleResumeFile(file){
@@ -719,7 +779,7 @@ async function handleResumeFile(file){
       return;
     }
     document.getElementById('resume').value = text;
-    setScanStatus('Text extracted ✓', false);
+    setScanStatus('Text extracted ✓', false);   // will turn LED solid green
     analyze(); // auto-run after upload
   } catch(err){
     console.error(err);
@@ -772,11 +832,13 @@ function clearAll(){
     </div>`;
   fileInput.value = '';
   fileLabel.textContent = 'Choose PDF, DOCX, or TXT';
-  setScanStatus('Idle', false);
+  setScanStatus('Ready', false); // hollow LED
 }
 
 updateMeterUI();
 updatePricingUI();
+/* Set initial LED state */
+setScanStatus('Ready', false);
 </script>
 </body>
 </html>
