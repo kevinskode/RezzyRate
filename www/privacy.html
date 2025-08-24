@@ -84,15 +84,13 @@
   <header class="topbar">
     <div class="wrap">
       <nav class="nav">
-        <div class="brand" href="index.html" aria-label="Rezzy home">
-          
-                <img class="logo" src="logo.png" alt="Rezzy logo" />
-                <div>
-                  <h1>Rezzy Rate</h1>
-                  <div class="helper">The smart resume checker</div>
-                </div>
-           
-            </div>
+        <a class="brand" href="index.html" aria-label="Rezzy home">
+          <picture>
+            <source srcset="assets/rezzy-logo-dark.svg" media="(prefers-color-scheme: dark)">
+            <img class="logo" src="assets/rezzy-logo-light.svg" alt="Rezzy logo">
+          </picture>
+          <span class="sr-only">Rezzy</span>
+        </a>
         <div class="links">
           <a class="link" href="index.html">Checker</a>
           <a class="link" href="about.html">About</a>
@@ -101,6 +99,7 @@
       </nav>
     </div>
   </header>
+  
 
   <main>
     <div class="container">
