@@ -49,7 +49,7 @@
     .pricing-buttons{display:flex;gap:8px;align-items:center}
     @media(max-width:700px){ .pricing-buttons{width:100%;justify-content:flex-start;flex-wrap:wrap} }
 
-    .pill{display:inline-block;padding:6px 10px;border-radius:9999px;font-size:12px;margin:2px;border:1px solid var(--border);color:var(--muted)}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:9999px;font-size:12px;margin:2px;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
     .pill.good{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
     .pill.bad{background:#fef2f2;color:#991b1b;border-color:#fecaca}
     @media(prefers-color-scheme:dark){
@@ -108,28 +108,26 @@
       display:grid;
       grid-template-columns:1fr;
       gap:10px;
-      margin:0;          /* remove default UL indent */
+      margin:0;
       padding:0;
-      counter-reset:fix; /* for numbered cards */
+      counter-reset:fix;
     }
     @media (min-width: 900px){
-      .list-tight{ grid-template-columns:1fr 1fr; } /* 2 columns on desktop */
+      .list-tight{ grid-template-columns:1fr 1fr; }
     }
     .list-tight li{
       list-style:none;
       position:relative;
-      padding:14px 12px 12px 42px;   /* room for number chip */
+      padding:14px 14px 12px 46px;
       border:1px solid var(--border);
-      border-radius:12px;
-      line-height:1.6;
-      color:var(--text);             /* stronger contrast */
-      background:rgba(99,102,241,.04); /* subtle panel tint */
+      border-radius:16px;
+      background:rgba(99,102,241,.04);
       box-shadow:var(--shadow);
     }
     .list-tight li::before{
       counter-increment:fix;
       content: counter(fix);
-      position:absolute; left:10px; top:12px;
+      position:absolute; left:12px; top:14px;
       width:22px; height:22px; border-radius:9999px;
       display:grid; place-items:center;
       font-weight:700; font-size:12px;
@@ -137,8 +135,34 @@
       background:var(--panel);
       border:1px solid var(--border);
     }
-    .list-tight li .pill{ margin:0 8px 6px 0; vertical-align:middle; }
-    .list-tight li b{ color:var(--text); }
+
+    /* Pill on first line, bold title underneath */
+    .fix-row{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+      margin-bottom:6px;
+    }
+    .fix-title{
+      display:block;
+      font-weight:700;
+      font-size:14px;
+      color:var(--text);
+      letter-spacing:.01em;
+      text-wrap:balance;
+      margin:0;
+    }
+    .fix-body{color:var(--muted);font-size:14px;line-height:1.6;margin:0}
+
+    /* Avoid odd breaks inside cards */
+    .list-tight li, .fix-body{
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      hyphens: auto;
+      text-wrap: pretty;
+    }
+    .list-tight li .pill{ margin:0; }
     @media (prefers-color-scheme: dark){
       .list-tight li{ background:rgba(99,102,241,.10); }
       .list-tight li::before{ background:var(--panel); color:var(--muted); }
@@ -381,52 +405,73 @@ function friendlyFixes(result, fre){
   const totalKW = result.totalKeywords || (present.length + missing.length);
   const perKw = totalKW ? Math.max(1, Math.round(40/totalKW)) : 0;
 
-  const tag = t =>
-    t === 'high' ? '<span class="pill good">Quick win</span>' :
-    t === 'med'  ? '<span class="pill">Worth doing</span>' :
+  const tag = p =>
+    p === 'high' ? '<span class="pill good">Quick win</span>' :
+    p === 'med'  ? '<span class="pill">Worth doing</span>' :
                    '<span class="pill">Nice to have</span>';
+
+  const addTip = (priority,title,body) =>
+    tips.push(`<li>
+      <div class="fix-row">${tag(priority)}<span class="fix-title">${title}</span></div>
+      <p class="fix-body">${body}</p>
+    </li>`);
 
   if (missing.length){
     const show = missing.slice(0,10);
-    tips.push(`<li>${tag('high')} Easiest boost: weave in a few missing terms from the job post — ${show.join(', ')}. Each one should nudge your ATS score by about +${perKw}.</li>`);
+    addTip('high','Add a few missing keywords',
+      `Sprinkle in terms the job uses — ${show.join(', ')}. Each one should bump your ATS score by about +${perKw}.`);
   }
   if (result.profDetails.numbers < 3){
-    tips.push(`<li>${tag('high')} Add a few measurable results. You’ve got ${result.profDetails.numbers}; aim for 3–5 like “cut processing time 30%”, “saved $50K”, “reduced variance 18%”.</li>`);
+    addTip('high','Show the impact with numbers',
+      `You’ve got ${result.profDetails.numbers}. Aim for 3–5 clear wins like “cut processing time 30%,” “saved $50K,” or “reduced variance 18%.”`);
   }
   const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
   if (missingSections.length){
-    tips.push(`<li>${tag('med')} Add the missing section${missingSections.length>1?'s':''}: ${missingSections.join(', ')}. This helps recruiters (and ATS) find the right info fast.</li>`);
+    addTip('med','Fill the missing sections',
+      `Add ${missingSections.join(', ')} so recruiters (and ATS) can find the essentials fast.`);
   }
   if (!result.sectionPresence.summary){
-    tips.push(`<li>${tag('med')} Add a short Summary (2–3 lines): title + core skills + one impact line. Think “Business Data Analyst • SQL, Python, Tableau • automate reporting and forecast accuracy”.</li>`);
+    addTip('med','Write a short summary',
+      `Two–three lines: your title, core skills, and one impact line. Example: “Business Data Analyst • SQL, Python, Tableau • automate reporting and forecast accuracy.”`);
   }
   if (result.profDetails.passive > 3){
-    tips.push(`<li>${tag('med')} Make the verbs more active. I spotted ${result.profDetails.passive} passive phrases. Try “Built/Automated/Forecasted” instead of “was built/were automated”.</li>`);
+    addTip('med','Use active verbs',
+      `I spotted ${result.profDetails.passive} passive phrases. Swap “was built/were automated” for “Built,” “Automated,” or “Forecasted.”`);
   }
   if (result.profDetails.bullets < 5){
-    tips.push(`<li>${tag('med')} Add a few more bullets. You have ${result.profDetails.bullets}; aim ~5–7 for recent roles and ~3–5 for older ones.</li>`);
+    addTip('med','Add a few more bullets',
+      `You have ${result.profDetails.bullets}. Aim ~5–7 bullets for recent roles and ~3–5 for older ones.`);
   }
   if (result.breakdown.readability <= 5 || fre < 55){
-    tips.push(`<li>${tag('med')} Smooth the reading flow (Flesch ${fre}). Shorter sentences (12–18 words), break longer lines into bullets, and swap heavy jargon for plain terms.</li>`);
+    addTip('med','Smooth the reading flow',
+      `Your Flesch score is ${fre}. Keep sentences to ~12–18 words, split long lines into bullets, and swap heavy jargon for plain terms.`);
   }
   if (result.profDetails.longLines > 0){
-    tips.push(`<li>${tag('low')} Break up long lines (${result.profDetails.longLines}). Under ~160 characters per bullet keeps skimming easy.</li>`);
+    addTip('low','Break up long lines',
+      `${result.profDetails.longLines} line(s) are quite long. Keep bullets under ~160 characters so they’re easy to scan.`);
   }
   if (result.profDetails.capsWords > 6){
-    tips.push(`<li>${tag('low')} Ease up on ALL CAPS (${result.profDetails.capsWords}). Bold or placement usually does the job without feeling shouty.</li>`);
+    addTip('low','Dial back ALL CAPS',
+      `${result.profDetails.capsWords} ALL-CAPS words found. Bold or positioning usually works better than shouting.`);
   }
   if (result.profDetails.exclam > 0){
-    tips.push(`<li>${tag('low')} Skip exclamation marks (${result.profDetails.exclam}). The accomplishments speak loudly on their own.</li>`);
+    addTip('low','Skip exclamation marks',
+      `You don’t need them — the results can carry the energy on their own.`);
   }
   if (result.profDetails.words < 300){
-    tips.push(`<li>${tag('low')} Add a bit more substance (${result.profDetails.words} words now). A good one-pager lives around 400–700 words.</li>`);
+    addTip('low','Add a bit more substance',
+      `${result.profDetails.words} words now. A solid one-pager usually lands around 400–700 words.`);
   } else if (result.profDetails.words > 950){
-    tips.push(`<li>${tag('low')} Consider trimming (${result.profDetails.words} words). Keep it to one page unless you’ve got 10+ years to showcase.</li>`);
+    addTip('low','Tighten the length',
+      `${result.profDetails.words} words total. Trim to a page unless you’ve got 10+ years to showcase.`);
   }
-  tips.push(`<li>${tag('low')} Keep the file ATS-friendly: single column, standard headings, no text in images/tables, export as a text-based PDF.</li>`);
+  addTip('low','Keep it ATS-friendly',
+    `Use a single column with standard headings, avoid text inside images/tables, and export as a text-based PDF.`);
   if (present.length && missing.length){
-    tips.push(`<li>${tag('low')} Mirror the job’s exact phrasing when it makes sense (e.g., “data pipelines” vs “pipelines of data”) so scanners don’t miss it.</li>`);
+    addTip('low','Match the job’s phrasing',
+      `When it makes sense, mirror the wording (e.g., “data pipelines” vs “pipelines of data”) so scanners don’t miss it.`);
   }
+
   return tips.slice(0,12);
 }
 
@@ -521,7 +566,7 @@ function analyze(){
   const sectionPills = Object.entries(result.sectionPresence)
     .map(([name,isOn])=>`<span class="pill ${isOn?'good':'bad'}">${name}</span>`).join('');
 
-  const fixes = friendlyFixes(result, fre).join('') || '<li><span class="pill good">Nice!</span> You’re in solid shape—consider tailoring a couple bullets to the job post.</li>';
+  const fixes = friendlyFixes(result, fre).join('') || '<li><div class="fix-row"><span class="pill good">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Consider tailoring a couple bullets to the job post.</p></li>';
 
   const out=document.getElementById('results');
   out.innerHTML=`
