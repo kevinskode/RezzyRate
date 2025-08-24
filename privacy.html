@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Privacy – Rezzy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f8fb; --panel:#ffffff; --text:#0f172a; --muted:#475569;
+      --border:#e5e7eb; --accent:#4f46e5; --radius:14px; --shadow:0 4px 16px rgba(2,6,23,.06);
+      --content-max:1100px;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1020; --panel:#0f172a; --text:#e5e7eb; --muted:#9aa4b2;
+        --border:rgba(148,163,184,.18); --shadow:0 8px 28px rgba(0,0,0,.35);
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--text); line-height:1.6;
+      display:flex; flex-direction:column;
+    }
+
+    /* Top bar — image logo, matches index structure */
+    .topbar{
+      position:sticky; top:0; z-index:10; backdrop-filter:saturate(1.2) blur(6px);
+      background:color-mix(in oklab, var(--panel) 86%, transparent);
+      border-bottom:1px solid var(--border);
+    }
+    .wrap{max-width:var(--content-max); margin:0 auto; padding:14px 18px}
+    .nav{display:flex; align-items:center; justify-content:space-between; gap:14px}
+    .brand{display:flex;align-items:center;gap:12px}
+    /* Logo image */
+    .logo{
+      width:clamp(32px,4vw,55px);
+      height:clamp(32px,4vw,55px);
+      border-radius:12px;
+      object-fit:cover;
+      display:block;
+      box-shadow:0 2px 10px rgba(79,70,229,.25);
+      border:1px solid var(--border);
+      background:transparent;
+    }
+    .links{display:flex; gap:10px; flex-wrap:wrap}
+    .link{padding:8px 12px; border-radius:10px; text-decoration:none; color:var(--text); font-weight:500}
+    .link.active, .link:hover{background:color-mix(in oklab, var(--accent) 12%, var(--panel));}
+
+    /* Main */
+    main{flex:1}
+    .container{max-width:var(--content-max); margin:24px auto; padding:0 18px}
+    .panel{
+      background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:28px; overflow:hidden;
+    }
+    h1{font-size:28px; margin:0 0 6px}
+    .sub{color:var(--muted); margin:0 0 18px}
+    .section{margin:18px 0; padding:18px; border:1px solid var(--border); border-radius:12px;
+      background:color-mix(in oklab, var(--panel) 96%, var(--bg))}
+    h2{margin:0 0 10px; font-size:18px}
+    p{margin:0 0 10px}
+    ul{margin:0; padding-left:20px}
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    .pill{
+      display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--border);
+      background:color-mix(in oklab, var(--accent) 12%, var(--panel)); font-weight:600; font-size:12px;
+    }
+
+    /* Footer */
+    footer{border-top:1px solid var(--border); margin-top:24px}
+    .foot{max-width:var(--content-max); margin:0 auto; padding:16px 18px; color:var(--muted);
+      display:flex; gap:14px; justify-content:space-between; flex-wrap:wrap}
+    .foot a{color:inherit; text-decoration:none; padding:6px 10px; border-radius:10px}
+    .foot a:hover{background:color-mix(in oklab, var(--accent) 10%, var(--panel)); color:var(--text)}
+    .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <nav class="nav">
+        <div class="brand" href="index.html" aria-label="Rezzy home">
+          
+                <img class="logo" src="logo.png" alt="Rezzy logo" />
+                <div>
+                  <h1>Rezzy Rate</h1>
+                  <div class="helper">The smart resume checker</div>
+                </div>
+           
+            </div>
+        <div class="links">
+          <a class="link" href="index.html">Checker</a>
+          <a class="link" href="about.html">About</a>
+          <a class="link active" href="privacy.html">Privacy</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="panel">
+        <h1>Privacy Policy</h1>
+        <p class="sub"><span class="pill">Simple promise:</span> We don’t sell your data. We keep things minimal and transparent.</p>
+
+        <div class="section">
+          <h2>What we collect</h2>
+          <ul>
+            <li><strong>Resume text you paste</strong> — used only to analyze and produce your results.</li>
+            <li><strong>Basic usage data</strong> — anonymous metrics to improve reliability and features.</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h2>What we don’t collect</h2>
+          <ul>
+            <li>No account profile data unless you explicitly create one.</li>
+            <li>No advertising identifiers.</li>
+            <li>No sale of personal information. Ever.</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h2>How your data is handled</h2>
+          <ul>
+            <li>Your pasted text is processed to generate a report and improvements.</li>
+            <li>Temporary processing may occur in memory; we avoid storing raw resumes whenever possible.</li>
+            <li>Any optional saved results are encrypted at rest.</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h2>Your choices</h2>
+          <ul>
+            <li>You can request deletion of any saved results at any time.</li>
+            <li>You can use Rezzy without creating an account.</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h2>Contact</h2>
+          <p>Questions? Reach us at <a href="mailto:support@rezzyrate.com">support@rezzyrate.com</a>.</p>
+          <p><a href="index.html">Back to the Resume Checker →</a></p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="foot">
+      <span>© <script>document.write(new Date().getFullYear())</script> Rezzy Rate</span>
+      <span>
+        <a href="about.html">About</a>
+        <a href="privacy.html">Privacy</a>
+      </span>
+    </div>
+  </footer>
+</body>
+</html>
