@@ -19,7 +19,19 @@
 
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
     .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:36px;height:36px;border-radius:10px;background:conic-gradient(from 180deg at 50% 50%, #4f46e5, #22d3ee, #4f46e5);box-shadow:0 2px 10px rgba(79,70,229,.25)}
+
+    /* NEW: real logo image */
+    .logo{
+      width:clamp(32px,4vw,44px);
+      height:clamp(32px,4vw,44px);
+      border-radius:12px;
+      object-fit:cover;
+      display:block;
+      box-shadow:0 2px 10px rgba(79,70,229,.25);
+      border:1px solid var(--border);
+      background:transparent;
+    }
+
     h1{margin:0;font-size:clamp(18px,2.4vw,22px);font-weight:700}
     .helper{font-size:12px;color:var(--muted)}
     .badges{display:flex;gap:8px;align-items:center}
@@ -103,7 +115,7 @@
     .spinner.show{display:inline-block}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* --- Easier-to-read Top Fixes --- */
+    /* --- Top Fixes grid & card content (pill first, title under) --- */
     .list-tight{
       display:grid;
       grid-template-columns:1fr;
@@ -112,57 +124,25 @@
       padding:0;
       counter-reset:fix;
     }
-    @media (min-width: 900px){
-      .list-tight{ grid-template-columns:1fr 1fr; }
-    }
+    @media (min-width: 900px){ .list-tight{ grid-template-columns:1fr 1fr; } }
     .list-tight li{
-      list-style:none;
-      position:relative;
+      list-style:none; position:relative;
       padding:14px 14px 12px 46px;
-      border:1px solid var(--border);
-      border-radius:16px;
-      background:rgba(99,102,241,.04);
-      box-shadow:var(--shadow);
+      border:1px solid var(--border); border-radius:16px;
+      background:rgba(99,102,241,.04); box-shadow:var(--shadow);
     }
     .list-tight li::before{
-      counter-increment:fix;
-      content: counter(fix);
+      counter-increment:fix; content: counter(fix);
       position:absolute; left:12px; top:14px;
       width:22px; height:22px; border-radius:9999px;
-      display:grid; place-items:center;
-      font-weight:700; font-size:12px;
-      color:var(--muted);
-      background:var(--panel);
-      border:1px solid var(--border);
+      display:grid; place-items:center; font-weight:700; font-size:12px;
+      color:var(--muted); background:var(--panel); border:1px solid var(--border);
     }
-
-    /* Pill on first line, bold title underneath */
-    .fix-row{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      gap:6px;
-      margin-bottom:6px;
-    }
-    .fix-title{
-      display:block;
-      font-weight:700;
-      font-size:14px;
-      color:var(--text);
-      letter-spacing:.01em;
-      text-wrap:balance;
-      margin:0;
-    }
+    .fix-row{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-bottom:6px}
+    .fix-title{display:block;font-weight:700;font-size:14px;color:var(--text);letter-spacing:.01em;text-wrap:balance;margin:0}
     .fix-body{color:var(--muted);font-size:14px;line-height:1.6;margin:0}
-
-    /* Avoid odd breaks inside cards */
-    .list-tight li, .fix-body{
-      word-break: keep-all;
-      overflow-wrap: break-word;
-      hyphens: auto;
-      text-wrap: pretty;
-    }
-    .list-tight li .pill{ margin:0; }
+    .list-tight li, .fix-body{word-break:keep-all;overflow-wrap:break-word;hyphens:auto;text-wrap:pretty}
+    .list-tight li .pill{margin:0}
     @media (prefers-color-scheme: dark){
       .list-tight li{ background:rgba(99,102,241,.10); }
       .list-tight li::before{ background:var(--panel); color:var(--muted); }
@@ -178,7 +158,8 @@
   <div class="container">
     <header class="topbar">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+        <!-- NEW: use the provided logo -->
+        <img class="logo" src="logo.png" alt="Rezzy logo" />
         <div>
           <h1>Rezzy Rate</h1>
           <div class="helper">The smart resume checker</div>
