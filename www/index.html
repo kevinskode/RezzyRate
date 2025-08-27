@@ -10,6 +10,7 @@
     :root{
       --bg:#f7f8fb; --panel:#ffffff; --text:#0f172a; --muted:#475569;
       --border:#e5e7eb; --accent:#4f46e5; --radius:14px; --shadow:0 4px 16px rgba(2,6,23,.06);
+      --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
     }
     @media (prefers-color-scheme: dark){
       :root{ --bg:#0b1020; --panel:#0f172a; --text:#e5e7eb; --muted:#9aa4b2; --border:rgba(148,163,184,.18); --shadow:0 6px 20px rgba(2,6,23,.35); }
@@ -19,44 +20,27 @@
       margin:0; background:var(--bg); color:var(--text);
       font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;
-      -webkit-text-size-adjust:100%; /* avoid iOS auto-zoom */
+      -webkit-text-size-adjust:100%;
     }
     .container{max-width:1100px; margin:0 auto; padding:20px clamp(16px,3vw,24px)}
-    /* iPhone safe areas */
     @supports(padding:max(0px)){
-      .container{
-        padding-left:max(16px, env(safe-area-inset-left));
-        padding-right:max(16px, env(safe-area-inset-right));
-      }
+      .container{ padding-left:max(16px, env(safe-area-inset-left)); padding-right:max(16px, env(safe-area-inset-right)); }
     }
 
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
     .brand{display:flex;align-items:center;gap:12px}
-
-    /* Logo image */
     .logo{
-      width:clamp(32px,4vw,55px);
-      height:clamp(32px,4vw,55px);
-      border-radius:12px;
-      object-fit:cover;
-      display:block;
-      box-shadow:0 2px 10px rgba(79,70,229,.25);
-      border:1px solid var(--border);
-      background:transparent;
+      width:clamp(32px,4vw,55px); height:clamp(32px,4vw,55px); border-radius:12px; object-fit:cover; display:block;
+      box-shadow:0 2px 10px rgba(79,70,229,.25); border:1px solid var(--border); background:transparent;
     }
 
-    /* --- Buy scan buttons: neon green --- */
+    /* Buy scan buttons */
     #btnBuy1Top, #btnBuy10Top, #btnBuy20Top,
     #btnBuy1Modal, #btnBuy10Modal, #btnBuy20Modal{
-      background:#19ff0099;          /* requested color */
-      border-color:#19ff0099;
-      color:#ffffff;                  /* readable text on green */
-      box-shadow:none;
+      background:#19ff0099; border-color:#19ff0099; color:#ffffff; box-shadow:none;
     }
     #btnBuy1Top:hover, #btnBuy10Top:hover, #btnBuy20Top:hover,
-    #btnBuy1Modal:hover, #btnBuy10Modal:hover, #btnBuy20Modal:hover{
-      filter:brightness(1.06);
-    }
+    #btnBuy1Modal:hover, #btnBuy10Modal:hover, #btnBuy20Modal:hover{ filter:brightness(1.06); }
 
     h1{margin:0;font-size:clamp(18px,2.4vw,22px);font-weight:700}
     .helper{font-size:12px;color:var(--muted)}
@@ -71,11 +55,9 @@
     .card-sub{font-size:13px;color:var(--muted);margin:0 0 10px}
     label{font-size:13px;color:#96d1f8;font-weight:900;letter-spacing:.06em;text-transform:uppercase;display:block;margin:8px 0 6px}
 
-    /* Prevent iOS zoom on focus with >=16px text */
     textarea,input{
       width:100%;background:#f8fafc;color:#0f172a;border:1px solid var(--border);
-      border-radius:12px;padding:12px 14px;transition:box-shadow .2s,border-color .2s;
-      font-size:12px; line-height:1.4;
+      border-radius:12px;padding:12px 14px;transition:box-shadow .2s,border-color .2s; font-size:12px; line-height:1.4;
     }
     textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.18)}
     @media(prefers-color-scheme:dark){textarea,input{background:#0b1220;color:var(--text)}}
@@ -87,7 +69,7 @@
     button{
       padding:10px 14px;border-radius:12px;border:1px solid transparent;background:var(--panel);
       color:var(--text);cursor:pointer;font-weight:600;transition:transform .1s ease, box-shadow .2s, border-color .2s;
-      min-height:44px; /* good tap target */
+      min-height:44px;
     }
     button:active{transform:translateY(1px)}
     .btn-primary{background:linear-gradient(180deg,#4f46e5,#4338ca);color:#fff;border-color:#4f46e5;box-shadow:0 6px 16px rgba(79,70,229,.20)}
@@ -105,16 +87,9 @@
       .pill.bad{background:#2a1517;color:#fca5a5;border-color:rgba(251,113,133,.25)}
     }
 
-    /* Priority pills — blue scale by urgency (NEW) */
-    .pill.p-high{  /* Quick win (strongest blue) */
-      background:#1788c1; border-color:#93c5fd; color:#153ab0;
-    }
-    .pill.p-med{   /* Worth doing (medium blue) */
-      background:#5b93b1; border-color:#a5b4fc; color:#6e68c1;
-    }
-    .pill.p-low{   /* Nice to have (lightest blue) */
-      background:#8ba4af; border-color:#c7d2fe; color:#e5aacc;
-    }
+    .pill.p-high{background:#1788c1; border-color:#93c5fd; color:#153ab0;}
+    .pill.p-med{ background:#5b93b1; border-color:#a5b4fc; color:#6e68c1;}
+    .pill.p-low{ background:#8ba4af; border-color:#c7d2fe; color:#e5aacc;}
     @media (prefers-color-scheme: dark){
       .pill.p-high{ background:rgba(37,99,235,.24);  border-color:rgba(59,130,246,.45);  color:#dbeafe; }
       .pill.p-med{  background:rgba(99,102,241,.22); border-color:rgba(129,140,248,.38); color:#e0e7ff; }
@@ -123,7 +98,9 @@
 
     .progress{height:8px;border-radius:9999px;background:#f1f5f9;border:1px solid var(--border);overflow:hidden}
     @media(prefers-color-scheme:dark){.progress{background:#0b1220}}
-    .progress-bar{height:100%;border-radius:9999px;background:linear-gradient(90deg,#818cf8,#4f46e5);width:0;transition:width .8s cubic-bezier(.2,.7,.2,1)}
+    .bar{height:8px;border-radius:9999px;background:#f1f5f9;border:1px solid var(--border);overflow:hidden}
+    @media(prefers-color-scheme:dark){.bar{background:#0b1220}}
+    .bar-fill{height:100%;width:0;background:linear-gradient(90deg,#818cf8,#4f46e5)}
 
     .overlay{position:fixed;inset:0;background:rgba(2,6,23,.6);display:none;align-items:center;justify-content:center;padding:16px}
     .overlay.open{display:flex}
@@ -137,9 +114,6 @@
     .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
     .kpi{padding:10px;border:1px solid var(--border);border-radius:12px}
     .kpi b{color:var(--text)}
-    .bar{height:8px;border-radius:9999px;background:#f1f5f9;border:1px solid var(--border);overflow:hidden}
-    @media(prefers-color-scheme:dark){.bar{background:#0b1220}}
-    .bar-fill{height:100%;width:0;background:linear-gradient(90deg,#818cf8,#4f46e5)}
     .stack{display:flex;height:10px;border-radius:9999px;overflow:hidden;border:1px solid var(--border)}
     .stack > div{height:100%}
     .stack .ok{background:#10b98122}
@@ -156,181 +130,193 @@
     .tip:hover .tip-bubble,.tip:focus-within .tip-bubble{opacity:1;transform:translateX(-50%) scale(1);pointer-events:auto}
     .tip-bubble .arrow{position:absolute;left:50%;bottom:-6px;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);background:var(--panel);border-left:1px solid var(--border);border-top:1px solid var(--border)}
 
-    /* Upload UI */
     .upload-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 10px}
     .file-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px dashed var(--border);border-radius:12px;font-size:12px;background:var(--panel)}
     .file-pill input[type="file"]{display:none}
     .file-btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--panel);font-size:12px}
-
-    .dropzone{flex:1 1 200px;border:1px dashed var(--border);border-radius:12px;padding:10px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
+    .dropzone{flex:1 1 200px;border:1px dashed var(--border);border-radius:12px;padding:10px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#94a3b8}
     .dropzone.drag{border-color:#60a5fa;background:rgba(99,102,241,.06);color:#4f46e5}
+
     .spinner{display:none;width:16px;height:16px;border-radius:50%;border:2px solid #c7d2fe;border-top-color:#4f46e5;animation:spin 1s linear infinite}
     .spinner.show{display:inline-block}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* --- Top Fixes grid & card content --- */
-    .list-tight{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-      margin:0;
-      padding:0;
-      counter-reset:fix;
-    }
+    /* --- Top Fixes --- */
+    .list-tight{ display:grid; grid-template-columns:1fr; gap:10px; margin:0; padding:0; counter-reset:fix; }
     @media (min-width: 900px){ .list-tight{ grid-template-columns:1fr 1fr; } }
     .list-tight li{
-      list-style:none; position:relative;
-      padding:14px 14px 12px 46px;
-      border:1px solid var(--border); border-radius:16px;
-      background:rgba(99,102,241,.04); box-shadow:var(--shadow);
+      list-style:none; position:relative; padding:14px 14px 12px 46px;
+      border:1px solid var(--border); border-radius:16px; background:rgba(99,102,241,.04); box-shadow:var(--shadow);
     }
     .list-tight li::before{
       counter-increment:fix; content: counter(fix);
-      position:absolute; left:12px; top:14px;
-      width:22px; height:22px; border-radius:9999px;
+      position:absolute; left:12px; top:14px; width:22px; height:22px; border-radius:9999px;
       display:grid; place-items:center; font-weight:700; font-size:12px;
       color:var(--muted); background:var(--panel); border:1px solid var(--border);
     }
     .fix-row{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-bottom:6px}
     .fix-title{display:block;font-weight:700;font-size:14px;color:var(--text);letter-spacing:.01em;text-wrap:balance;margin:0}
     .fix-body{color:var(--muted);font-size:14px;line-height:1.6;margin:0}
-    .list-tight li, .fix-body{word-break:keep-all;overflow-wrap:break-word;hyphens:auto;text-wrap:pretty}
     .list-tight li .pill{margin:0}
-    @media (prefers-color-scheme: dark){
-      .list-tight li{ background:rgba(99,102,241,.10); }
-      .list-tight li::before{ background:var(--panel); color:var(--muted); }
-    }
 
-    /* ---- Custom color for Browse + Clear ---- */
-    #btnPick, #btnClear{
-      background:#a9bae136;
-      background:rgba(169,186,225,0.21);
-      border-color:#a9bae136;
-    }
+    /* Browse + Clear */
+    #btnPick, #btnClear{ background:rgba(169,186,225,0.21); border-color:#a9bae136; }
     #btnPick:hover, #btnClear:hover{ filter:brightness(1.05); }
 
-    /* ---- Buy scan buttons: structured label + price chip ---- */
     .buy-btn{
-      background:#19ff0099;
-      border-color:#19ff0099;
-      color:#fff;
-      display:inline-flex;
-      align-items:center;
-      gap:5px;
-      padding:4px 14px;
-      border-radius:14px;
-      font-weight:700;
+      background:#19ff0099; border-color:#19ff0099; color:#fff;
+      display:inline-flex; align-items:center; gap:5px; padding:4px 14px; border-radius:14px; font-weight:700;
       box-shadow:0 8px 18px rgba(25,255,0,.15), inset 0 -2px 0 rgba(0,0,0,.12);
       transition:transform .12s ease, box-shadow .2s ease, filter .15s ease;
     }
-    .buy-btn:hover{ transform:translateY(-1px); box-shadow:0 12px 26px rgba(25,255,0,.22), inset 0 -2px 0 rgba(0,0,0,.12); }
+    .buy-btn:hover{ transform:translateY(-1px); box-shadow:0 12px 26px rgba(25,255,0,.22); }
     .buy-btn:active{ transform:translateY(0); }
     .buy-btn .btn-label{ font-weight:800; letter-spacing:.01em; }
-    .buy-btn .btn-price{
-      font-size:12px; font-weight:800; padding:4px 8px; line-height:1;
-      border-radius:9999px; background:rgba(255,255,255,.18); color:#fff;
-    }
-    @media (prefers-color-scheme: dark){
-      .buy-btn .btn-price{ background:rgba(255,255,255,.22); }
-    }
+    .buy-btn .btn-price{ font-size:12px; font-weight:800; padding:4px 8px; line-height:1; border-radius:9999px; background:rgba(255,255,255,.18); color:#fff; }
+    @media (prefers-color-scheme: dark){ .buy-btn .btn-price{ background:rgba(255,255,255,.22); } }
 
-    /* keep id-based overrides (same color) */
-    #btnBuy1Top, #btnBuy10Top, #btnBuy20Top,
-    #btnBuy1Modal, #btnBuy10Modal, #btnBuy20Modal{
-      background:#19ff0099; border-color:#19ff0099; color:#ffffff; box-shadow:none;
-    }
-    #btnBuy1Top:hover, #btnBuy10Top:hover, #btnBuy20Top:hover,
-    #btnBuy1Modal:hover, #btnBuy10Modal:hover, #btnBuy20Modal:hover{ filter:brightness(1.06); }
-
-    /* ---- Visual status LED (empty by default, solid on success) ---- */
-    .statusled{
-      width:12px; height:12px; border-radius:9999px;
-      background:transparent;                           /* empty */
-      border:2px solid rgba(148,163,184,.55);           /* subtle outline */
-      box-shadow:none;
-      transition:
-        background-color .2s ease,
-        border-color .2s ease,
-        transform .2s ease,
-        opacity .2s ease,
-        box-shadow .25s ease;
-    }
-    .statusled.ready{
-      background:transparent;
-      border-color:rgba(148,163,184,.55);
-    }
-    .statusled.scanning{
-      background:transparent;
-      border-color:#60a5fa;
-      animation:pulse 1.2s infinite;
-      box-shadow:0 0 0 3px rgba(96,165,250,.18);
-    }
-    .statusled.done{
-      background:#10b981;
-      border-color:#10b981;
-      box-shadow:0 0 0 3px rgba(16,185,129,.26), 0 0 12px rgba(16,185,129,.35);
-    }
-    .statusled.error{
-      background:#ef4444;
-      border-color:#ef4444;
-      box-shadow:0 0 0 3px rgba(239,68,68,.22), 0 0 12px rgba(239,68,68,.40);
-    }
+    .statusled{ width:12px; height:12px; border-radius:9999px; background:transparent; border:2px solid rgba(148,163,184,.55); }
+    .statusled.scanning{ border-color:#60a5fa; animation:pulse 1.2s infinite; box-shadow:0 0 0 3px rgba(96,165,250,.18); }
+    .statusled.done{ background:#10b981; border-color:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,.26), 0 0 12px rgba(16,185,129,.35); }
+    .statusled.error{ background:#ef4444; border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.22), 0 0 12px rgba(239,68,68,.40); }
     @keyframes pulse{ 0%{transform:scale(1)} 70%{transform:scale(1.18)} 100%{transform:scale(1)} }
 
-    /* Screen-reader only helper */
-    .sr-only{
-      position:absolute; width:1px; height:1px; padding:0; margin:-1px;
-      overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+    .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+    /* ======== RECOMMENDED JOBS — POLISHED ======== */
+    .jobs-wrap{ margin-top:16px; }
+    .jobs-toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:8px 0 14px; }
+    .jobs-toolbar .seg{
+      display:inline-flex; background:rgba(99,102,241,.08);
+      border:1px solid var(--border); border-radius:9999px; overflow:hidden;
+    }
+    .jobs-toolbar .seg button{
+      padding:8px 12px; border:0; background:transparent; font-size:12px; color:var(--muted); white-space:nowrap;
+    }
+    .jobs-toolbar .seg button.active{ background:linear-gradient(180deg,#4f46e5,#4338ca); color:#fff; }
+
+    .jobs{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap:14px;
     }
 
-    /* ======== MOBILE REFINEMENTS ======== */
-    /* Topbar wraps: badges drop below brand on phones */
-    @media (max-width: 640px){
-      .topbar{flex-wrap:wrap; align-items:flex-start; gap:10px}
-      .badges{order:2; width:100%; flex-wrap:wrap; justify-content:flex-start}
-      .badge{margin-top:4px}
-      .helper{font-size:11px}
+    .job-card{
+      position:relative; display:flex; flex-direction:column; min-height:260px;
+      border-radius:16px; padding:14px; background:var(--panel);
+      border:1px solid var(--border); box-shadow:var(--shadow);
+      transition:transform .15s ease, box-shadow .2s ease;
+      overflow:hidden;
     }
-    /* Hide subtitle on ultra-narrow screens for space */
-    @media (max-width: 360px){
-      .brand .helper{display:none}
+    .job-card::before{
+      content:""; position:absolute; inset:-1px; border-radius:16px; padding:1px;
+      background:linear-gradient(135deg, rgba(99,102,241,.7), rgba(79,70,229,.2), transparent 60%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite:xor; mask-composite: exclude; pointer-events:none;
     }
-    /* Upload row stacks vertically */
-    @media (max-width: 640px){
-      .upload-row{flex-direction:column; align-items:stretch}
-      .file-pill, .file-btn, .dropzone{width:100%}
+    .job-card:hover{ transform:translateY(-2px); box-shadow:0 12px 32px rgba(2,6,23,.18); }
+
+    /* Header: title full width, pills under title */
+    .job-head{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+      width:100%;
     }
-    /* Actions layout on small screens */
-    @media (max-width: 640px){
-      .actions .spacer{display:none}
-      .pricing-buttons{width:100%; flex-wrap:wrap}
-      .pricing-buttons .buy-btn{flex:1 1 110px; justify-content:center}
-      .actions > .btn-primary, .actions > .btn-secondary{flex:1 1 140px}
+    .job-title{
+      font-weight:800;
+      font-size:15px;
+      margin:0;
+      color:var(--text);
+      letter-spacing:.01em;
+      width:100%;
+      line-height:1.25;
+      word-break:break-word;
     }
-    /* KPI & metrics grids collapse progressively */
-    @media (max-width: 820px){ .kpi-grid{grid-template-columns:repeat(2,1fr)} }
-    @media (max-width: 460px){ .kpi-grid{grid-template-columns:1fr} .metrics{grid-template-columns:1fr} }
-    /* Smaller donut on phones */
-    @media (max-width: 480px){
-      .donut{width:56px; height:56px}
-      .donut .center{font-size:14px}
-      .results-head{align-items:flex-start}
+    .job-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      font-size:12px;
+      color:var(--muted);
+      justify-content:flex-start;
+      margin-top:2px;
     }
+    .job-meta .badge-mini{
+      padding:4px 8px;
+      border-radius:9999px;
+      border:1px solid var(--border);
+      background:var(--panel);
+    }
+
+    .chip{ font-size:11px; font-weight:800; padding:6px 8px; border-radius:9999px; border:1px solid var(--border); }
+    .chip.ok{ background:rgba(16,185,129,.1); color:#047857; border-color:rgba(16,185,129,.25) }
+    .chip.mid{ background:rgba(245,158,11,.1); color:#92400e; border-color:rgba(245,158,11,.25) }
+    .chip.bad{ background:rgba(239,68,68,.12); color:#7f1d1d; border-color:rgba(239,68,68,.25) }
+    .chip.mini{ padding:4px 8px; font-size:10.5px; }
+
+    .job-line{
+      font-size:13px; color:var(--muted); margin:6px 0 4px;
+      display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .job-tags{ display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 2px; }
+    .job-tags .pill{ font-size:11px; padding:4px 8px }
+
+    .job-footer{ margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+
+    .job-links{
+      display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; min-width:0;
+    }
+    @media (max-width: 680px){ .job-links{ grid-template-columns:1fr; } }
+
+    .job-btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      font-weight:700; font-size:12px; padding:8px 10px; border-radius:10px; border:1px solid var(--border);
+      background:var(--panel); color:var(--text); text-decoration:none; min-height:36px;
+    }
+    .job-btn.primary{ background:linear-gradient(180deg,#4f46e5,#4338ca); border-color:#4f46e5; color:#fff; }
+
+    /* Logo-only variant for brand buttons */
+    .job-btn.icon{ padding:8px; min-height:44px; }
+    .job-btn.icon svg{ width:22px; height:22px; display:block; }
+
+    .job-aux{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+
+    .heart{
+      width:34px; height:34px; border-radius:10px; display:grid; place-items:center; border:1px solid var(--border);
+      background:var(--panel); cursor:pointer; transition:transform .12s ease;
+    }
+    .heart.active{ background:rgba(236,72,153,.18); border-color:rgba(236,72,153,.35); }
+    .heart:active{ transform:scale(.96); }
+
+    .copyq{ font-size:12px; margin-top:8px; }
+    .copyq button{ border:1px dashed var(--border); background:transparent; padding:6px 10px; border-radius:8px; font-size:11px; }
+
+    .match{
+      position:relative; width:44px; height:44px; border-radius:9999px;
+      background: conic-gradient(#22c55e var(--p,0%), rgba(148,163,184,.25) 0);
+      display:grid; place-items:center; font-weight:800; color:var(--text);
+      border:1px solid var(--border);
+    }
+    .match span{ font-size:12px; }
+
+    .load-more{ margin-top:12px; display:flex; justify-content:center; }
   </style>
 
-  <!-- PDF.js + Mammoth for client-side parsing -->
+  <!-- PDF.js + Mammoth -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
   <script>window.pdfjsLib && (pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js");</script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js" defer></script>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HC1DSZ3RED"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-HC1DSZ3RED');
-</script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HC1DSZ3RED"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date()); gtag('config', 'G-HC1DSZ3RED');
+  </script>
 </head>
 <body>
   <div class="container">
@@ -353,7 +339,6 @@
         <h2 class="card-title">Check to see if your resume is industry ready</h2>
         <p class="card-sub">Paste your resume and the job description. Or upload a file — we’ll extract the text and score it.</p>
 
-        <!-- Upload row -->
         <div class="upload-row">
           <label class="file-pill" style="cursor:pointer">
             <input id="resumeFile" type="file" accept=".pdf,.docx,.txt,.rtf" />
@@ -362,7 +347,6 @@
           <button id="btnPick" class="file-btn" type="button">Browse</button>
           <div id="dropzone" class="dropzone">or drag & drop your resume here</div>
 
-          <!-- Visual status (LED + spinner). The text is sr-only for a11y. -->
           <span class="helper" id="scanStatus" style="display:flex;align-items:center;gap:8px">
             <span class="statusled ready" id="statusLed" aria-hidden="true"></span>
             <span class="spinner" id="scanSpinner" aria-hidden="true"></span>
@@ -415,6 +399,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         </div>
       </section>
     </main>
+
     <footer style="margin-top:40px;padding:20px 0;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--muted)">
       <p style="margin:6px 0">
         <a href="about.html" style="color:var(--accent);text-decoration:none;margin:0 10px">About</a> •
@@ -422,7 +407,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       </p>
       <p style="margin:6px 0">&copy; 2025 Rezzy Rate. All rights reserved.</p>
     </footer>
-
   </div>
 
   <div id="paywall" class="overlay" aria-modal="true" role="dialog">
@@ -450,30 +434,19 @@ const PRICES = { single: 0.49, pack10: 3.99, pack20: 5.99 };
 const fmt = n => `$${n.toFixed(2)}`;
 function updatePricingUI(){
   const p1 = fmt(PRICES.single), p10 = fmt(PRICES.pack10), p20 = fmt(PRICES.pack20);
-
   const lead = document.getElementById('paywallLeadText');
   if (lead) lead.innerHTML = `You used your free daily scan. Buy additional scans for <strong>${p1}</strong> or save with a pack.`;
-
   const setBtn = (id, qty, price) => {
     const el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = `<span class="btn-label">${qty} ${qty===1?'Scan':'Scans'}</span><span class="btn-price">${price}</span>`;
   };
-
-  // Top buttons
-  setBtn('btnBuy1Top', 1,  p1);
-  setBtn('btnBuy10Top',10, p10);
-  setBtn('btnBuy20Top',20, p20);
-
-  // Modal buttons
-  setBtn('btnBuy1Modal', 1,  p1);
-  setBtn('btnBuy10Modal',10, p10);
-  setBtn('btnBuy20Modal',20, p20);
+  setBtn('btnBuy1Top', 1,  p1); setBtn('btnBuy10Top',10, p10); setBtn('btnBuy20Top',20, p20);
+  setBtn('btnBuy1Modal', 1,  p1); setBtn('btnBuy10Modal',10, p10); setBtn('btnBuy20Modal',20, p20);
 }
 
 /* ===== Metering & Paywall ===== */
-const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_credits', unlimitedUntil:'rc_unlimited_until' };
-
+const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_credits', unlimitedUntil:'rc_unlimited_until', savedJobs:'rc_saved_jobs' };
 (function handleUnlimitedFlag(){
   const params = new URLSearchParams(location.search);
   const hours = 48;
@@ -516,7 +489,7 @@ function canConsumeScan(){
 }
 function consumeScan(mode){ if (mode==='free') writeMeter({freeConsumed:1}); else if (mode==='credit') writeMeter({creditConsumed:1}); }
 
-/* ===== Heuristic scoring helpers ===== */
+/* ===== Heuristic scoring ===== */
 const STOPWORDS = new Set(["the","a","an","and","or","but","if","then","else","of","to","in","for","on","at","with","by","from","as","that","this","these","those","is","are","was","were","be","been","being","it","its","your","you","i","me","my","we","our","they","their"]);
 const SECTION_HINTS = ["experience","education","skills","projects","certifications","summary","contact","awards"];
 const normalize = t => (t||"").replace(/\u2022/g,"-").replace(/[\t\r]/g," ").trim();
@@ -576,7 +549,7 @@ const pct = (val,max)=> Math.round((max?val/max:0)*100);
 function classifyScore(total){ if(total>=85) return "Excellent"; if(total>=70) return "Strong"; if(total>=55) return "Fair"; return "Needs work"; }
 function gradeReadability(r){ if(r>=8) return "Very easy to skim"; if(r>=6) return "Plain & readable"; if(r>=5) return "Somewhat dense"; if(r>=3) return "Hard to read"; return "Very hard to read"; }
 
-/* ---------- Friendlier, human-sounding recommendations ---------- */
+/* ---------- Top Fixes ---------- */
 function friendlyFixes(result, fre){
   const tips = [];
   const present=(result.presentKeywords||[]);
@@ -584,7 +557,6 @@ function friendlyFixes(result, fre){
   const totalKW = result.totalKeywords || (present.length + missing.length);
   const perKw = totalKW ? Math.max(1, Math.round(40/totalKW)) : 0;
 
-  /* UPDATED: blue urgency pills */
   const tag = (p) =>
     p === 'high' ? '<span class="pill p-high">Quick win</span>' :
     p === 'med'  ? '<span class="pill p-med">Worth doing</span>' :
@@ -598,64 +570,304 @@ function friendlyFixes(result, fre){
 
   if (missing.length){
     const show = missing.slice(0,10);
-    addTip('high','Add a few missing keywords',
-      `Sprinkle in terms the job uses — ${show.join(', ')}. Each one should bump your ATS score by about +${perKw}.`);
+    addTip('high','Add a few missing keywords', `Sprinkle in terms the job uses — ${show.join(', ')}. Each one should bump your ATS score by about +${perKw}.`);
   }
   if (result.profDetails.numbers < 3){
-    addTip('high','Show the impact with numbers',
-      `You’ve got ${result.profDetails.numbers}. Aim for 3–5 clear wins like “cut processing time 30%,” “saved $50K,” or “reduced variance 18%.”`);
+    addTip('high','Show the impact with numbers', `You’ve got ${result.profDetails.numbers}. Aim for 3–5 clear wins like “cut processing time 30%,” “saved $50K,” or “reduced variance 18%.”`);
   }
   const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
   if (missingSections.length){
-    addTip('med','Fill the missing sections',
-      `Add ${missingSections.join(', ')} so recruiters (and ATS) can find the essentials fast.`);
+    addTip('med','Fill the missing sections', `Add ${missingSections.join(', ')} so recruiters (and ATS) can find the essentials fast.`);
   }
   if (!result.sectionPresence.summary){
-    addTip('med','Write a short summary',
-      `Two–three lines: your title, core skills, and one impact line. Example: “Business Data Analyst • SQL, Python, Tableau • automate reporting and forecast accuracy.”`);
+    addTip('med','Write a short summary', `Two–three lines: your title, core skills, and one impact line. Example: “Business Data Analyst • SQL, Python, Tableau • automate reporting and forecast accuracy.”`);
   }
   if (result.profDetails.passive > 3){
-    addTip('med','Use active verbs',
-      `I spotted ${result.profDetails.passive} passive phrases. Swap “was built/were automated” for “Built,” “Automated,” or “Forecasted.”`);
+    addTip('med','Use active verbs', `I spotted ${result.profDetails.passive} passive phrases. Swap “was built/were automated” for “Built,” “Automated,” or “Forecasted.”`);
   }
   if (result.profDetails.bullets < 5){
-    addTip('med','Add a few more bullets',
-      `You have ${result.profDetails.bullets}. Aim ~5–7 bullets for recent roles and ~3–5 for older ones.`);
+    addTip('med','Add a few more bullets', `You have ${result.profDetails.bullets}. Aim ~5–7 bullets for recent roles and ~3–5 for older ones.`);
   }
-  if (result.breakdown.readability <= 5 || fre < 55){
-    addTip('med','Smooth the reading flow',
-      `Your Flesch score is ${fre}. Keep sentences to ~12–18 words, split long lines into bullets, and swap heavy jargon for plain terms.`);
+  if (result.breakdown.readability <= 5 || fleschReadingEase < 55){
+    addTip('med','Smooth the reading flow', `Your Flesch score is ${fleschReadingEase}. Keep sentences to ~12–18 words, split long lines into bullets, and swap heavy jargon for plain terms.`);
   }
   if (result.profDetails.longLines > 0){
-    addTip('low','Break up long lines',
-      `${result.profDetails.longLines} line(s) are quite long. Keep bullets under ~160 characters so they’re easy to scan.`);
+    addTip('low','Break up long lines', `${result.profDetails.longLines} line(s) are quite long. Keep bullets under ~160 characters so they’re easy to scan.`);
   }
   if (result.profDetails.capsWords > 6){
-    addTip('low','Dial back ALL CAPS',
-      `${result.profDetails.capsWords} ALL-CAPS words found. Bold or positioning usually works better than shouting.`);
+    addTip('low','Dial back ALL CAPS', `${result.profDetails.capsWords} ALL-CAPS words found. Bold or positioning usually works better than shouting.`);
   }
   if (result.profDetails.exclam > 0){
-    addTip('low','Skip exclamation marks',
-      `You don’t need them — the results can carry the energy on their own.`);
+    addTip('low','Skip exclamation marks', `You don’t need them — the results can carry the energy on their own.`);
   }
   if (result.profDetails.words < 300){
-    addTip('low','Add a bit more substance',
-      `${result.profDetails.words} words now. A solid one-pager usually lands around 400–700 words.`);
+    addTip('low','Add a bit more substance', `${result.profDetails.words} words now. A solid one-pager usually lands around 400–700 words.`);
   } else if (result.profDetails.words > 950){
-    addTip('low','Tighten the length',
-      `${result.profDetails.words} words total. Trim to a page unless you’ve got 10+ years to showcase.`);
+    addTip('low','Tighten the length', `${result.profDetails.words} words total. Trim to a page unless you’ve got 10+ years to showcase.`);
   }
-  addTip('low','Keep it ATS-friendly',
-    `Use a single column with standard headings, avoid text inside images/tables, and export as a text-based PDF.`);
+  addTip('low','Keep it ATS-friendly', `Use a single column with standard headings, avoid text inside images/tables, and export as a text-based PDF.`);
   if (present.length && missing.length){
-    addTip('low','Match the job’s phrasing',
-      `When it makes sense, mirror the wording (e.g., “data pipelines” vs “pipelines of data”) so scanners don’t miss it.`);
+    addTip('low','Match the job’s phrasing', `When it makes sense, mirror the wording (e.g., “data pipelines” vs “pipelines of data”) so scanners don’t miss it.`);
   }
-
   return tips.slice(0,12);
 }
 
-/* Donut SVG */
+/* ========== Jobs data (expanded to ~50 via templates) ========== */
+const CANON_SKILLS = ["sql","python","tableau","power bi","excel","etl","forecasting","dashboard","dashboards","pipeline","pipelines","bi","powerbi","power"];
+
+const ROLE_TEMPLATES = [
+  {title:"Data Analyst", bucket:"Data"},
+  {title:"Senior Data Analyst", bucket:"Data"},
+  {title:"Lead Data Analyst", bucket:"Data"},
+  {title:"Business Data Analyst", bucket:"Data"},
+  {title:"Business Intelligence Analyst", bucket:"BI"},
+  {title:"Reporting Analyst (SQL/Tableau)", bucket:"BI"},
+  {title:"Analytics Engineer", bucket:"Eng"},
+  {title:"Junior Analytics Engineer", bucket:"Eng"},
+  {title:"Product Analyst (Data)", bucket:"Product"},
+  {title:"Growth / Marketing Analyst", bucket:"Marketing"},
+  {title:"Financial Data Analyst", bucket:"Finance"},
+  {title:"Revenue / FP&A Analyst", bucket:"Finance"},
+  {title:"Operations Data Analyst", bucket:"Ops"},
+  {title:"Supply Chain Data Analyst", bucket:"Ops"}
+];
+const SENIORITY_BY_TITLE = (t)=> /lead|senior/i.test(t) ? "Senior" : /junior/i.test(t) ? "Entry" : "Mid";
+
+function pickLocationFromResume(t){
+  const m = (t.match(/[A-Za-z .'-]+,\s*[A-Z]{2}/) || [])[0];
+  return m ? m.replace(/\s+/g,' ').trim() : "Remote";
+}
+function topSkillsFromResume(t){
+  const low = t.toLowerCase();
+  const found = CANON_SKILLS.filter(s => low.includes(s));
+  const pretty = s => s
+    .replace('power bi','Power BI').replace('powerbi','Power BI')
+    .replace(/^sql$/i,'SQL').replace(/^etl$/i,'ETL').replace(/^bi$/i,'BI')
+    .replace(/^python$/i,'Python').replace(/^excel$/i,'Excel').replace(/^tableau$/i,'Tableau')
+    .replace(/^pipeline(s)?$/i,'Pipelines').replace(/^dashboard(s)?$/i,'Dashboards')
+    .replace(/^forecasting$/i,'Forecasting').replace(/^power$/i,'Power BI');
+  return Array.from(new Set(found.map(pretty)));
+}
+function estimateSalary(role, loc){
+  const base = (()=> {
+    if (/analytics engineer/i.test(role)) return [105,145];
+    if (/lead|senior/i.test(role)) return [100,135];
+    if (/product analyst/i.test(role)) return [95,130];
+    if (/fp&a|revenue/i.test(role)) return [90,120];
+    if (/financial/i.test(role)) return [88,115];
+    if (/marketing|growth/i.test(role)) return [85,110];
+    return [85,115];
+  })();
+  return loc.toLowerCase().includes('remote') ? base : [base[0]-2, base[1]-2];
+}
+function buildSearchLinks(role, loc, skills){
+  const q = encodeURIComponent(`${role} ${skills.slice(0,3).join(' ')}`.trim());
+  const l = encodeURIComponent(loc);
+  return {
+    linkedin:`https://www.linkedin.com/jobs/search/?keywords=${q}&location=${l}`,
+    indeed:`https://www.indeed.com/jobs?q=${q}&l=${l}`,
+    google:`https://www.google.com/search?q=${q}+jobs+in+${l}`
+  };
+}
+function roleLine(skills){
+  const s = skills.slice(0,3);
+  const map = {
+    "SQL":"own SQL pipelines", "Python":"automate reporting in Python",
+    "Tableau":"ship Tableau dashboards", "Power BI":"build Power BI reports",
+    "Forecasting":"improve forecasting accuracy", "ETL":"maintain ETL workflows",
+    "Pipelines":"scale data pipelines", "Dashboards":"design executive dashboards", "Excel":"analyze in Excel"
+  };
+  const bits = s.map(x=>map[x]||`use ${x}`);
+  return bits.slice(0,2).join(", ") + (bits[2]?`, ${bits[2]}`:"");
+}
+function extendedLine(){
+  return " define KPIs, set up quality checks, and present insights to stakeholders to drive decisions.";
+}
+function workMode(loc){ return loc.toLowerCase().includes('remote') ? "Remote" : "Hybrid"; }
+function matchScoreFor(role, skills, presentKeywords){
+  const roleTokens = role.toLowerCase().split(/[^a-z]+/g);
+  const skillSet = new Set(skills.map(s=>s.toLowerCase()));
+  (presentKeywords||[]).forEach(k=>skillSet.add((k||"").toLowerCase()));
+  const hits = roleTokens.filter(t=>skillSet.has(t) || ["data","analyst","analytics","bi","sql","python"].includes(t)).length;
+  const base = 65 + Math.min(25, skills.length*4) + hits*2;
+  return Math.max(60, Math.min(96, base));
+}
+function fmtSalary([lo,hi]){ return `$${lo}k–$${hi}k`; }
+
+function expandRoles(){
+  const flavors = ["", " (SQL/Tableau)", " (Python/ETL)", " (Power BI)"];
+  const out = [];
+  ROLE_TEMPLATES.forEach(rt=>{
+    flavors.forEach(f=>{
+      const title = (rt.title + f).replace(/\s+/g,' ').trim();
+      out.push({ title, bucket: rt.bucket, seniority: SENIORITY_BY_TITLE(title) });
+    });
+  });
+  return out.slice(0, 60);
+}
+function recommendJobs(resumeText, presentKeywords=[]){
+  const loc = pickLocationFromResume(resumeText);
+  const skills = topSkillsFromResume(resumeText);
+  const tags = Array.from(new Set([...(skills||[]), ...(presentKeywords||[]).slice(0,3).map(k=>k[0]?.toUpperCase()+k.slice(1))])).slice(0,6);
+
+  const jobs = expandRoles().map(meta=>{
+    const links = buildSearchLinks(meta.title, loc, skills);
+    const salary = estimateSalary(meta.title, loc);
+    const score = matchScoreFor(meta.title, skills, presentKeywords);
+    const mode = workMode(loc);
+    const line = roleLine(skills);
+    return { ...meta, location: loc, tags, links, salary, score, mode, line };
+  });
+
+  return jobs.sort((a,b)=>b.score-a.score).slice(0,50);
+}
+
+/* ========== Rendering, filters, and pagination ========== */
+let JOB_FILTER = { mode:"any", bucket:"any" };
+const JOBS_STATE = { all:[], page:0, pageSize:12 };
+
+function jobsToolbarHTML(){
+  const btn = (label, key, val)=>`<button type="button" data-key="${key}" data-val="${val}">${label}</button>`;
+  return `
+    <div class="jobs-toolbar">
+      <div class="seg" id="modeSeg">
+        ${btn('All modes','mode','any')}${btn('Remote','mode','Remote')}${btn('Hybrid','mode','Hybrid')}${btn('On-site','mode','On-site')}
+      </div>
+      <div class="seg" id="bucketSeg">
+        ${btn('All roles','bucket','any')}${btn('Data','bucket','Data')}${btn('BI','bucket','BI')}${btn('Eng','bucket','Eng')}${btn('Finance','bucket','Finance')}${btn('Ops','bucket','Ops')}${btn('Product','bucket','Product')}${btn('Marketing','bucket','Marketing')}
+      </div>
+      <span class="helper">Tip: toggle filters to refine your open searches.</span>
+    </div>`;
+}
+
+/* ===== Brand SVGs for logo-only buttons ===== */
+function brandSVG(name){
+  if(name==='linkedin'){
+    return `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="20" rx="4" fill="currentColor" opacity=".12"/>
+        <circle cx="7.25" cy="8" r="1.2" fill="currentColor"/>
+        <rect x="6.2" y="10" width="2.2" height="8" rx="1.1" fill="currentColor"/>
+        <path d="M11.2 10.8h2v1c.45-.7 1.2-1.2 2.3-1.2 1.7 0 2.9 1.1 2.9 3.1V18h-2.2v-3.8c0-1-.6-1.6-1.5-1.6s-1.6.7-1.6 1.7V18h-2.2v-7.2z" fill="currentColor"/>
+      </svg>`;
+  }
+  if(name==='indeed'){
+    return `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M17.6 7.6c-2-2-5.2-2-7.2 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <circle cx="12" cy="6.6" r="1" fill="currentColor"/>
+        <rect x="11" y="9" width="2" height="9" rx="1" fill="currentColor"/>
+      </svg>`;
+  }
+  /* google */
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 12.2c0-4.8-3.6-8.2-8.3-8.2-4.8 0-8.7 3.8-8.7 8.5s3.9 8.5 8.7 8.5c2.3 0 4.2-.8 5.5-2.1v-4.4h-5.7v2.2h3.4a5.3 5.3 0 0 1-3.2 1c-3.3 0-6-2.6-6-5.8s2.7-5.8 6-5.8c3 0 5.2 1.8 5.7 4.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+}
+
+function buildJobCardHTML(j){
+  const score = j.score|0;
+  const chipClass = score>=85?'ok': score>=75?'mid':'bad';
+  const saved = new Set(JSON.parse(localStorage.getItem(LS_KEYS.savedJobs)||'[]'));
+  const savedOn = saved.has(j.title);
+
+  return `
+    <div class="job-card" data-mode="${j.mode}" data-bucket="${j.bucket}">
+      <div class="job-head">
+        <h4 class="job-title">${j.title}</h4>
+        <div class="job-meta">
+          <span class="badge-mini">${j.location}</span>
+          <span class="badge-mini">${j.seniority}</span>
+          <span class="chip mini" title="Estimated base salary">${fmtSalary(j.salary)}</span>
+          <span class="chip mini" title="Work mode">${j.mode}</span>
+        </div>
+      </div>
+
+      <div class="job-line">You’d likely ${j.line};${extendedLine()}</div>
+      <div class="job-tags">${(j.tags||[]).map(t=>`<span class="pill">${t}</span>`).join('')}</div>
+
+      <div class="job-footer">
+        <div class="job-links">
+          <a class="job-btn primary icon" href="${j.links.linkedin}" target="_blank" rel="noopener" aria-label="LinkedIn">
+            ${brandSVG('linkedin')}<span class="sr-only">LinkedIn</span>
+          </a>
+          <a class="job-btn icon" href="${j.links.indeed}"  target="_blank" rel="noopener" aria-label="Indeed">
+            ${brandSVG('indeed')}<span class="sr-only">Indeed</span>
+          </a>
+          <a class="job-btn icon" href="${j.links.google}"  target="_blank" rel="noopener" aria-label="Google Jobs">
+            ${brandSVG('google')}<span class="sr-only">Google Jobs</span>
+          </a>
+        </div>
+        <div class="job-aux"></div>
+      </div>
+    </div>`;
+}
+
+function jobsSectionHTML(jobs){
+  JOBS_STATE.all = jobs;
+  JOBS_STATE.page = 0;
+
+  return `
+    <div class="jobs-wrap">
+      <h3 class="card-title" style="margin:14px 0 6px">Top Recommended Jobs</h3>
+      <p class="card-sub" style="margin-top:0">Personalized by your resume’s skills and location. These open searches lead to live listings.</p>
+      ${jobsToolbarHTML()}
+      <div class="jobs" id="jobsGrid"></div>
+      <div class="load-more"><button id="loadMoreBtn" class="btn-secondary">Load more</button></div>
+    </div>`;
+}
+
+function renderJobsGrid(){
+  const grid = document.getElementById('jobsGrid');
+  if (!grid) return;
+
+  const filtered = JOBS_STATE.all.filter(j =>
+    (JOB_FILTER.mode==='any'   || j.mode===JOB_FILTER.mode) &&
+    (JOB_FILTER.bucket==='any' || j.bucket===JOB_FILTER.bucket)
+  );
+
+  const start = 0;
+  const end = Math.min(filtered.length, (JOBS_STATE.page+1)*JOBS_STATE.pageSize);
+  grid.innerHTML = filtered.slice(start, end).map(buildJobCardHTML).join('');
+
+  const btn = document.getElementById('loadMoreBtn');
+  if (btn){
+    btn.style.display = end < filtered.length ? '' : 'none';
+    btn.onclick = () => { JOBS_STATE.page++; renderJobsGrid(); };
+  }
+}
+function wireToolbar(){
+  const bindSeg = (segId, key) => {
+    const seg = document.getElementById(segId);
+    if (!seg) return;
+    seg.querySelectorAll('button').forEach(btn=>{
+      const v = btn.getAttribute('data-val');
+      const setActive = () => {
+        seg.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+      if ((JOB_FILTER[key]==='any' && v==='any') || JOB_FILTER[key]===v) setActive();
+      btn.onclick = () => { JOB_FILTER[key]=v; setActive(); JOBS_STATE.page = 0; renderJobsGrid(); };
+    });
+  };
+  bindSeg('modeSeg','mode');
+  bindSeg('bucketSeg','bucket');
+}
+function toggleSaveJob(title, el){
+  const saved = new Set(JSON.parse(localStorage.getItem(LS_KEYS.savedJobs)||'[]'));
+  if (saved.has(title)){ saved.delete(title); el.classList.remove('active'); }
+  else { saved.add(title); el.classList.add('active'); }
+  localStorage.setItem(LS_KEYS.savedJobs, JSON.stringify([...saved]));
+}
+function copySearch(roleEncoded, locEncoded){
+  const txt = decodeURIComponent(roleEncoded) + " jobs in " + decodeURIComponent(locEncoded);
+  navigator.clipboard?.writeText(txt);
+  alert("Copied: " + txt);
+}
+function applyJobFilters(){ renderJobsGrid(); }
+
+/* Donut SVG for main score */
 function donutSVG(percent,label){
   const r=28, c=2*Math.PI*r, off=c*(1-percent/100);
   const gid = `g${Math.random().toString(36).slice(2,7)}`;
@@ -675,7 +887,7 @@ const tipHTML = inner => `
     <span class="tip-bubble" role="tooltip">${inner}<span class="arrow" aria-hidden="true"></span></span>
   </span>`;
 
-/* ===== UI: analyze() renders the results ===== */
+/* ===== Render results ===== */
 function analyze(){
   const gate = canConsumeScan();
   if (!gate.ok){ openPaywall(); return; }
@@ -693,35 +905,13 @@ function analyze(){
   const covPct = Math.round((result.coverage||0)*100);
   const fre = fleschReadingEase(resume);
 
-  const tipOverall = tipHTML(
-    `<b>Overall (0–100)</b><br>
-     Weighted sum capped at 100:
-     <ul><li>ATS keywords: 0–40</li><li>Professionalism: 0–35</li><li>Structure: 0–15</li><li>Readability: 0–10</li></ul>
-     Each point equals 1% of the ring score.`);
-
-  const tipATS = tipHTML(
-    `<b>ATS keywords (0–40)</b><br>
-     ATS = Applicant Tracking System (resume scanners).
-     <ul><li>Score = <b>40 × coverage</b> (matched ÷ total)</li><li>You matched <b>${present.length}</b> of <b>${totalKW}</b> keywords (${covPct}%).</li></ul>`);
-
-  const tipPRO = tipHTML(
-    `<b>Professionalism (0–35)</b><br>
-     Bonuses for good writing; deductions for noisy patterns.
-     <ul><li>Bonuses: bullet use, metric counts, healthy length</li><li>Penalties: exclamation marks, SHOUTING, passive voice, very long lines</li><li>Detected: bullets ${result.profDetails.bullets}, numbers ${result.profDetails.numbers}, passive ${result.profDetails.passive}, ! ${result.profDetails.exclam}, long lines ${result.profDetails.longLines}, CAPS ${result.profDetails.capsWords}</li></ul>`);
-
+  const tipOverall = tipHTML(`<b>Overall (0–100)</b><br>ATS 0–40, Professionalism 0–35, Structure 0–15, Readability 0–10.`);
+  const tipATS = tipHTML(`<b>ATS keywords (0–40)</b><br>Score = 40 × coverage. You matched <b>${present.length}</b> of <b>${totalKW}</b> (${covPct}%).`);
+  const tipPRO = tipHTML(`<b>Professionalism (0–35)</b><br>Bonuses: bullets, metrics, length. Penalties: shouting, passive voice, long lines.`);
   const presentSections = Object.entries(result.sectionPresence).filter(([,v])=>v).map(([k])=>k);
   const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
-  const tipSTRUCT = tipHTML(
-    `<b>Structure (0–15)</b><br>
-     <div class="helper" style="margin-top:4px">We look for: experience, education, skills, projects, certifications, summary, contact, awards.</div>
-     <ul><li>Present: ${presentSections.join(', ') || '—'}</li><li>Missing: ${missingSections.join(', ') || '—'}</li></ul>`);
-
-  const tipREAD = tipHTML(
-    `<b>Readability (0–10)</b><br>
-     Based on Flesch Reading Ease mapped to 0–10 (higher = easier).
-     <ul><li>Your Flesch score: <b>${fre}</b></li></ul>`);
-
-  const labelTips = { ATS: tipATS, Professionalism: tipPRO, Structure: tipSTRUCT, Readability: tipREAD };
+  const tipSTRUCT = tipHTML(`<b>Structure (0–15)</b><br>Present: ${presentSections.join(', ')||'—'}<br>Missing: ${missingSections.join(', ')||'—'}`);
+  const tipREAD = tipHTML(`<b>Readability (0–10)</b><br>Flesch: <b>${fre}</b>.`);
 
   const breakdown=[
     {label:'ATS', val:result.breakdown.ats_keywords, max:40},
@@ -733,13 +923,11 @@ function analyze(){
     <div class="kpi">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <span class="helper" style="letter-spacing:.02em;display:flex;align-items:center;gap:6px">
-          ${d.label} ${labelTips[d.label]}
+          ${d.label} ${({'ATS':tipATS,'Professionalism':tipPRO,'Structure':tipSTRUCT,'Readability':tipREAD})[d.label]}
         </span>
         <b>${d.val}/${d.max}</b>
       </div>
-      <div class="bar" style="margin-top:6px">
-        <div class="bar-fill" style="width:${pct(d.val,d.max)}%"></div>
-      </div>
+      <div class="bar" style="margin-top:6px"><div class="bar-fill" style="width:${pct(d.val,d.max)}%"></div></div>
     </div>
   `).join('');
 
@@ -748,6 +936,9 @@ function analyze(){
 
   const fixes = friendlyFixes(result, fre).join('') || '<li><div class="fix-row"><span class="pill p-low">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Consider tailoring a couple bullets to the job post.</p></li>';
 
+  const jobs = recommendJobs(resume, result.presentKeywords);
+  const jobsHTML = jobsSectionHTML(jobs);
+
   const out=document.getElementById('results');
   out.innerHTML=`
     <div>
@@ -755,9 +946,7 @@ function analyze(){
         <div class="score-block">
           <div style="position:relative">${donutSVG(result.total, `${result.total}`)}</div>
           <div>
-            <h2 class="card-title" style="margin:0;display:flex;align-items:center;gap:6px">
-              Overall Score ${tipOverall}
-            </h2>
+            <h2 class="card-title" style="margin:0;display:flex;align-items:center;gap:6px">Overall Score ${tipOverall}</h2>
             <div class="rating">${classifyScore(result.total)}</div>
           </div>
         </div>
@@ -773,8 +962,7 @@ function analyze(){
       <div style="margin-top:12px">
         <h3 class="card-title" style="margin:10px 0 6px">Keyword Coverage</h3>
         <div class="stack" aria-label="Keyword coverage stacked bar">
-          <div class="ok" style="width:${covPct}%"></div>
-          <div class="gap" style="width:${100-covPct}%"></div>
+          <div class="ok" style="width:${covPct}%"></div><div class="gap" style="width:${100-covPct}%"></div>
         </div>
         <div class="metrics">
           <div class="metric"><b>${present.length}</b> matched</div>
@@ -783,7 +971,7 @@ function analyze(){
         </div>
       </div>
 
-     <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
+      <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
       <div class="section-pills">${sectionPills}</div>
 
       <h3 class="card-title" style="margin:14px 0 6px">Extracted from Job Description</h3>
@@ -795,10 +983,6 @@ function analyze(){
       <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
       <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
 
-
-
- 
-
       <h3 class="card-title" style="margin:14px 0 6px">Readability & Tone</h3>
       <p class="helper" style="margin:0 0 8px">
         ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${result.profDetails.bullets}</b>,
@@ -807,7 +991,14 @@ function analyze(){
 
       <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
       <ul class="list-tight">${fixes}</ul>
+
+      <!-- Jobs section -->
+      ${jobsHTML}
     </div>`;
+
+  // wire up toolbar + first page render
+  wireToolbar();
+  renderJobsGrid();
 }
 
 /* ===== Upload handling ===== */
@@ -818,30 +1009,19 @@ const scanSpinner = document.getElementById('scanSpinner');
 const scanText = document.getElementById('scanText');
 document.getElementById('btnPick').addEventListener('click', ()=> fileInput.click());
 fileInput.addEventListener('change', e => { if (e.target.files?.[0]) handleResumeFile(e.target.files[0]); });
-
 ['dragenter','dragover'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add('drag'); }));
 ['dragleave','drop'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove('drag'); }));
-dropzone.addEventListener('drop', e=>{
-  const f = e.dataTransfer?.files?.[0];
-  if (f) handleResumeFile(f);
-});
+dropzone.addEventListener('drop', e=>{ const f = e.dataTransfer?.files?.[0]; if (f) handleResumeFile(f); });
 
-/* Updated to drive the LED states based on your existing calls */
 function setScanStatus(msg, spinning=false){
   const led = document.getElementById('statusLed');
   const spin = document.getElementById('scanSpinner');
   const txt  = document.getElementById('scanText');
-
   const m = String(msg||'').toLowerCase();
-  let state = 'ready';
-  if (spinning) state = 'scanning';
-  else if (/(error|unsupported|fail)/.test(m)) state = 'error';
-  else if (/(extracted|success|done|✓|scored)/.test(m)) state = 'done';
-
   led.classList.remove('ready','scanning','done','error');
-  led.classList.add(state);
-  spin.classList.toggle('show', !!spinning);
-  txt.textContent = msg; // keep for screen readers (hidden)
+  if (spinning){ led.classList.add('scanning'); spin.classList.add('show'); }
+  else { spin.classList.remove('show'); if (/(error|unsupported|fail)/.test(m)) led.classList.add('error'); else if (/(extracted|success|done|✓|scored)/.test(m)) led.classList.add('done'); else led.classList.add('ready'); }
+  txt.textContent = msg;
 }
 
 async function handleResumeFile(file){
@@ -850,38 +1030,28 @@ async function handleResumeFile(file){
   try{
     const ext = file.name.split('.').pop().toLowerCase();
     let text = '';
-    if (ext === 'pdf'){
-      text = await extractTextFromPDF(file);
-    } else if (ext === 'docx'){
-      text = await extractTextFromDOCX(file);
-    } else if (ext === 'txt'){
-      text = await file.text();
-    } else if (ext === 'rtf'){
+    if (ext === 'pdf'){ text = await extractTextFromPDF(file); }
+    else if (ext === 'docx'){ text = await extractTextFromDOCX(file); }
+    else if (ext === 'txt'){ text = await file.text(); }
+    else if (ext === 'rtf'){
       const raw = await file.text();
-      text = raw.replace(/\\'[0-9a-fA-F]{2}/g,' ')
-                .replace(/\\[a-z]+\d*/g,' ')
-                .replace(/[{}]/g,' ')
-                .replace(/\\par/g,'\n');
-    } else {
-      setScanStatus('Unsupported file type. Use PDF, DOCX, or TXT.', false);
-      return;
-    }
+      text = raw.replace(/\\'[0-9a-fA-F]{2}/g,' ').replace(/\\[a-z]+\d*/g,' ').replace(/[{}]/g,' ').replace(/\\par/g,'\n');
+    } else { setScanStatus('Unsupported file type. Use PDF, DOCX, or TXT.', false); return; }
     text = (text||'').trim();
     if (text.length < 20){
       setScanStatus('Could not extract much text — is it a scanned image PDF?', false);
-      document.getElementById('resume').value = text;
-      return;
+      document.getElementById('resume').value = text; return;
     }
     document.getElementById('resume').value = text;
-    setScanStatus('Text extracted ✓', false);   // will turn LED solid green
-    analyze(); // auto-run after upload
+    setScanStatus('Text extracted ✓', false);
+    analyze();
   } catch(err){
     console.error(err);
     setScanStatus('Error reading file. Try another format.', false);
   }
 }
 
-/* PDF text extraction using PDF.js */
+/* PDF.js */
 async function extractTextFromPDF(file){
   if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
   const buf = await file.arrayBuffer();
@@ -897,7 +1067,7 @@ async function extractTextFromPDF(file){
   return fullText.replace(/\s+\n/g,'\n').replace(/\n{3,}/g,'\n\n');
 }
 
-/* DOCX text extraction using Mammoth */
+/* Mammoth DOCX */
 async function extractTextFromDOCX(file){
   if (!window.mammoth) throw new Error('Mammoth not loaded');
   const arrayBuffer = await file.arrayBuffer();
@@ -908,11 +1078,7 @@ async function extractTextFromDOCX(file){
 /* ===== Paywall & misc ===== */
 function openPaywall(n=1){ window.__desiredCredits = n; document.getElementById('paywall').classList.add('open'); }
 function closePaywall(){ document.getElementById('paywall').classList.remove('open'); }
-async function startCheckout(n=1){
-  addCredits(n);
-  closePaywall();
-  alert(`Added ${n} scan${n>1?'s':''}. Swap this with Stripe for production.`);
-}
+async function startCheckout(n=1){ addCredits(n); closePaywall(); alert(`Added ${n} scan${n>1?'s':''}. Swap this with Stripe for production.`); }
 function addCredits(n){ writeMeter({creditAdd:n}); }
 function clearAll(){
   document.getElementById('resume').value='';
@@ -926,12 +1092,11 @@ function clearAll(){
     </div>`;
   fileInput.value = '';
   fileLabel.textContent = 'Choose PDF, DOCX, or TXT';
-  setScanStatus('Ready', false); // hollow LED
+  setScanStatus('Ready', false);
 }
 
 updateMeterUI();
 updatePricingUI();
-/* Set initial LED state */
 setScanStatus('Ready', false);
 </script>
 </body>
