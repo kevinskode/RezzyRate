@@ -115,9 +115,54 @@ button:active{transform:translateY(1px)}
 .metric b{color:var(--text)}
 .section-pills{display:flex;flex-wrap:wrap;gap:6px}
 
-.tip{position:relative;display:inline-flex;align-items:center;margin-left:6px}
-.tip-btn{width:18px;height:18px;padding:0;border-radius:9999px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:12px;line-height:1;font-weight:700;display:grid;place-items:center;cursor:help;}
-.tip-btn:focus{outline:none;box-shadow:0 0 0 3px rgba(79,70,229,.18);border-color:var(--accent);color:var(--text)}
+/* Force the "i" buttons to be perfect circles */
+/* Force the "i" buttons to be perfect circles */
+/* === Perfect circular info button (overrides global button styles) === */
+.tip .tip-btn{
+  /* kill the inherited button min-height/padding */
+  min-height:0;
+  padding:0;
+
+  /* fixed square box → circle */
+  width:22px;
+  height:22px;
+  aspect-ratio:1 / 1;
+  border-radius:50%;
+
+  /* visuals */
+  border:1px solid var(--border);
+  background:linear-gradient(180deg,#f8fafc,#eef2ff);
+  color:#4f46e5;
+  font-size:12px;
+  font-weight:800;
+
+  /* centering & layout */
+  display:inline-grid;
+  place-items:center;
+  line-height:1;
+  vertical-align:middle;
+
+  /* behavior */
+  cursor:help;
+  appearance:none;
+  box-shadow:0 1px 2px rgba(2,6,23,.06), inset 0 -1px 0 rgba(2,6,23,.04);
+  transition:box-shadow .15s ease, transform .06s ease, border-color .15s ease;
+}
+.tip .tip-btn:hover{ box-shadow:0 2px 10px rgba(79,70,229,.18); }
+.tip .tip-btn:active{ transform:translateY(1px); }
+.tip .tip-btn:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,70,229,.18); }
+
+/* Dark mode polish */
+@media (prefers-color-scheme: dark){
+  .tip .tip-btn{
+    background:linear-gradient(180deg,#0f172a,#0b1220);
+    color:#a5b4fc;
+    box-shadow:0 1px 2px rgba(0,0,0,.35), inset 0 -1px 0 rgba(255,255,255,.03);
+  }
+}
+
+
+
 .tip-bubble{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%) scale(.98);min-width:220px;max-width:320px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow);font-size:12px;color:var(--text);opacity:0;pointer-events:none;transition:opacity .15s ease,transform .15s ease;z-index:60}
 .tip:hover .tip-bubble,.tip:focus-within .tip-bubble{opacity:1;transform:translateX(-50%) scale(1);pointer-events:auto}
 .tip-bubble .arrow{position:absolute;left:50%;bottom:-6px;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);background:var(--panel);border-left:1px solid var(--border);border-top:1px solid var(--border)}

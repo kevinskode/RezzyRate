@@ -252,67 +252,131 @@ const pct = (val,max)=> Math.round((max?val/max:0)*100);
 function classifyScore(total){ if(total>=85) return "Excellent"; if(total>=70) return "Strong"; if(total>=55) return "Fair"; return "Needs work"; }
 function gradeReadability(r){ if(r>=8) return "Very easy to skim"; if(r>=6) return "Plain & readable"; if(r>=5) return "Somewhat dense"; if(r>=3) return "Hard to read"; return "Very hard to read"; }
 
-/* ---------- Top Fixes ---------- */
+/* ---------- Top Fixes (human-friendly) ---------- */
 function friendlyFixes(result, fre){
   const tips = [];
-  const present=(result.presentKeywords||[]);
-  const missing=(result.missingKeywords||[]);
+  const present = (result.presentKeywords || []);
+  const missing = (result.missingKeywords || []);
   const totalKW = result.totalKeywords || (present.length + missing.length);
-  const perKw = totalKW ? Math.max(1, Math.round(40/totalKW)) : 0;
+  const perKw = totalKW ? Math.max(1, Math.round(40 / totalKW)) : 0;
 
   const tag = (p) =>
     p === 'high' ? '<span class="pill p-high">Quick win</span>' :
     p === 'med'  ? '<span class="pill p-med">Worth doing</span>' :
                    '<span class="pill p-low">Nice to have</span>';
 
-  const addTip = (priority,title,body) =>
+  const addTip = (priority, title, body) =>
     tips.push(`<li>
       <div class="fix-row">${tag(priority)}<span class="fix-title">${title}</span></div>
       <p class="fix-body">${body}</p>
     </li>`);
 
+  // 1) Missing keywords
   if (missing.length){
-    const show = missing.slice(0,10);
-    addTip('high','Add a few missing keywords', `Sprinkle in terms the job uses — ${show.join(', ')}. Each one should bump your ATS score by about +${perKw}.`);
+    const show = missing.slice(0, 10);
+    addTip(
+      'high',
+      'Add a few missing keywords',
+      `Work in the terms the job uses — ${show.join(', ')}. Each one should bump your ATS score by about +${perKw}.`
+    );
   }
+
+  // 2) Quantify impact
   if (result.profDetails.numbers < 3){
-    addTip('high','Show the impact with numbers', `You’ve got ${result.profDetails.numbers}. Aim for 3–5 clear wins like “cut processing time 30%,” “saved $50K,” or “reduced variance 18%.”`);
+    addTip(
+      'high',
+      'Show the impact with numbers',
+      `You’ve got ${result.profDetails.numbers}. Aim for 3–5 clear wins like “cut processing time 30%,” “saved $50K,” or “reduced variance 18%.”`
+    );
   }
-  const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
+
+  // 3) Missing sections
+  const missingSections = Object.entries(result.sectionPresence)
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+
   if (missingSections.length){
-    addTip('med','Fill the missing sections', `Add ${missingSections.join(', ')} so recruiters (and ATS) can find the essentials fast.`);
+    addTip(
+      'med',
+      'Fill the missing sections',
+      `Add ${missingSections.join(', ')} so recruiters (and ATS) can find the essentials fast.`
+    );
   }
+
+  // 4) Summary
   if (!result.sectionPresence.summary){
-    addTip('med','Write a short summary', `Two–three lines: your title, core skills, and one impact line. Example: “Business Data Analyst • SQL, Python, Tableau • automate reporting and forecast accuracy.”`);
+    addTip(
+      'med',
+      'Write a short summary',
+      `Two–three lines: your title, core tools, and one impact line. Example: “Business Data Analyst • SQL, Python, Tableau • automate reporting and improve forecast accuracy.”`
+    );
   }
+
+  // 5) Voice
   if (result.profDetails.passive > 3){
-    addTip('med','Use active verbs', `I spotted ${result.profDetails.passive} passive phrases. Swap “was built/were automated” for “Built,” “Automated,” or “Forecasted.”`);
+    addTip(
+      'med',
+      'Use active verbs',
+      `I spotted ${result.profDetails.passive} passive phrases. Swap “was built / were automated” for “Built,” “Automated,” “Forecasted.”`
+    );
   }
+
+  // 6) Bullet count
   if (result.profDetails.bullets < 5){
-    addTip('med','Add a few more bullets', `You have ${result.profDetails.bullets}. Aim ~5–7 bullets for recent roles and ~3–5 for older ones.`);
+    addTip(
+      'med',
+      'Add a few more bullets',
+      `You have ${result.profDetails.bullets}. Aim ~5–7 bullets for recent roles and ~3–5 for older ones.`
+    );
   }
-  if (result.breakdown.readability <= 5 || fleschReadingEase < 55){
-    addTip('med','Smooth the reading flow', `Your Flesch score is ${fleschReadingEase}. Keep sentences to ~12–18 words, split long lines into bullets, and swap heavy jargon for plain terms.`);
+
+  // 7) Readability — FIXED: use 'fre' (the number), not the function
+  if (result.breakdown.readability <= 5 || fre < 55){
+    addTip(
+      'med',
+      'Smooth the reading flow',
+      `Your Flesch score is ${fre} (higher is easier). Keep sentences ~12–18 words, split long lines into bullets, and swap heavy jargon for plain terms. Aim for 60+.`
+    );
   }
+
+  // 8) Long lines
   if (result.profDetails.longLines > 0){
-    addTip('low','Break up long lines', `${result.profDetails.longLines} line(s) are quite long. Keep bullets under ~160 characters so they’re easy to scan.`);
+    addTip(
+      'low',
+      'Break up long lines',
+      `${result.profDetails.longLines} line(s) are quite long. Keep bullets under ~160 characters so they’re easy to scan.`
+    );
   }
+
+  // 9) ALL CAPS
   if (result.profDetails.capsWords > 6){
-    addTip('low','Dial back ALL CAPS', `${result.profDetails.capsWords} ALL-CAPS words found. Bold or positioning usually works better than shouting.`);
+    addTip(
+      'low',
+      'Dial back ALL CAPS',
+      `${result.profDetails.capsWords} ALL-CAPS words found. Bold or positioning usually works better than shouting.`
+    );
   }
+
+  // 10) Exclamation marks
   if (result.profDetails.exclam > 0){
-    addTip('low','Skip exclamation marks', `You don’t need them — the results can carry the energy on their own.`);
+    addTip('low', 'Skip exclamation marks', `You don’t need them — the results can carry the energy on their own.`);
   }
+
+  // 11) Length
   if (result.profDetails.words < 300){
-    addTip('low','Add a bit more substance', `${result.profDetails.words} words now. A solid one-pager usually lands around 400–700 words.`);
+    addTip('low', 'Add a bit more substance', `${result.profDetails.words} words now. A solid one-pager usually lands around 400–700 words.`);
   } else if (result.profDetails.words > 950){
-    addTip('low','Tighten the length', `${result.profDetails.words} words total. Trim to a page unless you’ve got 10+ years to showcase.`);
+    addTip('low', 'Tighten the length', `${result.profDetails.words} words total. Trim to a page unless you’ve got 10+ years to showcase.`);
   }
-  addTip('low','Keep it ATS-friendly', `Use a single column with standard headings, avoid text inside images/tables, and export as a text-based PDF.`);
+
+  // 12) ATS hygiene
+  addTip('low', 'Keep it ATS-friendly', `Use a single column with standard headings, avoid text inside images/tables, and export as a text-based PDF.`);
+
   if (present.length && missing.length){
-    addTip('low','Match the job’s phrasing', `When it makes sense, mirror the wording (e.g., “data pipelines” vs “pipelines of data”) so scanners don’t miss it.`);
+    addTip('low', 'Match the job’s phrasing', `When it makes sense, mirror the wording (e.g., “data pipelines” vs “pipelines of data”) so scanners don’t miss it.`);
   }
-  return tips.slice(0,12);
+
+  return tips.slice(0, 12);
 }
 
 /* ========== Jobs data (expanded to ~50 via templates) ========== */
@@ -445,28 +509,33 @@ function jobsToolbarHTML(){
 
 /* ===== Brand SVGs for logo-only buttons ===== */
 function brandSVG(name){
-  if(name==='linkedin'){
+  if (name === 'linkedin'){
+    // Official 'in' glyph
     return `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="2" y="2" width="20" height="20" rx="4" fill="currentColor" opacity=".12"/>
-        <circle cx="7.25" cy="8" r="1.2" fill="currentColor"/>
-        <rect x="6.2" y="10" width="2.2" height="8" rx="1.1" fill="currentColor"/>
-        <path d="M11.2 10.8h2v1c.45-.7 1.2-1.2 2.3-1.2 1.7 0 2.9 1.1 2.9 3.1V18h-2.2v-3.8c0-1-.6-1.6-1.5-1.6s-1.6.7-1.6 1.7V18h-2.2v-7.2z" fill="currentColor"/>
-      </svg>`;
-  }
-  if(name==='indeed'){
-    return `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M17.6 7.6c-2-2-5.2-2-7.2 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <circle cx="12" cy="6.6" r="1" fill="currentColor"/>
-        <rect x="11" y="9" width="2" height="9" rx="1" fill="currentColor"/>
-      </svg>`;
-  }
-  /* google */
-  return `
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M21 12.2c0-4.8-3.6-8.2-8.3-8.2-4.8 0-8.7 3.8-8.7 8.5s3.9 8.5 8.7 8.5c2.3 0 4.2-.8 5.5-2.1v-4.4h-5.7v2.2h3.4a5.3 5.3 0 0 1-3.2 1c-3.3 0-6-2.6-6-5.8s2.7-5.8 6-5.8c3 0 5.2 1.8 5.7 4.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill="#FFFFFF" d="M5.22 8.67H2.56V21h2.66V8.67zM3.89 3c-.92 0-1.67.74-1.67 1.65 0 .9.75 1.65 1.67 1.65s1.67-.75 1.67-1.65C5.56 3.74 4.81 3 3.89 3zM21.44 21h-2.65v-6.1c0-1.46-.03-3.33-2.03-3.33-2.03 0-2.34 1.58-2.34 3.22V21h-2.66V8.67h2.55v1.69h.04c.36-.69 1.24-1.42 2.55-1.42 2.73 0 3.23 1.8 3.23 4.14V21z"/>
     </svg>`;
+  }
+  if (name === 'indeed'){
+    // Indeed "i" with swoosh
+    return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#FFFFFF" d="M12.6 9.3c1.68 0 3.01 1.33 3.01 2.98V21h-2.38v-8.27c0-.55-.45-1-1.01-1s-1.01.45-1.01 1V21H8.83v-8.72c0-1.66 1.33-3 3.01-3z"/>
+      <path fill="#FFFFFF" d="M5.71 6.93c2.66-2.51 6.86-2.6 9.61-.26.23.2.56.18.76-.05.2-.23.18-.57-.05-.77-3.2-2.82-8.04-2.71-11.1.29-.23.2-.24.54-.03.77.2.22.54.24.77.02z"/>
+      <circle cx="12.59" cy="6.01" r="1.05" fill="#FFFFFF"/>
+    </svg>`;
+  }
+  if (name === 'google'){
+    // Multicolor "G" (uses built-in colors)
+    return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21.35 12.2c0-.67-.06-1.16-.18-1.66H12v3.02h5.25c-.11.75-.72 1.89-2.06 2.65l-.02.1 2.99 2.32.21.02C20.4 17.7 21.35 15.2 21.35 12.2z" fill="#4285F4"/>
+      <path d="M12 21c2.7 0 4.97-.9 6.62-2.45l-3.16-2.45c-.85.48-1.98.82-3.46.82-2.64 0-4.88-1.74-5.68-4.15h-.12l-3.24 2.5-.04.11C4.66 18.86 8.04 21 12 21z" fill="#34A853"/>
+      <path d="M6.32 12.77c-.2-.6-.32-1.24-.32-1.89s.12-1.3.32-1.89V7l-3.27-2.53C2.38 6.02 2 7.96 2 10c0 2.04.38 3.98 1.05 5.53l3.27-2.53z" fill="#FBBC05"/>
+      <path d="M12 4.6c1.87 0 3.12.78 3.84 1.43l2.8-2.72C16.96 1.9 14.7 1 12 1 8.04 1 4.66 3.14 3.05 6.47L6.32 9c.8-2.41 3.04-4.4 5.68-4.4z" fill="#EA4335"/>
+    </svg>`;
+  }
+  return '';
 }
 
 function buildJobCardHTML(j){
@@ -491,17 +560,18 @@ function buildJobCardHTML(j){
       <div class="job-tags">${(j.tags||[]).map(t=>`<span class="pill">${t}</span>`).join('')}</div>
 
       <div class="job-footer">
-        <div class="job-links">
-          <a class="job-btn primary icon" href="${j.links.linkedin}" target="_blank" rel="noopener" aria-label="LinkedIn">
-            ${brandSVG('linkedin')}<span class="sr-only">LinkedIn</span>
-          </a>
-          <a class="job-btn icon" href="${j.links.indeed}"  target="_blank" rel="noopener" aria-label="Indeed">
-            ${brandSVG('indeed')}<span class="sr-only">Indeed</span>
-          </a>
-          <a class="job-btn icon" href="${j.links.google}"  target="_blank" rel="noopener" aria-label="Google Jobs">
-            ${brandSVG('google')}<span class="sr-only">Google Jobs</span>
-          </a>
-        </div>
+      <div class="job-links">
+  <a class="job-btn brand btn-linkedin" href="${j.links.linkedin}" target="_blank" rel="noopener">
+    ${brandSVG('linkedin')} <span class="label">LinkedIn</span>
+  </a>
+  <a class="job-btn brand btn-indeed" href="${j.links.indeed}" target="_blank" rel="noopener">
+    ${brandSVG('indeed')} <span class="label">Indeed</span>
+  </a>
+  <a class="job-btn brand btn-google" href="${j.links.google}" target="_blank" rel="noopener">
+    ${brandSVG('google')} <span class="label">Google Jobs</span>
+  </a>
+</div>
+
         <div class="job-aux"></div>
       </div>
     </div>`;
