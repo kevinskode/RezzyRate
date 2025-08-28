@@ -77,7 +77,7 @@ SKILLS
 SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
 
         <label>Paste Job Description (optional)</label>
-        <textarea id="jd" rows="6">We seek a Business Data Analyst to build SQL pipelines, automate reporting in Python, and create Tableau dashboards. Experience with forecasting, ETL, and stakeholder communication required.</textarea>
+        <textarea id="jd" rows="4">We seek a Business Data Analyst to build SQL pipelines, automate reporting in Python, and create Tableau dashboards. Experience with forecasting, ETL, and stakeholder communication required.</textarea>
 
         <label>Add more keywords to compare (comma separated)</label>
         <input id="keywords" placeholder="SQL, Python, Tableau, ETL, forecasting" value="SQL, Python, Tableau, ETL, forecasting"/>
@@ -292,30 +292,30 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         addTip('med','Add a few more bullets',`You have ${result.profDetails.bullets}. Aim ~5–7 bullets for recent roles and ~3–5 for older ones.`);
       }
       if (result.breakdown.readability <= 5 || fre < 55){
-        addTip('med','Smooth the reading flow',`Your Flesch score is ${fre} (higher is easier). Keep sentences ~12–18 words, split long lines into bullets, and swap heavy jargon for plain terms. Aim for 60+.`);
+        addTip('med','Smooth the reading flow',`Your Flesch score is ${fre}. Keep sentences ~12–18 words, split long lines into bullets, and prefer clear wording. Aim for 60+.`);
       }
       if (result.profDetails.longLines > 0){
-        addTip('low','Break up long lines',`${result.profDetails.longLines} line(s) are quite long. Keep bullets under ~160 characters so they’re easy to scan.`);
+        addTip('low','Break up long lines',`${result.profDetails.longLines} line(s) are quite long. Keep bullets under ~160 characters.`);
       }
       if (result.profDetails.capsWords > 6){
-        addTip('low','Dial back ALL CAPS',`${result.profDetails.capsWords} ALL-CAPS words found. Bold or positioning usually works better than shouting.`);
+        addTip('low','Dial back ALL CAPS',`${result.profDetails.capsWords} ALL-CAPS words found.`);
       }
       if (result.profDetails.exclam > 0){
-        addTip('low','Skip exclamation marks','You don’t need them — the results can carry the energy on their own.');
+        addTip('low','Skip exclamation marks','You don’t need them — the results can carry the energy.');
       }
       if (result.profDetails.words < 300){
-        addTip('low','Add a bit more substance',`${result.profDetails.words} words now. A solid one-pager usually lands around 400–700 words.`);
+        addTip('low','Add a bit more substance',`${result.profDetails.words} words now. A one-pager usually lands around 400–700 words.`);
       } else if (result.profDetails.words > 950){
-        addTip('low','Tighten the length',`${result.profDetails.words} words total. Trim to a page unless you’ve got 10+ years to showcase.`);
+        addTip('low','Tighten the length',`${result.profDetails.words} words total.`);
       }
-      addTip('low','Keep it ATS-friendly','Use a single column with standard headings, avoid text inside images/tables, and export as a text-based PDF.');
+      addTip('low','Keep it ATS-friendly','Use a single column, simple headings, and export to a text-based PDF.');
       if (present.length && missing.length){
-        addTip('low','Match the job’s phrasing','When it makes sense, mirror the wording (e.g., “data pipelines” vs “pipelines of data”) so scanners don’t miss it.');
+        addTip('low','Match the job’s phrasing','Mirror wording when it makes sense so scanners don’t miss it.');
       }
       return tips.slice(0, 12);
     }
     
-    /* ========== Jobs data (no external JSON; all client-side) ========== */
+    /* ===== Jobs (single-link cards; exact city/salary via local overrides) ===== */
     const CANON_SKILLS = ["sql","python","tableau","power bi","excel","etl","forecasting","dashboard","dashboards","pipeline","pipelines","bi","powerbi","power"];
     
     const ROLE_TEMPLATES = [
@@ -336,6 +336,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
     ];
     const SENIORITY_BY_TITLE = (t)=> /lead|senior/i.test(t) ? "Senior" : /junior/i.test(t) ? "Entry" : "Mid";
     
+    /* Default location from resume text; only used as placeholder until user pins exact posting */
     function pickLocationFromResume(t){
       const m = (t.match(/[A-Za-z .'-]+,\s*[A-Z]{2}/) || [])[0];
       return m ? m.replace(/\s+/g,' ').trim() : "Remote";
@@ -351,51 +352,38 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         .replace(/^forecasting$/i,'Forecasting').replace(/^power$/i,'Power BI');
       return Array.from(new Set(found.map(pretty)));
     }
-    function estimateSalary(role, loc){
-      const base = (()=> {
-        if (/analytics engineer/i.test(role)) return [105,145];
-        if (/lead|senior/i.test(role)) return [100,135];
-        if (/product analyst/i.test(role)) return [95,130];
-        if (/fp&a|revenue/i.test(role)) return [90,120];
-        if (/financial/i.test(role)) return [88,115];
-        if (/marketing|growth/i.test(role)) return [85,110];
-        return [85,115];
-      })();
-      return loc.toLowerCase().includes('remote') ? base : [base[0]-2, base[1]-2];
-    }
     
-    /* Deep search URLs (live postings) */
-    function buildSearchLinks(role, loc, skills){
+    /* Build a single search URL as a fallback */
+    function buildFallbackSearch(role, loc, skills){
       const k = `${role} ${skills.slice(0,3).join(' ')}`.trim();
       const q = encodeURIComponent(k);
       const l = encodeURIComponent(loc);
-      const linkedin = `https://www.linkedin.com/jobs/search/?keywords=${q}&location=${l}&f_TPR=r86400&position=1&pageNum=0`;
-      const indeed   = `https://www.indeed.com/jobs?q=${q}&l=${l}&fromage=7&radius=25`;
-      const google   = `https://www.google.com/search?hl=en&q=${q}+jobs+in+${l}&ibp=htl;jobs`;
-      return { linkedin, indeed, google };
+      return `https://www.google.com/search?hl=en&q=${q}+jobs+in+${l}&ibp=htl;jobs`;
     }
     
-    /* Optional per-card URL overrides stored locally (no backend/files) */
-    const JOB_LINK_OVERRIDES_KEY = 'rc_job_link_overrides';
-    function getLinkOverrides(){
-      try { return JSON.parse(localStorage.getItem(JOB_LINK_OVERRIDES_KEY) || '{}'); }
+    /* Local “exact posting” overrides: url + city + salary + mode */
+    const JOB_OVERRIDES_KEY = 'rc_job_overrides';
+    function getOverrides(){
+      try { return JSON.parse(localStorage.getItem(JOB_OVERRIDES_KEY) || '{}'); }
       catch { return {}; }
     }
-    function saveLinkOverrides(map){
-      localStorage.setItem(JOB_LINK_OVERRIDES_KEY, JSON.stringify(map || {}));
+    function saveOverrides(map){
+      localStorage.setItem(JOB_OVERRIDES_KEY, JSON.stringify(map || {}));
     }
-    function setCustomLinksFor(title){
-      const map = getLinkOverrides();
+    function setExactPosting(title){
+      const map = getOverrides();
       const cur = map[title] || {};
-      const linkedin = prompt('LinkedIn job URL (optional):', cur.linkedin || '');
-      const indeed   = prompt('Indeed job URL (optional):',   cur.indeed   || '');
-      const google   = prompt('Google Jobs / company job URL (optional):', cur.google || '');
-      map[title] = { ...(linkedin?{linkedin}:{}) , ...(indeed?{indeed}:{}) , ...(google?{google}:{}) };
-      if (!map[title].linkedin && !map[title].indeed && !map[title].google) delete map[title];
-      saveLinkOverrides(map);
+      const url   = prompt('Paste the exact job link:', cur.url || '');
+      if (!url){ delete map[title]; saveOverrides(map); renderJobsGrid(); return; }
+      const city  = prompt('City, ST as shown on the posting (e.g., Detroit, MI):', cur.city || '');
+      const pay   = prompt('Salary range exactly as posted (e.g., $83k–$113k or $40–$55/hr):', cur.pay || '');
+      const mode  = prompt('Work mode (Remote / Hybrid / On-site):', cur.mode || '');
+      map[title] = { url, city, pay, mode };
+      saveOverrides(map);
       renderJobsGrid();
     }
     
+    /* Helpers for score + blurb */
     function roleLine(skills){
       const s = skills.slice(0,3);
       const map = {
@@ -407,10 +395,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const bits = s.map(x=>map[x]||`use ${x}`);
       return bits.slice(0,2).join(", ") + (bits[2]?`, ${bits[2]}`:"");
     }
-    function extendedLine(){
-      return " define KPIs, set up quality checks, and present insights to stakeholders to drive decisions.";
-    }
-    function workMode(loc){ return loc.toLowerCase().includes('remote') ? "Remote" : "Hybrid"; }
     function matchScoreFor(role, skills, presentKeywords){
       const roleTokens = role.toLowerCase().split(/[^a-z]+/g);
       const skillSet = new Set(skills.map(s=>s.toLowerCase()));
@@ -419,8 +403,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const base = 65 + Math.min(25, skills.length*4) + hits*2;
       return Math.max(60, Math.min(96, base));
     }
-    function fmtSalary([lo,hi]){ return `$${lo}k–$${hi}k`; }
-    
     function expandRoles(){
       const flavors = ["", " (SQL/Tableau)", " (Python/ETL)", " (Power BI)"];
       const out = [];
@@ -438,18 +420,25 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const tags = Array.from(new Set([...(skills||[]), ...(presentKeywords||[]).slice(0,3).map(k=>k[0]?.toUpperCase()+k.slice(1))])).slice(0,6);
     
       const jobs = expandRoles().map(meta=>{
-        const links = buildSearchLinks(meta.title, loc, skills);
-        const salary = estimateSalary(meta.title, loc);
         const score = matchScoreFor(meta.title, skills, presentKeywords);
-        const mode = workMode(loc);
         const line = roleLine(skills);
-        return { ...meta, location: loc, tags, links, salary, score, mode, line };
+        const fallbackUrl = buildFallbackSearch(meta.title, loc, skills);
+        return {
+          ...meta,
+          tags,
+          score,
+          line,
+          // default “soft” values only shown when exact posting data is not provided
+          softLocation: loc,
+          softMode: loc.toLowerCase().includes('remote') ? 'Remote' : 'Hybrid',
+          fallbackUrl
+        };
       });
     
       return jobs.sort((a,b)=>b.score-a.score).slice(0,50);
     }
     
-    /* ========== Rendering, filters, and pagination ========== */
+    /* ===== Rendering, filters, pagination ===== */
     let JOB_FILTER = { mode:"any", bucket:"any" };
     const JOBS_STATE = { all:[], page:0, pageSize:12 };
     
@@ -467,109 +456,99 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         </div>`;
     }
     
-    /* ===== Brand SVGs for logo-only buttons ===== */
+    /* Brand icon (for the single link) */
     function brandSVG(name){
       if (name === 'linkedin'){
-        return `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="#FFFFFF" d="M5.22 8.67H2.56V21h2.66V8.67zM3.89 3c-.92 0-1.67.74-1.67 1.65 0 .9.75 1.65 1.67 1.65s1.67-.75 1.67-1.65C5.56 3.74 4.81 3 3.89 3zM21.44 21h-2.65v-6.1c0-1.46-.03-3.33-2.03-3.33-2.03 0-2.34 1.58-2.34 3.22V21h-2.66V8.67h2.55v1.69h.04c.36-.69 1.24-1.42 2.55-1.42 2.73 0 3.23 1.8 3.23 4.14V21z"/>
-        </svg>`;
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#FFFFFF" d="M5.22 8.67H2.56V21h2.66V8.67zM3.89 3c-.92 0-1.67.74-1.67 1.65 0 .9.75 1.65 1.67 1.65s1.67-.75 1.67-1.65C5.56 3.74 4.81 3 3.89 3zM21.44 21h-2.65v-6.1c0-1.46-.03-3.33-2.03-3.33-2.03 0-2.34 1.58-2.34 3.22V21h-2.66V8.67h2.55v1.69h.04c.36-.69 1.24-1.42 2.55-1.42 2.73 0 3.23 1.8 3.23 4.14V21z"/></svg>`;
       }
       if (name === 'indeed'){
-        return `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="#FFFFFF" d="M12.6 9.3c1.68 0 3.01 1.33 3.01 2.98V21h-2.38v-8.27c0-.55-.45-1-1.01-1s-1.01.45-1.01 1V21H8.83v-8.72c0-1.66 1.33-3 3.01-3z"/>
-          <path fill="#FFFFFF" d="M5.71 6.93c2.66-2.51 6.86-2.6 9.61-.26.23.2.56.18.76-.05.2-.23.18-.57-.05-.77-3.2-2.82-8.04-2.71-11.1.29-.23.2-.24.54-.03.77.2.22.54.24.77.02z"/>
-          <circle cx="12.59" cy="6.01" r="1.05" fill="#FFFFFF"/>
-        </svg>`;
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#FFFFFF" d="M12.6 9.3c1.68 0 3.01 1.33 3.01 2.98V21h-2.38v-8.27c0-.55-.45-1-1.01-1s-1.01.45-1.01 1V21H8.83v-8.72c0-1.66 1.33-3 3.01-3z"/><path fill="#FFFFFF" d="M5.71 6.93c2.66-2.51 6.86-2.6 9.61-.26.23.2.56.18.76-.05.2-.23.18-.57-.05-.77-3.2-2.82-8.04-2.71-11.1.29-.23.2-.24.54-.03.77.2.22.54.24.77.02z"/><circle cx="12.59" cy="6.01" r="1.05" fill="#FFFFFF"/></svg>`;
       }
       if (name === 'google'){
-        return `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M21.35 12.2c0-.67-.06-1.16-.18-1.66H12v3.02h5.25c-.11.75-.72 1.89-2.06 2.65l-.02.1 2.99 2.32.21.02C20.4 17.7 21.35 15.2 21.35 12.2z" fill="#4285F4"/>
-          <path d="M12 21c2.7 0 4.97-.9 6.62-2.45l-3.16-2.45c-.85.48-1.98.82-3.46.82-2.64 0-4.88-1.74-5.68-4.15h-.12l-3.24 2.5-.04.11C4.66 18.86 8.04 21 12 21z" fill="#34A853"/>
-          <path d="M6.32 12.77c-.2-.6-.32-1.24-.32-1.89s.12-1.3.32-1.89V7l-3.27-2.53C2.38 6.02 2 7.96 2 10c0 2.04.38 3.98 1.05 5.53l3.27-2.53z" fill="#FBBC05"/>
-          <path d="M12 4.6c1.87 0 3.12.78 3.84 1.43l2.8-2.72C16.96 1.9 14.7 1 12 1 8.04 1 4.66 3.14 3.05 6.47L6.32 9c.8-2.41 3.04-4.4 5.68-4.4z" fill="#EA4335"/>
-        </svg>`;
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.35 12.2c0-.67-.06-1.16-.18-1.66H12v3.02h5.25c-.11.75-.72 1.89-2.06 2.65l-.02.1 2.99 2.32.21.02C20.4 17.7 21.35 15.2 21.35 12.2z" fill="#4285F4"/><path d="M12 21c2.7 0 4.97-.9 6.62-2.45l-3.16-2.45c-.85.48-1.98.82-3.46.82-2.64 0-4.88-1.74-5.68-4.15h-.12l-3.24 2.5-.04.11C4.66 18.86 8.04 21 12 21z" fill="#34A853"/><path d="M6.32 12.77c-.2-.6-.32-1.24-.32-1.89s.12-1.3.32-1.89V7l-3.27-2.53C2.38 6.02 2 7.96 2 10c0 2.04.38 3.98 1.05 5.53l3.27-2.53z" fill="#FBBC05"/><path d="M12 4.6c1.87 0 3.12.78 3.84 1.43l2.8-2.72C16.96 1.9 14.7 1 12 1 8.04 1 4.66 3.14 3.05 6.47L6.32 9c.8-2.41 3.04-4.4 5.68-4.4z" fill="#EA4335"/></svg>`;
       }
       return '';
     }
+    function brandForURL(u){
+      try{
+        const h = new URL(u).hostname.replace(/^www\./,'');
+        if (h.includes('linkedin.')) return 'linkedin';
+        if (h.includes('indeed.')) return 'indeed';
+        return 'google';
+      }catch{return 'google'}
+    }
     
-    /* Build each job card, supporting local link overrides + Verified chip */
+    /* Build a single-link job card: city/salary pills show EXACT user-set values. */
     function buildJobCardHTML(j){
       const score = j.score|0;
-      const chipClass = score>=85?'ok': score>=75?'mid':'bad';
+      const overrides = getOverrides()[j.title] || {};
+      const singleURL = overrides.url || j.fallbackUrl;
+      const brand = brandForURL(singleURL);
+      const accurateCity = overrides.city || '';
+      const accuratePay  = overrides.pay  || '';
+      const accurateMode = overrides.mode || '';
     
-      const overrides = getLinkOverrides()[j.title] || {};
-      const links = {
-        linkedin: overrides.linkedin || j.links.linkedin,
-        indeed:   overrides.indeed   || j.links.indeed,
-        google:   overrides.google   || j.links.google
-      };
-      const verified = !!(overrides.linkedin || overrides.indeed || overrides.google);
+      const showCity = accurateCity || j.softLocation;         // badge pill shows exact if provided
+      const showPay  = accuratePay  || '—';                    // salary pill only exact; otherwise "—"
+      const showMode = accurateMode || j.softMode;
+    
+      const verified = !!overrides.url; // we have an exact posting URL
     
       return `
-        <div class="job-card" data-mode="${j.mode}" data-bucket="${j.bucket}">
+        <div class="job-card" data-mode="${(accurateMode||j.softMode)}" data-bucket="${j.bucket}">
           <div class="job-head">
             <h4 class="job-title">${j.title}</h4>
             <div class="job-meta">
-              <span class="badge-mini">${j.location}</span>
+              <span class="badge-mini">${showCity}</span>
               <span class="badge-mini">${j.seniority}</span>
-              <span class="chip mini" title="Estimated base salary">${fmtSalary(j.salary)}</span>
-              <span class="chip mini" title="Work mode">${j.mode}</span>
-              ${verified ? `<span class="chip mini ok" title="This card uses direct links you set">Verified</span>` : ``}
+              <span class="chip mini" title="${accuratePay ? 'Salary from posting' : 'Add exact salary via “Set posting”'}">${showPay}</span>
+              <span class="chip mini" title="Work mode">${showMode}</span>
+              ${verified ? `<span class="chip mini ok" title="Exact job link added">Verified</span>` : ``}
             </div>
           </div>
     
-          <div class="job-line">You’d likely ${j.line};${extendedLine()}</div>
+          <div class="job-line">You’d likely ${j.line}; define KPIs, set up quality checks, and present insights to stakeholders to drive decisions.</div>
           <div class="job-tags">${(j.tags||[]).map(t=>`<span class="pill">${t}</span>`).join('')}</div>
     
           <div class="job-footer">
             <div class="job-links">
-              <a class="job-btn brand btn-linkedin" href="${links.linkedin}" target="_blank" rel="noopener">
-                ${brandSVG('linkedin')} <span class="label">LinkedIn</span>
-              </a>
-              <a class="job-btn brand btn-indeed" href="${links.indeed}" target="_blank" rel="noopener">
-                ${brandSVG('indeed')} <span class="label">Indeed</span>
-              </a>
-              <a class="job-btn brand btn-google" href="${links.google}" target="_blank" rel="noopener">
-                ${brandSVG('google')} <span class="label">Google Jobs</span>
+              <a class="job-btn brand" href="${singleURL}" target="_blank" rel="noopener">
+                ${brandSVG(brand)} <span class="label">View job</span>
               </a>
             </div>
-    
             <div class="job-aux">
-              <button class="file-btn" title="Set exact links for this card" onclick="setCustomLinksFor('${j.title.replace(/'/g, "\\'")}')">Set links</button>
+              <button class="file-btn" title="Set exact URL, city, salary, and mode" onclick="setExactPosting('${j.title.replace(/'/g, "\\'")}')">Set posting</button>
             </div>
           </div>
         </div>`;
     }
     
+    /* Section shell + grid rendering */
     function jobsSectionHTML(jobs){
       JOBS_STATE.all = jobs;
       JOBS_STATE.page = 0;
-    
       return `
         <div class="jobs-wrap">
           <h3 class="card-title" style="margin:14px 0 6px">Top Recommended Jobs</h3>
-          <p class="card-sub" style="margin-top:0">Personalized by your resume’s skills and location. These open searches lead to live listings.</p>
+          <p class="card-sub" style="margin-top:0">Pinned to one link per card. Add the exact posting to show the real city & salary.</p>
           ${jobsToolbarHTML()}
           <div class="jobs" id="jobsGrid"></div>
           <div class="load-more"><button id="loadMoreBtn" class="btn-secondary">Load more</button></div>
         </div>`;
     }
-    
     function renderJobsGrid(){
       const grid = document.getElementById('jobsGrid');
       if (!grid) return;
     
-      const filtered = JOBS_STATE.all.filter(j =>
-        (JOB_FILTER.mode==='any'   || j.mode===JOB_FILTER.mode) &&
-        (JOB_FILTER.bucket==='any' || j.bucket===JOB_FILTER.bucket)
-      );
+      const filtered = JOBS_STATE.all.filter(j => {
+        const o = getOverrides()[j.title] || {};
+        const modeNow = (o.mode || j.softMode);
+        return (JOB_FILTER.mode==='any'   || modeNow===JOB_FILTER.mode) &&
+               (JOB_FILTER.bucket==='any' || j.bucket===JOB_FILTER.bucket);
+      });
     
-      const start = 0;
       const end = Math.min(filtered.length, (JOBS_STATE.page+1)*JOBS_STATE.pageSize);
-      grid.innerHTML = filtered.slice(start, end).map(buildJobCardHTML).join('');
+      grid.innerHTML = filtered.slice(0, end).map(buildJobCardHTML).join('');
     
       const btn = document.getElementById('loadMoreBtn');
       if (btn){
@@ -594,18 +573,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       bindSeg('modeSeg','mode');
       bindSeg('bucketSeg','bucket');
     }
-    function toggleSaveJob(title, el){
-      const saved = new Set(JSON.parse(localStorage.getItem(LS_KEYS.savedJobs)||'[]'));
-      if (saved.has(title)){ saved.delete(title); el.classList.remove('active'); }
-      else { saved.add(title); el.classList.add('active'); }
-      localStorage.setItem(LS_KEYS.savedJobs, JSON.stringify([...saved]));
-    }
-    function copySearch(roleEncoded, locEncoded){
-      const txt = decodeURIComponent(roleEncoded) + " jobs in " + decodeURIComponent(locEncoded);
-      navigator.clipboard?.writeText(txt);
-      alert("Copied: " + txt);
-    }
-    function applyJobFilters(){ renderJobsGrid(); }
     
     /* Donut SVG for main score */
     function donutSVG(percent,label){
@@ -674,7 +641,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const sectionPills = Object.entries(result.sectionPresence)
         .map(([name,isOn])=>`<span class="pill ${isOn?'good':'bad'}">${name}</span>`).join('');
     
-      const fixes = friendlyFixes(result, fre).join('') || '<li><div class="fix-row"><span class="pill p-low">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Consider tailoring a couple bullets to the job post.</p></li>';
+      const fixes = friendlyFixes(result, fre).join('') || '<li><div class="fix-row"><span class="pill p-low">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Tailor a couple bullets to the job post.</p></li>';
     
       const jobs = recommendJobs(resume, result.presentKeywords);
       const jobsHTML = jobsSectionHTML(jobs);
@@ -732,7 +699,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
           <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
           <ul class="list-tight">${fixes}</ul>
     
-          <!-- Jobs section -->
           ${jobsHTML}
         </div>`;
     
@@ -838,6 +804,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
     updatePricingUI();
     setScanStatus('Ready', false);
     </script>
+    
     
 </body>
 </html>
