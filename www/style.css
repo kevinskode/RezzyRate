@@ -45,7 +45,7 @@ h1{margin:0;font-size:clamp(18px,2.4vw,22px);font-weight:700}
 .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
 .card-title{font-size:16px;font-weight:700;margin:2px 0}
 .card-sub{font-size:13px;color:var(--muted);margin:0 0 10px}
-label{font-size:13px;color:#96d1f8;font-weight:900;letter-spacing:.06em;text-transform:uppercase;display:block;margin:8px 0 6px}
+label{font-size:13px;color:#7b84f6;font-weight:900;letter-spacing:.06em;text-transform:uppercase;display:block;margin:8px 0 6px}
 
 textarea,input{
   width:100%;background:#f8fafc;color:#0f172a;border:1px solid var(--border);
@@ -340,3 +340,7 @@ button:active{transform:translateY(1px)}
 .match span{ font-size:12px; }
 
 .load-more{ margin-top:12px; display:flex; justify-content:center; }
+
+#fileLabel{
+  color: #919494;
+}
