@@ -42,9 +42,9 @@ h1{margin:0;font-size:clamp(18px,2.4vw,22px);font-weight:700}
 @media(min-width:980px){.layout{grid-template-columns:1fr 1fr}}
 
 .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
-.card-title{font-size:16px;font-weight:700;margin:2px 0}
+.card-title{font-size:18px;font-weight:700;margin:2px 0; text-transform:uppercase;}
 .card-sub{font-size:13px;color:var(--muted);margin:0 0 10px}
-label{font-size:13px;color:#7b84f6;font-weight:900;letter-spacing:.06em;text-transform:uppercase;display:block;margin:8px 0 6px}
+label{font-size:16px;color:#96c9ff;font-weight:500;letter-spacing:.05em;display:block;margin:8px 0 6px}
 
 textarea,input{
   width:100%;background:#0b1220;color:var(--text);border:1px solid var(--border);
@@ -125,7 +125,7 @@ button:active{transform:translateY(1px)}
 .file-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px dashed var(--border);border-radius:12px;font-size:12px;background:var(--panel)}
 .file-pill input[type="file"]{display:none}
 .file-btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--panel);font-size:12px}
-.dropzone{flex:1 1 200px;border:1px dashed var(--border);border-radius:12px;padding:10px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#94a3b8}
+.dropzone{flex:1 1 100px;border:1px dashed var(--border);border-radius:12px;padding:10px;padding-left:20px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#94a3b8}
 .dropzone.drag{border-color:#60a5fa;background:rgba(99,102,241,.06);color:#4f46e5}
 
 .spinner{display:none;width:16px;height:16px;border-radius:50%;border:2px solid #c7d2fe;border-top-color:#4f46e5;animation:spin 1s linear infinite}
