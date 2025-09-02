@@ -205,7 +205,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
     const passiveVoiceCount = t => (t.match(/\b(?:was|were|is|are|been|being|be)\s+[a-z]+ed\b/gi)||[]).length;
     function fleschReadingEase(t){ const s=(t.match(/[.!?]+/g)||["."]).length; const words=tokenize(t); const wc=Math.max(words.length,1); const syl=words.reduce((sum,w)=>sum+ (w.match(/[aeiouy]{1,2}/g)||[]).length,0); const ASL=wc/s; const ASW=syl/wc; return Math.max(0,Math.min(100,Math.round(206.835-1.015*ASL-84.6*ASW))); }
     const presenceScore = t => Math.min(15, Math.round((SECTION_HINTS.filter(s=> normalize(t).toLowerCase().includes(s)).length/5)*15));
-    
     function keywordScore(resume,keywords){
       const rTokens=new Set(tokenize(resume));
       const list=unique(keywords.map(k=>k.toLowerCase().trim()).filter(k=>k.length>0));
@@ -229,7 +228,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       return {score:Math.max(0,Math.min(35,Math.round(score))), details:{bullets,exclam,capsWords,longLines,passive:pv,words,numbers:countNumbers(r)}};
     }
     const readabilityScore = r => Math.round((fleschReadingEase(r)/100)*10);
-    
     function scoreResume(resume,jd,userKeywords){
       const extracted=extractKeywords(jd||"");
       const combined=unique([...(userKeywords||[]),...extracted]);
@@ -247,11 +245,10 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         sectionPresence: SECTION_HINTS.reduce((acc,s)=>{ acc[s]=normalize(resume).toLowerCase().includes(s); return acc; },{})
       };
     }
-    
     const pct = (val,max)=> Math.round((max?val/max:0)*100);
     function classifyScore(total){ if(total>=85) return "Excellent"; if(total>=70) return "Strong"; if(total>=55) return "Fair"; return "Needs work"; }
     function gradeReadability(r){ if(r>=8) return "Very easy to skim"; if(r>=6) return "Plain & readable"; if(r>=5) return "Somewhat dense"; if(r>=3) return "Hard to read"; return "Very hard to read"; }
-    
+
     /* ---------- Top Fixes (human-friendly) ---------- */
     function friendlyFixes(result, fre){
       const tips = [];
@@ -259,18 +256,15 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const missing = (result.missingKeywords || []);
       const totalKW = result.totalKeywords || (present.length + missing.length);
       const perKw = totalKW ? Math.max(1, Math.round(40 / totalKW)) : 0;
-    
       const tag = (p) =>
         p === 'high' ? '<span class="pill p-high">Quick win</span>' :
         p === 'med'  ? '<span class="pill p-med">Worth doing</span>' :
                        '<span class="pill p-low">Nice to have</span>';
-    
       const addTip = (priority, title, body) =>
         tips.push(`<li>
           <div class="fix-row">${tag(priority)}<span class="fix-title">${title}</span></div>
           <p class="fix-body">${body}</p>
         </li>`);
-    
       if (missing.length){
         const show = missing.slice(0, 10);
         addTip('high','Add a few missing keywords',`Work in the terms the job uses — ${show.join(', ')}. Each one should bump your ATS score by about +${perKw}.`);
@@ -314,10 +308,9 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       }
       return tips.slice(0, 12);
     }
-    
-    /* ===== Jobs (single-link cards; exact city/salary via local overrides) ===== */
+
+    /* ===== Jobs ===== */
     const CANON_SKILLS = ["sql","python","tableau","power bi","excel","etl","forecasting","dashboard","dashboards","pipeline","pipelines","bi","powerbi","power"];
-    
     const ROLE_TEMPLATES = [
       {title:"Data Analyst", bucket:"Data"},
       {title:"Senior Data Analyst", bucket:"Data"},
@@ -335,8 +328,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       {title:"Supply Chain Data Analyst", bucket:"Ops"}
     ];
     const SENIORITY_BY_TITLE = (t)=> /lead|senior/i.test(t) ? "Senior" : /junior/i.test(t) ? "Entry" : "Mid";
-    
-    /* Default location from resume text; only used as placeholder until user pins exact posting */
+
     function pickLocationFromResume(t){
       const m = (t.match(/[A-Za-z .'-]+,\s*[A-Z]{2}/) || [])[0];
       return m ? m.replace(/\s+/g,' ').trim() : "Remote";
@@ -352,48 +344,70 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         .replace(/^forecasting$/i,'Forecasting').replace(/^power$/i,'Power BI');
       return Array.from(new Set(found.map(pretty)));
     }
-    
-    /* Build a single search URL as a fallback */
-    function buildFallbackSearch(role, loc, skills){
-      const k = `${role} ${skills.slice(0,3).join(' ')}`.trim();
-      const q = encodeURIComponent(k);
-      const l = encodeURIComponent(loc);
-      return `https://www.google.com/search?hl=en&q=${q}+jobs+in+${l}&ibp=htl;jobs`;
+
+    /* Only LinkedIn & Indeed URLs are accepted for "verified" cards */
+    const ALLOWED_JOB_HOST_PATTERNS = [/(\.|^)linkedin\.com\/jobs/i, /(\.|^)indeed\.com/i];
+    const RELEVANCE_TOKENS = ["data","analyst","analytics","bi","business-intelligence","sql","python","tableau","power-bi","powerbi","etl","reporting","dashboard","pipelines","forecast"];
+    function urlLooksLegitAndRelevant(urlStr){
+      let u; try{ u = new URL(urlStr); }catch{ return {ok:false, reason:"Invalid URL"}; }
+      const ok = ALLOWED_JOB_HOST_PATTERNS.some(rx => rx.test((u.hostname+u.pathname).toLowerCase()));
+      if (!ok) return {ok:false, reason:"Only LinkedIn and Indeed links are accepted"};
+      const hay = (u.pathname + " " + u.search).toLowerCase();
+      if (!RELEVANCE_TOKENS.some(t => hay.includes(t))) return {ok:false, reason:"URL path lacks relevant analyst/data keywords"};
+      return {ok:true};
     }
-    
-    /* Local “exact posting” overrides: url + city + salary + mode */
+
+    /* Local overrides (optional manual pins) */
     const JOB_OVERRIDES_KEY = 'rc_job_overrides';
-    function getOverrides(){
-      try { return JSON.parse(localStorage.getItem(JOB_OVERRIDES_KEY) || '{}'); }
-      catch { return {}; }
-    }
-    function saveOverrides(map){
-      localStorage.setItem(JOB_OVERRIDES_KEY, JSON.stringify(map || {}));
-    }
+    const getOverrides = () => { try { return JSON.parse(localStorage.getItem(JOB_OVERRIDES_KEY) || '{}'); } catch { return {}; } };
+    const saveOverrides = map => localStorage.setItem(JOB_OVERRIDES_KEY, JSON.stringify(map || {}));
+
     function setExactPosting(title){
       const map = getOverrides();
       const cur = map[title] || {};
-      const url   = prompt('Paste the exact job link:', cur.url || '');
+      const url = prompt('Paste the exact job link (LinkedIn or Indeed only):', cur.url || '');
       if (!url){ delete map[title]; saveOverrides(map); renderJobsGrid(); return; }
-      const city  = prompt('City, ST as shown on the posting (e.g., Detroit, MI):', cur.city || '');
-      const pay   = prompt('Salary range exactly as posted (e.g., $83k–$113k or $40–$55/hr):', cur.pay || '');
-      const mode  = prompt('Work mode (Remote / Hybrid / On-site):', cur.mode || '');
+      const check = urlLooksLegitAndRelevant(url);
+      if (!check.ok){ alert(`Rejected: ${check.reason}`); return; }
+      const city = prompt('City, ST as shown on the posting (e.g., Detroit, MI):', cur.city || '');
+      const pay  = prompt('Salary range exactly as posted (e.g., $83k–$113k or $40–$55/hr):', cur.pay || '');
+      const mode = prompt('Work mode (Remote / Hybrid / On-site):', cur.mode || '');
       map[title] = { url, city, pay, mode };
       saveOverrides(map);
       renderJobsGrid();
     }
-    
-    /* Helpers for score + blurb */
+
+    function openAddLinks(){
+      const msg = `Paste 1–10 job links (each on a new line).\n\nAccepted: LinkedIn Jobs and Indeed only.`;
+      const raw = prompt(msg, ""); if (!raw) return;
+      const urls = raw.split(/\s*\n+\s*/).map(s=>s.trim()).filter(Boolean).slice(0,10);
+      const map = getOverrides(); let added = 0, rejected = 0;
+      const titles = JOBS_STATE.all.map(j => j.title);
+      const lowerTitle = t => t.toLowerCase();
+      urls.forEach(u=>{
+        const v = urlLooksLegitAndRelevant(u); if (!v.ok){ rejected++; return; }
+        const tokenized = (new URL(u).pathname.toLowerCase()).split(/[^a-z]+/g);
+        const pick = titles.find(t=>{
+          const toks = lowerTitle(t).split(/[^a-z]+/g);
+          return toks.some(x => x && tokenized.includes(x));
+        }) || titles[0];
+        const cur = map[pick] || {};
+        map[pick] = { url: u, city: cur.city || "", pay: cur.pay || "", mode: cur.mode || "" };
+        added++;
+      });
+      saveOverrides(map); renderJobsGrid();
+      alert(`Added ${added} link(s). ${rejected ? rejected + ' rejected (must be LinkedIn or Indeed and relevant).' : ''}`);
+    }
+
+    /* Helpers for role recommendations */
     function roleLine(skills){
       const s = skills.slice(0,3);
       const map = {
-        "SQL":"own SQL pipelines", "Python":"automate reporting in Python",
-        "Tableau":"ship Tableau dashboards", "Power BI":"build Power BI reports",
-        "Forecasting":"improve forecasting accuracy", "ETL":"maintain ETL workflows",
-        "Pipelines":"scale data pipelines", "Dashboards":"design executive dashboards", "Excel":"analyze in Excel"
+        "SQL":"own SQL pipelines","Python":"automate reporting in Python","Tableau":"ship Tableau dashboards",
+        "Power BI":"build Power BI reports","Forecasting":"improve forecasting accuracy","ETL":"maintain ETL workflows",
+        "Pipelines":"scale data pipelines","Dashboards":"design executive dashboards","Excel":"analyze in Excel"
       };
-      const bits = s.map(x=>map[x]||`use ${x}`);
-      return bits.slice(0,2).join(", ") + (bits[2]?`, ${bits[2]}`:"");
+      const bits = s.map(x=>map[x]||`use ${x}`); return bits.slice(0,2).join(", ")+(bits[2]?`, ${bits[2]}`:"");
     }
     function matchScoreFor(role, skills, presentKeywords){
       const roleTokens = role.toLowerCase().split(/[^a-z]+/g);
@@ -418,27 +432,62 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const loc = pickLocationFromResume(resumeText);
       const skills = topSkillsFromResume(resumeText);
       const tags = Array.from(new Set([...(skills||[]), ...(presentKeywords||[]).slice(0,3).map(k=>k[0]?.toUpperCase()+k.slice(1))])).slice(0,6);
-    
       const jobs = expandRoles().map(meta=>{
         const score = matchScoreFor(meta.title, skills, presentKeywords);
         const line = roleLine(skills);
-        const fallbackUrl = buildFallbackSearch(meta.title, loc, skills);
-        return {
-          ...meta,
-          tags,
-          score,
-          line,
-          // default “soft” values only shown when exact posting data is not provided
-          softLocation: loc,
-          softMode: loc.toLowerCase().includes('remote') ? 'Remote' : 'Hybrid',
-          fallbackUrl
-        };
+        return { ...meta, tags, score, line, softLocation: loc, softMode: loc.toLowerCase().includes('remote') ? 'Remote' : 'Hybrid' };
       });
-    
       return jobs.sort((a,b)=>b.score-a.score).slice(0,50);
     }
-    
-    /* ===== Rendering, filters, pagination ===== */
+
+    /* ---------- NEW: Related job ads (LinkedIn & Indeed) ---------- */
+    const mkQuery = (title, skills=[]) => encodeURIComponent(`${title} ${skills.slice(0,2).join(' ')}`.trim());
+    const mkLoc   = (loc="") => encodeURIComponent(loc || "Remote");
+
+    function liSearchUrl(title, loc, skills){
+      return `https://www.linkedin.com/jobs/search/?keywords=${mkQuery(title, skills)}&location=${mkLoc(loc)}`;
+    }
+    function indeedSearchUrl(title, loc, skills){
+      return `https://www.indeed.com/jobs?q=${mkQuery(title, skills)}&l=${mkLoc(loc)}`;
+    }
+
+    function relatedJobsSectionHTML(jobs){
+      const top = jobs.slice(0,8);
+      const cards = top.map(j=>{
+        const li = liSearchUrl(j.title, j.softLocation, j.tags);
+        const indd = indeedSearchUrl(j.title, j.softLocation, j.tags);
+        return `
+          <div class="job-card" data-bucket="${j.bucket}">
+            <div class="job-head">
+              <h4 class="job-title">${j.title}</h4>
+              <div class="job-meta">
+                <span class="badge-mini">${j.softLocation}</span>
+                <span class="badge-mini">${j.seniority}</span>
+                <span class="chip mini">${j.softMode}</span>
+              </div>
+            </div>
+            <div class="job-line">${j.line}; scan current openings and apply fast.</div>
+            <div class="job-tags">${(j.tags||[]).map(t=>`<span class="pill">${t}</span>`).join('')}</div>
+            <div class="job-footer">
+              <a class="job-btn brand" href="${li}"   target="_blank" rel="noopener"><span class="label">Open on LinkedIn</span></a>
+              <a class="job-btn"        href="${indd}" target="_blank" rel="noopener"><span class="label">Open on Indeed</span></a>
+              <div class="job-aux"></div>
+            </div>
+          </div>`;
+      }).join('');
+      return `
+        <div class="jobs-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div>
+              <h3 class="card-title" style="margin:14px 0 6px">Related Job Ads</h3>
+              <p class="card-sub" style="margin-top:0">Direct searches on <b>LinkedIn</b> and <b>Indeed</b>, based on your resume.</p>
+            </div>
+          </div>
+          <div class="jobs" id="relatedJobsGrid">${cards}</div>
+        </div>`;
+    }
+
+    /* ===== Verified (manual) section + rendering/paging ===== */
     let JOB_FILTER = { mode:"any", bucket:"any" };
     const JOBS_STATE = { all:[], page:0, pageSize:12 };
     
@@ -452,114 +501,89 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
           <div class="seg" id="bucketSeg">
             ${btn('All roles','bucket','any')}${btn('Data','bucket','Data')}${btn('BI','bucket','BI')}${btn('Eng','bucket','Eng')}${btn('Finance','bucket','Finance')}${btn('Ops','bucket','Ops')}${btn('Product','bucket','Product')}${btn('Marketing','bucket','Marketing')}
           </div>
-          <span class="helper">Tip: toggle filters to refine your open searches.</span>
+          <span class="helper">Only exact postings from <b>LinkedIn</b> and <b>Indeed</b> are shown.</span>
         </div>`;
     }
-    
-    /* Brand icon (for the single link) */
-    function brandSVG(name){
-      if (name === 'linkedin'){
-        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#FFFFFF" d="M5.22 8.67H2.56V21h2.66V8.67zM3.89 3c-.92 0-1.67.74-1.67 1.65 0 .9.75 1.65 1.67 1.65s1.67-.75 1.67-1.65C5.56 3.74 4.81 3 3.89 3zM21.44 21h-2.65v-6.1c0-1.46-.03-3.33-2.03-3.33-2.03 0-2.34 1.58-2.34 3.22V21h-2.66V8.67h2.55v1.69h.04c.36-.69 1.24-1.42 2.55-1.42 2.73 0 3.23 1.8 3.23 4.14V21z"/></svg>`;
-      }
-      if (name === 'indeed'){
-        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#FFFFFF" d="M12.6 9.3c1.68 0 3.01 1.33 3.01 2.98V21h-2.38v-8.27c0-.55-.45-1-1.01-1s-1.01.45-1.01 1V21H8.83v-8.72c0-1.66 1.33-3 3.01-3z"/><path fill="#FFFFFF" d="M5.71 6.93c2.66-2.51 6.86-2.6 9.61-.26.23.2.56.18.76-.05.2-.23.18-.57-.05-.77-3.2-2.82-8.04-2.71-11.1.29-.23.2-.24.54-.03.77.2.22.54.24.77.02z"/><circle cx="12.59" cy="6.01" r="1.05" fill="#FFFFFF"/></svg>`;
-      }
-      if (name === 'google'){
-        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.35 12.2c0-.67-.06-1.16-.18-1.66H12v3.02h5.25c-.11.75-.72 1.89-2.06 2.65l-.02.1 2.99 2.32.21.02C20.4 17.7 21.35 15.2 21.35 12.2z" fill="#4285F4"/><path d="M12 21c2.7 0 4.97-.9 6.62-2.45l-3.16-2.45c-.85.48-1.98.82-3.46.82-2.64 0-4.88-1.74-5.68-4.15h-.12l-3.24 2.5-.04.11C4.66 18.86 8.04 21 12 21z" fill="#34A853"/><path d="M6.32 12.77c-.2-.6-.32-1.24-.32-1.89s.12-1.3.32-1.89V7l-3.27-2.53C2.38 6.02 2 7.96 2 10c0 2.04.38 3.98 1.05 5.53l3.27-2.53z" fill="#FBBC05"/><path d="M12 4.6c1.87 0 3.12.78 3.84 1.43l2.8-2.72C16.96 1.9 14.7 1 12 1 8.04 1 4.66 3.14 3.05 6.47L6.32 9c.8-2.41 3.04-4.4 5.68-4.4z" fill="#EA4335"/></svg>`;
-      }
-      return '';
-    }
-    function brandForURL(u){
-      try{
-        const h = new URL(u).hostname.replace(/^www\./,'');
-        if (h.includes('linkedin.')) return 'linkedin';
-        if (h.includes('indeed.')) return 'indeed';
-        return 'google';
-      }catch{return 'google'}
-    }
-    
-    /* Build a single-link job card: city/salary pills show EXACT user-set values. */
+
     function buildJobCardHTML(j){
-      const score = j.score|0;
       const overrides = getOverrides()[j.title] || {};
-      const singleURL = overrides.url || j.fallbackUrl;
-      const brand = brandForURL(singleURL);
+      if (!overrides.url) return "";
+      const validation = urlLooksLegitAndRelevant(overrides.url);
+      if (!validation.ok) return "";
       const accurateCity = overrides.city || '';
-      const accuratePay  = overrides.pay  || '';
-      const accurateMode = overrides.mode || '';
-    
-      const showCity = accurateCity || j.softLocation;         // badge pill shows exact if provided
-      const showPay  = accuratePay  || '—';                    // salary pill only exact; otherwise "—"
-      const showMode = accurateMode || j.softMode;
-    
-      const verified = !!overrides.url; // we have an exact posting URL
-    
+      const accuratePay  = overrides.pay  || '—';
+      const accurateMode = overrides.mode || j.softMode || '—';
       return `
-        <div class="job-card" data-mode="${(accurateMode||j.softMode)}" data-bucket="${j.bucket}">
+        <div class="job-card" data-mode="${accurateMode}" data-bucket="${j.bucket}">
           <div class="job-head">
             <h4 class="job-title">${j.title}</h4>
             <div class="job-meta">
-              <span class="badge-mini">${showCity}</span>
+              <span class="badge-mini">${accurateCity || j.softLocation}</span>
               <span class="badge-mini">${j.seniority}</span>
-              <span class="chip mini" title="${accuratePay ? 'Salary from posting' : 'Add exact salary via “Set posting”'}">${showPay}</span>
-              <span class="chip mini" title="Work mode">${showMode}</span>
-              ${verified ? `<span class="chip mini ok" title="Exact job link added">Verified</span>` : ``}
+              <span class="chip mini">${accuratePay}</span>
+              <span class="chip mini">${accurateMode}</span>
+              <span class="chip mini ok" title="Verified job posting">Verified</span>
             </div>
           </div>
-    
-          <div class="job-line">You’d likely ${j.line}; define KPIs, set up quality checks, and present insights to stakeholders to drive decisions.</div>
+          <div class="job-line">${j.line}; define KPIs, set up quality checks, and present insights to stakeholders to drive decisions.</div>
           <div class="job-tags">${(j.tags||[]).map(t=>`<span class="pill">${t}</span>`).join('')}</div>
-    
           <div class="job-footer">
-            <div class="job-links">
-              <a class="job-btn brand" href="${singleURL}" target="_blank" rel="noopener">
-                ${brandSVG(brand)} <span class="label">View job</span>
-              </a>
-            </div>
+            <a class="job-btn brand" href="${overrides.url}" target="_blank" rel="noopener"><span class="label">View job</span></a>
             <div class="job-aux">
-              <button class="file-btn" title="Set exact URL, city, salary, and mode" onclick="setExactPosting('${j.title.replace(/'/g, "\\'")}')">Set posting</button>
+              <button class="file-btn" title="Edit posting details" onclick="setExactPosting('${j.title.replace(/'/g, "\\'")}')">Edit</button>
             </div>
           </div>
         </div>`;
     }
-    
-    /* Section shell + grid rendering */
+
     function jobsSectionHTML(jobs){
       JOBS_STATE.all = jobs;
       JOBS_STATE.page = 0;
       return `
         <div class="jobs-wrap">
-          <h3 class="card-title" style="margin:14px 0 6px">Top Recommended Jobs</h3>
-          <p class="card-sub" style="margin-top:0">Pinned to one link per card. Add the exact posting to show the real city & salary.</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div>
+              <h3 class="card-title" style="margin:14px 0 6px">Verified Job Postings</h3>
+              <p class="card-sub" style="margin-top:0">Only real postings from <b>LinkedIn</b> and <b>Indeed</b>. One link per card.</p>
+            </div>
+            <div class="flex" style="display:flex;gap:8px">
+              <button class="btn-secondary btn-compact" onclick="openAddLinks()">Paste LinkedIn/Indeed links</button>
+            </div>
+          </div>
           ${jobsToolbarHTML()}
           <div class="jobs" id="jobsGrid"></div>
           <div class="load-more"><button id="loadMoreBtn" class="btn-secondary">Load more</button></div>
         </div>`;
     }
+
     function renderJobsGrid(){
       const grid = document.getElementById('jobsGrid');
       if (!grid) return;
-    
       const filtered = JOBS_STATE.all.filter(j => {
         const o = getOverrides()[j.title] || {};
+        if (!o.url) return false;
+        const v = urlLooksLegitAndRelevant(o.url);
+        if (!v.ok) return false;
         const modeNow = (o.mode || j.softMode);
         return (JOB_FILTER.mode==='any'   || modeNow===JOB_FILTER.mode) &&
                (JOB_FILTER.bucket==='any' || j.bucket===JOB_FILTER.bucket);
       });
-    
       const end = Math.min(filtered.length, (JOBS_STATE.page+1)*JOBS_STATE.pageSize);
-      grid.innerHTML = filtered.slice(0, end).map(buildJobCardHTML).join('');
-    
+      const html = filtered.slice(0, end).map(buildJobCardHTML).join('');
+      grid.innerHTML = html || `
+        <div class="helper" style="text-align:center;padding:18px">
+          No verified job ads yet. Click <b>Paste LinkedIn/Indeed links</b> to add exact postings.
+        </div>`;
       const btn = document.getElementById('loadMoreBtn');
       if (btn){
         btn.style.display = end < filtered.length ? '' : 'none';
         btn.onclick = () => { JOBS_STATE.page++; renderJobsGrid(); };
       }
     }
+
     function wireToolbar(){
       const bindSeg = (segId, key) => {
-        const seg = document.getElementById(segId);
-        if (!seg) return;
+        const seg = document.getElementById(segId); if (!seg) return;
         seg.querySelectorAll('button').forEach(btn=>{
           const v = btn.getAttribute('data-val');
           const setActive = () => {
@@ -570,11 +594,10 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
           btn.onclick = () => { JOB_FILTER[key]=v; setActive(); JOBS_STATE.page = 0; renderJobsGrid(); };
         });
       };
-      bindSeg('modeSeg','mode');
-      bindSeg('bucketSeg','bucket');
+      bindSeg('modeSeg','mode'); bindSeg('bucketSeg','bucket');
     }
-    
-    /* Donut SVG for main score */
+
+    /* ===== Render results ===== */
     function donutSVG(percent,label){
       const r=28, c=2*Math.PI*r, off=c*(1-percent/100);
       const gid = `g${Math.random().toString(36).slice(2,7)}`;
@@ -586,32 +609,28 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       </svg>
       <div class="center">${label}</div>`;
     }
-    
-    /* Tooltip builder */
     const tipHTML = inner => `
       <span class="tip">
         <button class="tip-btn" type="button" aria-label="More info">i</button>
         <span class="tip-bubble" role="tooltip">${inner}<span class="arrow" aria-hidden="true"></span></span>
       </span>`;
-    
-    /* ===== Render results ===== */
+
     function analyze(){
-      const gate = canConsumeScan();
-      if (!gate.ok){ openPaywall(); return; }
-    
+      const gate = canConsumeScan(); if (!gate.ok){ openPaywall(); return; }
+
       const resume=document.getElementById('resume').value;
       const jd=document.getElementById('jd').value;
       const keywords=(document.getElementById('keywords').value||'').split(/,|\n/).map(s=>s.trim()).filter(Boolean);
       const result=scoreResume(resume,jd,keywords);
-    
+
       consumeScan(gate.mode);
-    
+
       const present=(result.presentKeywords||[]);
       const missing=(result.missingKeywords||[]);
       const totalKW = present.length + missing.length;
       const covPct = Math.round((result.coverage||0)*100);
       const fre = fleschReadingEase(resume);
-    
+
       const tipOverall = tipHTML(`<b>Overall (0–100)</b><br>ATS 0–40, Professionalism 0–35, Structure 0–15, Readability 0–10.`);
       const tipATS = tipHTML(`<b>ATS keywords (0–40)</b><br>Score = 40 × coverage. You matched <b>${present.length}</b> of <b>${totalKW}</b> (${covPct}%).`);
       const tipPRO = tipHTML(`<b>Professionalism (0–35)</b><br>Bonuses: bullets, metrics, length. Penalties: shouting, passive voice, long lines.`);
@@ -619,7 +638,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
       const tipSTRUCT = tipHTML(`<b>Structure (0–15)</b><br>Present: ${presentSections.join(', ')||'—'}<br>Missing: ${missingSections.join(', ')||'—'}`);
       const tipREAD = tipHTML(`<b>Readability (0–10)</b><br>Flesch: <b>${fre}</b>.`);
-    
+
       const breakdown=[
         {label:'ATS', val:result.breakdown.ats_keywords, max:40},
         {label:'Professionalism', val:result.breakdown.professionalism, max:35},
@@ -637,15 +656,16 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
           <div class="bar" style="margin-top:6px"><div class="bar-fill" style="width:${pct(d.val,d.max)}%"></div></div>
         </div>
       `).join('');
-    
+
       const sectionPills = Object.entries(result.sectionPresence)
         .map(([name,isOn])=>`<span class="pill ${isOn?'good':'bad'}">${name}</span>`).join('');
-    
+
       const fixes = friendlyFixes(result, fre).join('') || '<li><div class="fix-row"><span class="pill p-low">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Tailor a couple bullets to the job post.</p></li>';
-    
+
       const jobs = recommendJobs(resume, result.presentKeywords);
-      const jobsHTML = jobsSectionHTML(jobs);
-    
+      const relatedHTML = relatedJobsSectionHTML(jobs);           /* NEW */
+      const verifiedHTML = jobsSectionHTML(jobs);                 /* manual pins */
+      
       const out=document.getElementById('results');
       out.innerHTML=`
         <div>
@@ -663,9 +683,9 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
               : 'Unlimited (temp)'
             }</span>
           </div>
-    
+
           <div class="kpi-grid">${bhtml}</div>
-    
+
           <div style="margin-top:12px">
             <h3 class="card-title" style="margin:10px 0 6px">Keyword Coverage</h3>
             <div class="stack" aria-label="Keyword coverage stacked bar">
@@ -677,35 +697,36 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
               <div class="metric"><b>${covPct}%</b> coverage</div>
             </div>
           </div>
-    
+
           <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
           <div class="section-pills">${sectionPills}</div>
-    
+
           <h3 class="card-title" style="margin:14px 0 6px">Extracted from Job Description</h3>
           <div>${result.extractedKeywords.map(k=>`<span class='pill good'>${k}</span>`).join('')}</div>
-    
+
           <h3 class="card-title" style="margin:14px 0 6px">Matched Keywords</h3>
           <div>${present.map(k=>`<span class='pill good'>${k}</span>`).join('') || '<span class="pill bad">No matches yet</span>'}</div>
-    
+
           <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
           <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
-    
+
           <h3 class="card-title" style="margin:14px 0 6px">Readability & Tone</h3>
           <p class="helper" style="margin:0 0 8px">
             ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${result.profDetails.bullets}</b>,
             metrics used: <b>${result.profDetails.numbers}</b>, passive uses: <b>${result.profDetails.passive}</b>.
           </p>
-    
+
           <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
           <ul class="list-tight">${fixes}</ul>
-    
-          ${jobsHTML}
+
+          ${relatedHTML}           <!-- NEW: LinkedIn/Indeed searches -->
+          ${verifiedHTML}          <!-- Optional: manual exact postings -->
         </div>`;
-    
+
       wireToolbar();
       renderJobsGrid();
     }
-    
+
     /* ===== Upload handling ===== */
     const fileInput = document.getElementById('resumeFile');
     const fileLabel = document.getElementById('fileLabel');
@@ -717,7 +738,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
     ['dragenter','dragover'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add('drag'); }));
     ['dragleave','drop'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove('drag'); }));
     dropzone.addEventListener('drop', e=>{ const f = e.dataTransfer?.files?.[0]; if (f) handleResumeFile(f); });
-    
+
     function setScanStatus(msg, spinning=false){
       const led = document.getElementById('statusLed');
       const spin = document.getElementById('scanSpinner');
@@ -728,7 +749,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       else { spin.classList.remove('show'); if (/(error|unsupported|fail)/.test(m)) led.classList.add('error'); else if (/(extracted|success|done|✓|scored)/.test(m)) led.classList.add('done'); else led.classList.add('ready'); }
       txt.textContent = msg;
     }
-    
+
     async function handleResumeFile(file){
       fileLabel.textContent = file.name;
       setScanStatus('Scanning...', true);
@@ -755,7 +776,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         setScanStatus('Error reading file. Try another format.', false);
       }
     }
-    
+
     /* PDF.js */
     async function extractTextFromPDF(file){
       if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
@@ -771,7 +792,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       }
       return fullText.replace(/\s+\n/g,'\n').replace(/\n{3,}/g,'\n\n');
     }
-    
+
     /* Mammoth DOCX */
     async function extractTextFromDOCX(file){
       if (!window.mammoth) throw new Error('Mammoth not loaded');
@@ -779,7 +800,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const result = await mammoth.extractRawText({arrayBuffer});
       return (result.value || '').replace(/\r/g,'').trim();
     }
-    
+
     /* ===== Paywall & misc ===== */
     function openPaywall(n=1){ window.__desiredCredits = n; document.getElementById('paywall').classList.add('open'); }
     function closePaywall(){ document.getElementById('paywall').classList.remove('open'); }
@@ -799,12 +820,10 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       fileLabel.textContent = 'Choose PDF, DOCX, or TXT';
       setScanStatus('Ready', false);
     }
-    
+
     updateMeterUI();
     updatePricingUI();
     setScanStatus('Ready', false);
-    </script>
-    
-    
+  </script>
 </body>
 </html>
