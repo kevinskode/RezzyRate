@@ -45,7 +45,7 @@ body{
   font-weight:900;
   letter-spacing:.01em;
   line-height:1.1;
-  background:linear-gradient(90deg,#4f46e5,#23cfff 50%,#4f46e5 70%,#7c3aed);
+  background:linear-gradient(90deg,#23cfff,#433cff 50%,#7c3aed 50%,#23cfff);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   text-wrap:balance;
 }
@@ -264,3 +264,126 @@ button:active{transform:translateY(1px)}
 .job-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:900;font-size:var(--step--1);padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--panel);color:var(--text);text-decoration:none;min-height:36px;}
 .job-btn.primary{background:linear-gradient(180deg,#4f46e5,#4338ca);color:#fff;}
 .job-aux{display:flex;gap:6px;align-items:center;justify-content:flex-end;}
+
+/* ===================================================================== */
+/* ========== iOS / MOBILE-FRIENDLY ENHANCEMENTS (append-only) ========= */
+/* ===================================================================== */
+
+:root{ --tap: 44px; } /* Apple HIG minimum */
+
+/* Respect iPhone notches */
+@supports(padding:max(0px)){
+  body { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+}
+
+/* General iOS polish */
+html, body {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+/* Images stay within cards */
+img { max-width: 100%; height: auto; }
+
+/* Make interactive elements easy to tap on small screens */
+button, .file-btn, .buy-btn, .job-btn, .tip .tip-btn {
+  min-height: var(--tap);
+  min-width: var(--tap);
+}
+
+/* Prevent iOS zoom-on-focus by keeping font-size >= 16px */
+@media (max-width: 480px){
+  input, textarea { font-size: 16px; }
+}
+
+/* Layout & spacing on small screens */
+@media (max-width: 640px){
+  .container      { padding: 16px clamp(12px, 4vw, 16px); }
+  .topbar         { gap: 8px; }
+  .brand h1       { font-size: var(--step-3); }
+  .badges         { flex-wrap: wrap; gap: 6px; }
+  .badge          { padding: 6px 8px; }
+
+  .card           { padding: 14px; }
+  .card-title     { font-size: var(--step-2); }
+  .card-title::after { width: 40%; }
+
+  /* Upload row stacks for thumb reach */
+  .upload-row     { flex-direction: column; align-items: stretch; gap: 8px; }
+  .file-pill      { width: 100%; justify-content: space-between; }
+  .dropzone       { width: 100%; min-height: var(--tap); }
+
+  /* Actions: primary CTA full-width */
+  .actions        { flex-direction: column; align-items: stretch; }
+  .actions .spacer{ display: none; }
+  .btn-primary    { width: 100%; }
+  .pricing-buttons{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; }
+  .btn-secondary.btn-compact { width: 100%; }
+
+  /* KPIs & metrics reflow for readability */
+  .kpi-grid       { grid-template-columns: 1fr; }
+  .metrics        { grid-template-columns: repeat(2,1fr); }
+
+  .section-pills  { gap: 8px; }
+  .pill           { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Jobs grid collapses to one column */
+  .jobs           { grid-template-columns: 1fr; }
+  .job-card       { min-height: 0; }
+  .job-title      { font-size: var(--step-1); }
+  .job-footer     { flex-direction: column; align-items: stretch; gap: 8px; }
+  .job-btn        { width: 100%; }
+
+  /* Tooltip bubble can wrap on phones */
+  .tip-bubble     { max-width: min(88vw, 320px); white-space: normal; }
+}
+
+/* iOS 100vh issues: use dynamic viewport units for overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  padding: 16px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
+  -webkit-overflow-scrolling: touch;
+}
+body.modal-open {
+  position: fixed; inset: 0; width: 100%;
+  overflow: hidden; height: 100dvh;
+}
+
+/* Modal inner scroll on small screens */
+.card.modal {
+  max-height: min(88vh, 600px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Touch-friendly tooltips: visible when parent has .open (JS toggles) */
+.tip { position: relative; }
+.tip.open .tip-bubble { opacity: 1; transform: translateX(-50%) scale(1); pointer-events: auto; }
+
+/* Larger “i” chip on very small phones */
+@media (max-width: 480px){
+  .tip .tip-btn { width: 26px; height: 26px; font-size: 13px; }
+}
+
+/* Donut readability on phones */
+@media (max-width: 480px){
+  .donut { width: 56px; height: 56px; }
+  .donut .center { font-size: var(--step-1); }
+  .results-head { align-items: flex-start; gap: 8px; }
+}
+
+/* Robust word breaking to avoid overflow in long tokens/URLs */
+*, .job-line, .job-title, .helper, .badge, .pill, .chip {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Subtle focus ring for accessibility on iOS */
+:focus-visible {
+  outline: 2px solid rgba(79,70,229,.65);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
