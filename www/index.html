@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Rezzy</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css"> 
 
   <!-- PDF.js + Mammoth -->
@@ -23,19 +23,16 @@
 </head>
 <body>
   <div class="container">
-    <header class="topbar">
-      <div class="brand">
-        <img class="logo" src="logo.png" alt="Rezzy logo" />
-        <div>
-          <h1>Rezzy Rate</h1>
-          <div class="helper">The smart resume checker</div>
-        </div>
-      </div>
-      <div class="badges">
-        <span class="badge" id="freeBadge">Free credits left today: 1</span>
-        <span class="badge" id="creditBadge">Paid credits: 0</span>
-      </div>
-    </header>
+<header class="topbar">
+  <div class="brand pinned-logo">
+    <img class="logo" src="logo.png" alt="Rezzy Rate logo" />
+  </div>
+  <div class="badges">
+    <span class="badge" id="freeBadge">Free credits left today: 1</span>
+    <span class="badge" id="creditBadge">Paid credits: 0</span>
+  </div>
+</header>
+
 
     <main class="layout">
       <section class="card">
@@ -106,7 +103,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
 
       <section id="results" class="card">
         <div style="text-align:center;color:var(--muted)">
-          <div style="width:44px;height:44px;border-radius:9999px;margin:8px auto;background:linear-gradient(135deg,#60a5fa,#4f46e5)"></div>
+          <div style="width:44px;height:44px;border-radius:9999px;margin:8px auto;background:linear-gradient(135deg,#ffd34d,#f26e8c)"></div>
           <h3 style="margin:6px 0 4px;color:var(--text)">Ready to score your resume</h3>
           <div class="helper">Paste your resume or upload a file, then click <b>Analyze</b>.</div>
         </div>
@@ -355,7 +352,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       return Array.from(new Set(found.map(pretty)));
     }
 
-    /* Only LinkedIn & Indeed URLs are accepted for "verified" cards */
     const ALLOWED_JOB_HOST_PATTERNS = [/(\.|^)linkedin\.com\/jobs/i, /(\.|^)indeed\.com/i];
     const RELEVANCE_TOKENS = ["data","analyst","analytics","bi","business-intelligence","sql","python","tableau","power-bi","powerbi","etl","reporting","dashboard","pipelines","forecast"];
     function urlLooksLegitAndRelevant(urlStr){
@@ -367,7 +363,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       return {ok:true};
     }
 
-    /* Local overrides (optional manual pins) */
     const JOB_OVERRIDES_KEY = 'rc_job_overrides';
     const getOverrides = () => { try { return JSON.parse(localStorage.getItem(JOB_OVERRIDES_KEY) || '{}'); } catch { return {}; } };
     const saveOverrides = map => localStorage.setItem(JOB_OVERRIDES_KEY, JSON.stringify(map || {}));
@@ -409,7 +404,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       alert(`Added ${added} link(s). ${rejected ? rejected + ' rejected (must be LinkedIn or Indeed and relevant).' : ''}`);
     }
 
-    /* Helpers for role recommendations */
     function roleLine(skills){
       const s = skills.slice(0,3);
       const map = {
@@ -450,16 +444,11 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       return jobs.sort((a,b)=>b.score-a.score).slice(0,50);
     }
 
-    /* ---------- NEW: Related job ads (LinkedIn & Indeed) ---------- */
+    /* Related job ads (search links) */
     const mkQuery = (title, skills=[]) => encodeURIComponent(`${title} ${skills.slice(0,2).join(' ')}`.trim());
     const mkLoc   = (loc="") => encodeURIComponent(loc || "Remote");
-
-    function liSearchUrl(title, loc, skills){
-      return `https://www.linkedin.com/jobs/search/?keywords=${mkQuery(title, skills)}&location=${mkLoc(loc)}`;
-    }
-    function indeedSearchUrl(title, loc, skills){
-      return `https://www.indeed.com/jobs?q=${mkQuery(title, skills)}&l=${mkLoc(loc)}`;
-    }
+    function liSearchUrl(title, loc, skills){ return `https://www.linkedin.com/jobs/search/?keywords=${mkQuery(title, skills)}&location=${mkLoc(loc)}`; }
+    function indeedSearchUrl(title, loc, skills){ return `https://www.indeed.com/jobs?q=${mkQuery(title, skills)}&l=${mkLoc(loc)}`; }
 
     function relatedJobsSectionHTML(jobs){
       const top = jobs.slice(0,8);
@@ -497,10 +486,8 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         </div>`;
     }
 
-    /* ===== Verified (manual) section + rendering/paging ===== */
     let JOB_FILTER = { mode:"any", bucket:"any" };
     const JOBS_STATE = { all:[], page:0, pageSize:12 };
-    
     function jobsToolbarHTML(){
       const btn = (label, key, val)=>`<button type="button" data-key="${key}" data-val="${val}">${label}</button>`;
       return `
@@ -514,7 +501,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
           <span class="helper">Only exact postings from <b>LinkedIn</b> and <b>Indeed</b> are shown.</span>
         </div>`;
     }
-
     function buildJobCardHTML(j){
       const overrides = getOverrides()[j.title] || {};
       if (!overrides.url) return "";
@@ -545,7 +531,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
           </div>
         </div>`;
     }
-
     function jobsSectionHTML(jobs){
       JOBS_STATE.all = jobs;
       JOBS_STATE.page = 0;
@@ -565,7 +550,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
           <div class="load-more"><button id="loadMoreBtn" class="btn-secondary">Load more</button></div>
         </div>`;
     }
-
     function renderJobsGrid(){
       const grid = document.getElementById('jobsGrid');
       if (!grid) return;
@@ -590,7 +574,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         btn.onclick = () => { JOBS_STATE.page++; renderJobsGrid(); };
       }
     }
-
     function wireToolbar(){
       const bindSeg = (segId, key) => {
         const seg = document.getElementById(segId); if (!seg) return;
@@ -613,7 +596,12 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const gid = `g${Math.random().toString(36).slice(2,7)}`;
       return `
       <svg class="donut" viewBox="0 0 72 72" role="img" aria-label="Score ${percent}%">
-        <defs><linearGradient id="${gid}" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4f46e5"/></linearGradient></defs>
+        <defs>
+          <!-- Updated to logo colors: yellow -> pink -->
+          <linearGradient id="${gid}" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#ffd34d"/><stop offset="100%" stop-color="#f26e8c"/>
+          </linearGradient>
+        </defs>
         <circle cx="36" cy="36" r="${r}" fill="none" stroke="rgba(148,163,184,.25)" stroke-width="8"/>
         <circle cx="36" cy="36" r="${r}" fill="none" stroke="url(#${gid})" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 36 36)"/>
       </svg>
@@ -673,8 +661,8 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       const fixes = friendlyFixes(result, fre).join('') || '<li><div class="fix-row"><span class="pill p-low">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Tailor a couple bullets to the job post.</p></li>';
 
       const jobs = recommendJobs(resume, result.presentKeywords);
-      const relatedHTML = relatedJobsSectionHTML(jobs);           /* NEW */
-      const verifiedHTML = jobsSectionHTML(jobs);                 /* manual pins */
+      const relatedHTML = relatedJobsSectionHTML(jobs);
+      const verifiedHTML = jobsSectionHTML(jobs);
       
       const out=document.getElementById('results');
       out.innerHTML=`
@@ -729,8 +717,8 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
           <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
           <ul class="list-tight">${fixes}</ul>
 
-          ${relatedHTML}           <!-- NEW: LinkedIn/Indeed searches -->
-          ${verifiedHTML}          <!-- Optional: manual exact postings -->
+          ${relatedHTML}
+          ${verifiedHTML}
         </div>`;
 
       wireToolbar();
@@ -787,7 +775,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       }
     }
 
-    /* PDF.js */
     async function extractTextFromPDF(file){
       if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
       const buf = await file.arrayBuffer();
@@ -803,7 +790,6 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       return fullText.replace(/\s+\n/g,'\n').replace(/\n{3,}/g,'\n\n');
     }
 
-    /* Mammoth DOCX */
     async function extractTextFromDOCX(file){
       if (!window.mammoth) throw new Error('Mammoth not loaded');
       const arrayBuffer = await file.arrayBuffer();
@@ -822,7 +808,7 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
       document.getElementById('keywords').value='';
       document.getElementById('results').innerHTML = `
         <div style="text-align:center;color:var(--muted)">
-          <div style="width:44px;height:44px;border-radius:9999px;margin:8px auto;background:linear-gradient(135deg,#60a5fa,#4f46e5)"></div>
+          <div style="width:44px;height:44px;border-radius:9999px;margin:8px auto;background:linear-gradient(135deg,#ffd34d,#f26e8c)"></div>
           <h3 style="margin:6px 0 4px;color:var(--text)">Ready to score your resume</h3>
           <div class="helper">Paste your resume and click <b>Analyze</b>.</div>
         </div>`;
