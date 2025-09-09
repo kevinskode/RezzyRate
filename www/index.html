@@ -798,8 +798,15 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
     }
 
     /* ===== Paywall & misc ===== */
-    function openPaywall(n=1){ window.__desiredCredits = n; document.getElementById('paywall').classList.add('open'); }
-    function closePaywall(){ document.getElementById('paywall').classList.remove('open'); }
+  function openPaywall(n=1){
+    window.__desiredCredits = n;
+    document.getElementById('paywall').classList.add('open');
+    document.body.classList.add('modal-open');   // lock background scroll (iOS friendly)
+  }
+  function closePaywall(){
+    document.getElementById('paywall').classList.remove('open');
+    document.body.classList.remove('modal-open'); // unlock
+  }
     async function startCheckout(n=1){ addCredits(n); closePaywall(); alert(`Added ${n} scan${n>1?'s':''}. Swap this with Stripe for production.`); }
     function addCredits(n){ writeMeter({creditAdd:n}); }
     function clearAll(){
