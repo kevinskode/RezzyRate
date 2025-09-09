@@ -443,3 +443,55 @@ button,.file-btn,.buy-btn,.job-btn,.tip .tip-btn{ min-height:var(--tap); min-wid
 
 /* Prevent accidental horizontal scroll anywhere */
 html,body,.container{ overflow-x:hidden; }
+
+/* ===== iPhone fixes: pinned logo spacing, header contrast, tidy grid ===== */
+@media (max-width:640px){
+  /* Keep the logo fixed but reserve space so content never sits underneath */
+  .pinned-logo{
+    position:fixed;
+    top:max(10px, env(safe-area-inset-top));
+    left:max(10px, env(safe-area-inset-left));
+    z-index:1000;
+  }
+  .pinned-logo .logo{ width:84px; border-radius:10px; }
+
+  /* Header block that clears the logo area on iPhone */
+  .topbar{
+    padding-left:0;                                  /* override previous 96px */
+    padding-right:max(10px, env(safe-area-inset-right));
+    padding-top:max(12px, env(safe-area-inset-top));
+    padding-bottom:12px;
+    min-height:96px;                                 /* reserves vertical space under logo */
+    display:flex; align-items:center; gap:10px;
+  }
+
+  /* Improve badge readability over bright corner glow */
+  .badges{ justify-content:flex-start; gap:6px; flex-wrap:wrap; }
+  .badge{
+    background:rgba(7,16,32,.55);
+    border-color:rgba(255,255,255,.22);
+    color:#fff;
+  }
+
+  /* Ensure first card never tucks up into the logo area */
+  .layout{ margin-top:6px; }
+
+  /* (Upload controls already made full-width above; leaving here for clarity) */
+  .upload-row{ flex-direction:column; align-items:stretch; gap:8px; }
+  .file-pill{ width:100%; justify-content:space-between; }
+  .dropzone{ width:100%; min-height:var(--tap); }
+
+  .layout, .card, .actions, .jobs, .kpi-grid, .metrics{ max-width:100%; }
+}
+
+/* If :has is available (iOS 17+), add extra top padding only when logo exists */
+@supports(selector(:has(*))){
+  @media (max-width:640px){
+    .container:has(.pinned-logo){ padding-top:84px; }
+  }
+}
+
+/* Keep bottom content above Safari toolbar & home indicator */
+@supports(padding:max(0px)){
+  body{ padding-bottom:max(16px, env(safe-area-inset-bottom)); }
+}
