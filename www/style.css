@@ -85,7 +85,7 @@ body::before{
   }
 }
 
-/* ---------- Topbar / Brand ---------- */
+/* ---------- Topbar / Brand (desktop baseline) ---------- */
 .pinned-logo{
   position:absolute;
   top:4%;
@@ -99,7 +99,7 @@ body::before{
   box-shadow:0 8px 20px rgba(0,0,0,.25);
 }
 .topbar{
-  padding-left:120px;
+  padding-left:120px; /* clears the pinned logo on desktop */
   margin-top:-1%;
   padding-bottom:1%;
 }
@@ -640,7 +640,7 @@ body.modal-open{
 }
 :focus-visible{ outline:2px solid rgba(242,110,140,.65); outline-offset:2px; border-radius:8px; }
 
-/* ---------- Mobile tweaks ---------- */
+/* ---------- Mobile tweaks: shared ---------- */
 button,.file-btn,.buy-btn,.job-btn,.tip .tip-btn{ min-height:var(--tap); min-width:var(--tap); }
 
 /* Avoid input zoom on iOS */
@@ -648,105 +648,108 @@ button,.file-btn,.buy-btn,.job-btn,.tip .tip-btn{ min-height:var(--tap); min-wid
   select,button,input,textarea{ font-size:16px; }
 }
 
-/* Main mobile layout (≤640px) */
-@media (max-width:640px){
-  .container{ padding:16px clamp(12px,4vw,16px); }
-  .badges{ gap:6px; justify-content:flex-start; }
-  .card{ padding:14px; }
-  .card-title{ font-size:var(--step-2); }
-  .card-title::after{ width:40%; }
+/* ==== MOBILE HEADER FIX (iPhone & small screens) ==== */
+@media (max-width: 640px){
+  /* Let the logo flow so it doesn't overlap content */
+  .pinned-logo{
+    position:static !important;
+    top:auto; left:auto;
+    z-index:1;
+  }
+  .pinned-logo .logo{
+    width:72px !important;
+    height:auto;
+    border-radius:10px;
+    box-shadow:0 6px 16px rgba(0,0,0,.22);
+  }
+
+  /* Sticky, notch-safe header */
+  .topbar{
+    position:sticky;
+    top:0;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:0;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      10px
+      max(12px, env(safe-area-inset-left));
+    background:linear-gradient(180deg,rgba(9,14,28,.88),rgba(9,14,28,.72));
+    backdrop-filter:saturate(1.1) blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+
+  /* Brand left • badges right with one-line scroll */
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .badges{
+    margin-left:auto;
+    display:flex; gap:8px; align-items:center;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:2px 0;
+    scrollbar-width:none;
+  }
+  .badges::-webkit-scrollbar{ display:none; }
+  .badge{
+    flex:0 0 auto;
+    font-size:12px;
+    padding:6px 10px;
+    background:rgba(7,16,32,.6);
+    border-color:#ffffff22;
+    color:#fff;
+  }
+
+  /* Space under sticky bar */
+  .container{ padding-top:12px; }
+  .layout{ margin-top:8px; }
+
+  /* Stack upload controls nicely */
   .upload-row{ flex-direction:column; align-items:stretch; gap:8px; }
   .file-pill{ width:100%; justify-content:space-between; }
   .dropzone{ width:100%; min-height:var(--tap); }
-  .actions{ flex-direction:column; align-items:stretch; }
+
+  /* Actions & pricing */
+  .actions{ flex-direction:column; align-items:stretch; gap:8px; }
   .actions .spacer{ display:none; }
   .btn-primary{ width:100%; }
   .pricing-buttons{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; width:100%; }
+
+  /* Card & type scaling */
+  .card{ padding:14px; }
+  .card-title{ font-size:var(--step-2); }
+  .card-title::after{ width:40%; }
+
+  /* Score visuals scale down */
+  .score-block{ gap:10px; }
+  .donut{ width:56px; height:56px; }
+  .donut .center{ font-size:var(--step-1); }
+
+  /* KPI & metrics collapse */
   .kpi-grid{ grid-template-columns:1fr; }
   .metrics{ grid-template-columns:repeat(2,1fr); }
+
+  /* Jobs grid */
   .jobs{ grid-template-columns:1fr; }
   .job-title{ font-size:var(--step-1); }
   .job-footer{ flex-direction:column; align-items:stretch; gap:8px; }
 
-  /* Pinned logo stays visible but non-blocking */
-  .pinned-logo{
-    position:fixed;
-    top:max(10px, env(safe-area-inset-top));
-    left:max(10px, env(safe-area-inset-left));
-    z-index:1000;
-  }
-  .pinned-logo .logo{ width:84px; border-radius:10px; }
-
-  /* Keep content clear of logo */
-  .topbar{
-    padding-left:96px;
-    margin-top:0;
-    padding-bottom:8px;
-  }
-
-  /* Tighten score visuals */
-  .score-block{ gap:10px; }
-  .donut{ width:56px; height:56px; }
-  .donut .center{ font-size:var(--step-1); }
+  /* No sideways scroll */
+  html, body, .container{ overflow-x:hidden; }
 }
 
-/* Very small devices */
+/* Ultra-small phones */
 @media (max-width:360px){
+  .pinned-logo .logo{ width:64px !important; }
+  .badge{ font-size:11.5px; padding:5px 9px; }
   .card{ padding:12px; }
-  .job-title{ font-size:var(--step-0); }
-  .file-pill span,#fileLabel{ font-size:var(--step--1); }
-}
-
-/* Prevent accidental horizontal scroll anywhere */
-html,body,.container{ overflow-x:hidden; }
-
-/* ===== iPhone fixes: pinned logo spacing, header contrast, tidy grid ===== */
-@media (max-width:640px){
-  /* Keep the logo fixed but reserve space so content never sits underneath */
-  .pinned-logo{
-    position:fixed;
-    top:max(10px, env(safe-area-inset-top));
-    left:max(10px, env(safe-area-inset-left));
-    z-index:1000;
-  }
-  .pinned-logo .logo{ width:84px; border-radius:10px; }
-
-  /* Header block that clears the logo area on iPhone */
-  .topbar{
-    padding-left:0;                                  /* override previous 96px */
-    padding-right:max(10px, env(safe-area-inset-right));
-    padding-top:max(12px, env(safe-area-inset-top));
-    padding-bottom:12px;
-    min-height:96px;                                 /* reserves vertical space under logo */
-    display:flex; align-items:center; gap:10px;
-  }
-
-  /* Improve badge readability over bright corner glow */
-  .badges{ justify-content:flex-start; gap:6px; flex-wrap:wrap; }
-  .badge{
-    background:rgba(7,16,32,.55);
-    border-color:rgba(255,255,255,.22);
-    color:#fff;
-  }
-
-  /* Ensure first card never tucks up into the logo area */
-  .layout{ margin-top:6px; }
-
-  .upload-row{ flex-direction:column; align-items:stretch; gap:8px; }
-  .file-pill{ width:100%; justify-content:space-between; }
-  .dropzone{ width:100%; min-height:var(--tap); }
-
-  .layout, .card, .actions, .jobs, .kpi-grid, .metrics{ max-width:100%; }
-}
-
-/* If :has is available (iOS 17+), add extra top padding only when logo exists */
-@supports(selector(:has(*))){
-  @media (max-width:640px){
-    .container:has(.pinned-logo){ padding-top:84px; }
-  }
 }
 
 /* Keep bottom content above Safari toolbar & home indicator */
 @supports(padding:max(0px)){
   body{ padding-bottom:max(16px, env(safe-area-inset-bottom)); }
 }
+ 
