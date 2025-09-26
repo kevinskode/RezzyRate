@@ -1,3 +1,18 @@
+/* Stripe checkout overlay container (your DOM, not Stripe's iframe) */
+#checkout-modal.overlay { background: rgba(5,10,25,.65); }
+
+#checkout-modal .card.modal{
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+#checkout-modal .card.modal h2{
+  color: var(--text);
+  margin-top: 0;
+}
+
 :root{
   /* Logo-true palette */
   --ink:#0a0f18;

@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  
   <title>Rezzy</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css"> 
@@ -20,6 +21,9 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date()); gtag('config', 'G-HC1DSZ3RED');
   </script>
+
+  <script src="https://js.stripe.com/v3" defer></script>
+  <script src="script.js" defer></script> 
 </head>
 <body>
   <div class="container">
@@ -134,10 +138,18 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         <span class="spacer"></span>
         <button class="btn-secondary btn-compact" onclick="closePaywall()">Close</button>
       </div>
-      <p class="helper" style="margin-top:12px">Dev mode: This demo adds credits to localStorage. Replace <code>startCheckout</code> with Stripe Checkout + webhook.</p>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <div id="checkout-modal" class="overlay" aria-modal="true" role="dialog">
+  <div class="card modal">
+    <h2 class="card-title" style="margin-top:0">Complete your purchase</h2>
+    <div id="payment-element"></div>
+    <button id="pay-now" class="btn-primary" style="margin-top:12px">Pay now</button>
+    <div id="checkout-msg" class="helper" style="margin-top:8px"></div>
+    <button id="closeCheckoutBtn" class="btn-secondary btn-compact" style="margin-top:10px">Close</button>
+  </div>
+</div>
+
 </body>
 </html>

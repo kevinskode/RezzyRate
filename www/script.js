@@ -1,6 +1,78 @@
+// === Stripe config ===
+const STRIPE_PUBLISHABLE_KEY = "pk_test_51RzkyvChKVWsJZcWlClLjJ1xACdszPyCjKmX1HTudOaqq5VKOM2rAdc2a9qusAWjskbaGba2IEzLhDGaBJb2NAYM00yaemtAQf";  // <-- your TEST publishable key
+const API_BASE_URL = "https://gyw1n7b24m.execute-api.us-east-2.amazonaws.com/Prod"; // <-- your API
 
+function getOrCreateToken(){
+  const k = 'credit_token_v1';
+  let t = localStorage.getItem(k);
+  if (!t){
+    t = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+    localStorage.setItem(k, t);
+  }
+  return t;
+}
+const CREDIT_TOKEN = getOrCreateToken();
+
+// one Price per bundle (set these to your real Price IDs from Stripe)
+const PRICE_IDS = {
+  1:  "price_1S5dgPChKVWsJZcWk9kacziD",   // $0.49
+  10: "price_1S5dhfChKVWsJZcWJdjIkpfx",   // $3.99
+  20: "price_1S5di8ChKVWsJZcWTxpXycQ0"    // $5.99
+};
+
+
+let stripe, elements, paymentElement, clientSecret;
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.Stripe) {
+    console.error('Stripe.js failed to load (CSP or network)');
+    return;
+  }
+  stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+
+  // make sure your price labels render on load too
+  if (typeof updatePricingUI === 'function') {
+    updatePricingUI();
+  }
+});
+
+function openCheckout(){
+  const modal = document.getElementById('checkout-modal');
+  modal.classList.add('open');
+  document.body.classList.add('modal-open');
+
+  // reset button state + message every time the modal opens
+  const payBtn = document.getElementById('pay-now');
+  const msg    = document.getElementById('checkout-msg');
+  if (payBtn) payBtn.disabled = false;
+  if (msg) msg.textContent = '';
+}
+
+function closeCheckout(){
+  const modal = document.getElementById('checkout-modal');
+  modal.classList.remove('open');
+  document.body.classList.remove('modal-open');
+
+  // unmount Element if present
+  try { if (paymentElement) paymentElement.unmount(); } catch(_) {}
+  const mount = document.getElementById('payment-element');
+  if (mount) mount.innerHTML = '';
+
+  // clear handler + re-enable button for next time
+  const payBtn = document.getElementById('pay-now');
+  if (payBtn) { payBtn.onclick = null; payBtn.disabled = false; }
+
+  // clear state
+  elements = paymentElement = clientSecret = null;
+  const msg = document.getElementById('checkout-msg');
+  if (msg) msg.textContent = '';
+}
+
+document.getElementById('closeCheckoutBtn').addEventListener('click', closeCheckout);
+
+    
     /* ===== Prices ===== */
-    const PRICES = { single: 0.49, pack10: 3.99, pack20: 5.99 };
+    const PRICES = { single: 0.50, pack10: 3.99, pack20: 5.99 };
     const fmt = n => `$${n.toFixed(2)}`;
     function updatePricingUI(){
       const p1 = fmt(PRICES.single), p10 = fmt(PRICES.pack10), p20 = fmt(PRICES.pack20);
@@ -667,7 +739,132 @@
     document.getElementById('paywall').classList.remove('open');
     document.body.classList.remove('modal-open'); // unlock
   }
-    async function startCheckout(n=1){ addCredits(n); closePaywall(); alert(`Added ${n} scan${n>1?'s':''}. Swap this with Stripe for production.`); }
+
+async function startCheckout(n = 1){
+  if (!stripe) { alert('Payment library not loaded yet. Please retry.'); return; }
+  const priceId = PRICE_IDS[n];
+  if (!priceId){ alert('Unknown product'); return; }
+
+  // close the paywall; we’ll show the Stripe overlay
+  closePaywall();
+
+  // 1) Create PaymentIntent via your Lambda (server looks up Price and sets the amount)
+  const res = await fetch(`${API_BASE_URL}/create-payment-intent`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ 
+      priceId, 
+      quantity: 1,
+      token: CREDIT_TOKEN,          // NEW
+      credits: n                    // NEW: 1, 10, or 20
+    })
+  });
+  const data = await res.json();
+  if (!res.ok || !data.client_secret){
+    alert(data.error || 'Error creating payment'); 
+    return;
+  }
+  clientSecret = data.client_secret;
+
+  // ensure any previous instance is gone
+  try { if (paymentElement) paymentElement.unmount(); } catch(_) {}
+  paymentElement = null;
+  elements = null;
+
+  // 2) Mount Payment Element inside our checkout modal
+  elements = stripe.elements({
+  clientSecret,
+  appearance: {
+    theme: 'night',
+    variables: {
+      colorPrimary: '#f26e8c',      // --accent
+      colorPrimaryText: '#0b1020',
+      colorBackground: '#0d1422',   // --panel
+      colorText: '#f7f9ff',         // --text
+      colorTextSecondary: '#aeb7c6',// --muted
+      colorDanger: '#ef4444',       // --bad
+      fontFamily: "'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+      borderRadius: '16px'          // --radius
+    },
+    rules: {
+      '.Input': {
+        backgroundColor: '#0b1220',
+        border: '1px solid rgba(168,179,197,.18)',
+        color: '#f7f9ff'
+      },
+      '.Input:focus': {
+        borderColor: '#21c7b7',
+        boxShadow: '0 0 0 3px rgba(33,199,183,.22)'
+      }
+    }
+  }
+});
+
+  paymentElement = elements.create('payment');
+  paymentElement.mount('#payment-element');
+
+  openCheckout();
+
+  // 3) Wire the Pay Now button (idempotently)
+  const payBtn = document.getElementById('pay-now');
+const msg    = document.getElementById('checkout-msg');
+
+let paying = false;
+payBtn.onclick = async () => {
+  if (paying) return;            // prevent double submit
+  paying = true;
+  payBtn.disabled = true;
+  msg.textContent = 'Processing…';
+
+  const { error } = await stripe.confirmPayment({
+    elements,
+    confirmParams: { return_url: window.location.origin + '/success.html' },
+    redirect: 'if_required'
+  });
+
+  if (error){
+    msg.textContent = error.message || 'Payment failed.';
+    payBtn.disabled = false;
+    paying = false;
+    return;
+  }
+
+  msg.textContent = 'Payment succeeded!';
+  const granted = await claimCredits();
+  if (!granted) setTimeout(() => claimCredits(), 1500);
+
+  // small delay so the user sees success, then clean close
+  setTimeout(() => { paying = false; closeCheckout(); }, 1200);
+};
+
+}
+
+async function claimCredits({ retries = 6, delay = 400 } = {}) {
+  const url = `${API_BASE_URL}/credits?token=${encodeURIComponent(CREDIT_TOKEN)}`;
+
+  for (let i = 0; i < retries; i++) {
+    const r = await fetch(url, { cache: 'no-store' });
+    if (r.ok) {
+      const { credits = 0 } = await r.json();
+      if (credits > 0) {
+        // add to your local balance
+        if (typeof addCredits === 'function') addCredits(credits);
+
+        // force badge/pill redraw if you have a renderer
+        if (typeof renderCreditBadges === 'function') renderCreditBadges();
+        if (typeof updateCreditUI === 'function') updateCreditUI();
+
+        return credits;
+      }
+    }
+    // webhook may not have written yet — wait and try again
+    await new Promise(res => setTimeout(res, delay));
+    delay = Math.min(delay * 1.6, 3000); // backoff up to 3s
+  }
+  return 0;
+}
+
+
     function addCredits(n){ writeMeter({creditAdd:n}); }
     function clearAll(){
       document.getElementById('resume').value='';
@@ -687,3 +884,5 @@
     updateMeterUI();
     updatePricingUI();
     setScanStatus('Ready', false);
+    document.addEventListener('DOMContentLoaded', () => { claimCredits(); });
+
