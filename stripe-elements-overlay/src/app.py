@@ -57,39 +57,42 @@ PRODUCTS = {
 
 # === Lambda handler ===
 def create_payment_intent(event, _context):
-    # Preflight for CORS
     if event.get("httpMethod") == "OPTIONS":
         return _response(200, {"ok": True}, event)
 
     try:
         body = _parse_json_body(event)
-        product_id = body.get("productId")
+        price_id = body.get("priceId")
         quantity = int(body.get("quantity", 1))
 
-        if not product_id or product_id not in PRODUCTS:
-            return _response(400, {"error": "Unknown or missing productId"}, event)
+        if not price_id:
+            return _response(400, {"error": "priceId required"}, event)
         if quantity < 1 or quantity > 50:
             return _response(400, {"error": "quantity must be 1..50"}, event)
 
-        item = PRODUCTS[product_id]
-        amount_cents = item["amount"] * quantity
-        currency = item.get("currency", "usd")
-
-        # Stripe
         stripe.api_key = _get_stripe_key()
+
+        # Optional allowlist, e.g. ALLOWED_PRICE_IDS="price_xxx_single,price_xxx_pack10,price_xxx_pack20"
+        allowed = {p.strip() for p in os.environ.get("ALLOWED_PRICE_IDS", "").split(",") if p.strip()}
+        if allowed and price_id not in allowed:
+            return _response(400, {"error": "priceId not allowed"}, event)
+
+        price = stripe.Price.retrieve(price_id)
+        if not price.get("active"):
+            return _response(400, {"error": "price is inactive"}, event)
+        if price.get("type") != "one_time" or price.get("unit_amount") is None:
+            return _response(400, {"error": "price must be one_time with unit_amount"}, event)
+
+        amount_cents = int(price["unit_amount"]) * quantity
+        currency = price["currency"]
+
         intent = stripe.PaymentIntent.create(
             amount=amount_cents,
             currency=currency,
             automatic_payment_methods={"enabled": True},
-            metadata={
-                "product_id": product_id,
-                "quantity": str(quantity),
-                "source": "s3-overlay",
-            },
+            metadata={"price_id": price_id, "quantity": str(quantity), "source": "rezzy"},
         )
-
         return _response(200, {"client_secret": intent["client_secret"]}, event)
 
     except Exception as e:
-        # Log full details in CloudWatch in real life; returning message here for speed while you test
         return _response(500, {"error": str(e)}, event)
