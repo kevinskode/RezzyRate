@@ -361,38 +361,47 @@ body.modal-open{
 .metric b{ color:var(--text); }
 .section-pills{ display:flex; flex-wrap:wrap; gap:6px; }
 
-/* Tip button */
+/* Tip button (compact 16px circle) — single source of truth */
+.tip{ position:relative; display:inline-flex; align-items:center; }
 .tip .tip-btn{
-  min-height:0;
+  width:16px;
+  height:16px;
+  min-width:16px;
+  min-height:16px;
   padding:0;
-  width:22px;
-  height:22px;
-  aspect-ratio:1/1;
   border-radius:50%;
   border:1px solid var(--border);
-  background:linear-gradient(180deg,#141b30,#0b1220);
-  color:#ffd6e5;
-  font-size:12px;
-  font-weight:900;
-  display:inline-grid;
-  place-items:center;
+  background:rgba(255,255,255,.06);
+  color:var(--muted);
+  font-size:10px;
+  font-weight:700;
   line-height:1;
-  vertical-align:middle;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   cursor:help;
   appearance:none;
-  box-shadow:0 1px 2px rgba(0,0,0,.35), inset 0 -1px 0 rgba(255,255,255,.03);
-  transition:box-shadow .15s ease, transform .06s ease, border-color .15s ease;
+  box-shadow:none;
+  vertical-align:middle;
+  transition:background .15s ease, border-color .15s ease, color .15s ease;
 }
-.tip .tip-btn:hover{ box-shadow:0 2px 10px rgba(242,110,140,.28); }
-.tip .tip-btn:active{ transform:translateY(1px); }
-.tip .tip-btn:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(242,110,140,.22); }
+.tip .tip-btn:hover{
+  background:rgba(242,110,140,.18);
+  border-color:var(--accent);
+  color:var(--accent);
+}
+.tip .tip-btn:active{ transform:translateY(0); }  /* no jump */
+
+/* Bubble – open BELOW the icon */
 .tip-bubble{
   position:absolute;
   left:50%;
-  bottom:calc(100% + 10px);
-  transform:translateX(-50%) scale(.98);
+  top:calc(100% + 8px);     /* moved below the icon */
+  bottom:auto;              /* reset bottom */
+  transform:translateX(-50%) scale(.95);
   min-width:220px;
-  max-width:320px;
+  max-width:460px;
+  line-height: 1.6;
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:12px;
@@ -407,16 +416,21 @@ body.modal-open{
 }
 .tip:hover .tip-bubble,
 .tip:focus-within .tip-bubble{ opacity:1; transform:translateX(-50%) scale(1); }
+/* Arrow sits on TOP edge, pointing up */
 .tip-bubble .arrow{
   position:absolute;
   left:50%;
-  bottom:-6px;
+  top:-6px;
+  bottom:auto;
   width:10px;
   height:10px;
   transform:translateX(-50%) rotate(45deg);
   background:var(--panel);
-  border-left:1px solid var(--border);
-  border-top:1px solid var(--border);
+  /* flip borders to match the bubble outline on the TOP edge */
+  border-right:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  border-left:0;
+  border-top:0;
 }
 
 /* Upload row */
@@ -656,7 +670,11 @@ body.modal-open{
 :focus-visible{ outline:2px solid rgba(242,110,140,.65); outline-offset:2px; border-radius:8px; }
 
 /* ---------- Mobile tweaks: shared ---------- */
-button,.file-btn,.buy-btn,.job-btn,.tip .tip-btn{ min-height:var(--tap); min-width:var(--tap); }
+/* Exclude tip buttons so they stay tiny */
+button,.file-btn,.buy-btn,.job-btn{
+  min-height:var(--tap);
+  min-width:var(--tap);
+}
 
 /* Avoid input zoom on iOS */
 @media (max-width:480px){
@@ -768,3 +786,212 @@ button,.file-btn,.buy-btn,.job-btn,.tip .tip-btn{ min-height:var(--tap); min-wid
   body{ padding-bottom:max(16px, env(safe-area-inset-bottom)); }
 }
  
+/* === Type cleanup: inputs + buttons + labels === */
+:root{
+  --font-sans: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --btn-weight: 600;      /* firm but not shouty */
+  --input-weight: 500;    /* balanced for fields */
+  --label-weight: 700;    /* clear section labels */
+  --label-track: .06em;   /* was .12em – tighter = cleaner */
+}
+
+/* Improve shaping & rendering for Inter */
+html{
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Body copy stays regular */
+body{
+  font-family: var(--font-sans);
+  letter-spacing: 0;            /* removes global extra tracking */
+}
+
+/* Labels: keep uppercase but reduce shout */
+label{
+  font-family: var(--font-sans);
+  font-weight: var(--label-weight);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  opacity: .9;
+}
+
+/* Inputs & textareas: consistent, compact line-height */
+input, textarea, select{
+  font-family: var(--font-sans);
+  font-weight: var(--input-weight);
+  font-size: var(--step-0);
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+/* Placeholder tone down */
+::placeholder{
+  color: #9aa3b2;
+  opacity: .9;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Buttons: unify style across all button-like elements */
+button,
+.file-btn,
+.job-btn,
+.buy-btn{
+  font-family: var(--font-sans);
+  font-weight: var(--btn-weight);
+  letter-spacing: .005em;  /* subtle, not wide */
+  line-height: 1.1;
+  text-transform: none;     /* keep case natural */
+}
+
+/* Primary buttons: stronger contrast for text */
+.btn-primary{
+  color: #0b1020;
+  font-weight: var(--btn-weight);
+}
+
+/* Secondary/neutral buttons: slightly higher contrast */
+.btn-secondary,
+.file-btn,
+.job-btn{
+  color: #eef2ff;                 /* a bit brighter than --text for clarity */
+}
+
+/* Pills/badges: lighten weight so they don’t compete with buttons */
+.badge,
+.pill,
+.chip,
+.badge-mini{
+  font-weight: 600;               /* was 800–900 in spots */
+  letter-spacing: .01em;
+}
+
+/* Reduce over-bold headlines that sit next to buttons */
+.card-title{
+  font-weight: 800;               /* was 900 */
+  letter-spacing: .003em;
+}
+
+/* === KPI color system (green / yellow / red) === */
+.kpi { padding:10px; border:1px solid var(--border); border-radius:12px; min-width:0; }
+.kpi-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.kpi-label{ display:flex; align-items:center; gap:8px; min-width:0; }
+.kpi-text{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* small colored dot before each label */
+.kpi-dot{
+  width:10px; height:10px; border-radius:9999px; flex:0 0 10px;
+  background:var(--muted);
+  box-shadow:0 0 0 1px rgba(255,255,255,.05) inset;
+}
+
+/* colored states for bar + dot */
+.kpi.good  .bar-fill{ background:var(--ok); }
+.kpi.warn  .bar-fill{ background:var(--warn); }
+.kpi.bad   .bar-fill{ background:var(--bad);  }
+
+.kpi.good  .kpi-dot{ background:var(--ok);  }
+.kpi.warn  .kpi-dot{ background:var(--warn); }
+.kpi.bad   .kpi-dot{ background:var(--bad);  }
+
+/* make the bar a little more contrasty on dark */
+.bar{ height:10px; border-radius:9999px; background:#0b1220; border:1px solid var(--border); overflow:hidden; }
+.bar-fill{ height:100%; width:0; }
+
+/* Overall score label tone (Strong/Excellent/etc.) */
+.rating.good{ color:var(--ok); }
+.rating.warn{ color:var(--warn); }
+.rating.bad { color:var(--bad); }
+
+/* Prevent awkward wraps everywhere in the header */
+.results-head h2, .results-head .rating, .kpi b, .kpi-label { white-space:nowrap; }
+
+/* Mobile: show shorter labels to avoid wrapping */
+@media (max-width:480px){
+  .kpi-text::after { content: attr(data-short); }
+  .kpi-text { font-variant-ligatures:none; }
+  .kpi-text { display:inline-block; }
+  .kpi-text { visibility:hidden; }        /* hide long text… */
+  .kpi-text::after{ visibility:visible; } /* …show short alias */
+}
+
+/* ---------- RESULTS HEADER / DONUT ---------- */
+.results-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.score-block{ display:flex; align-items:center; gap:12px; min-width:0; }
+.results-head .pill{ flex:0 0 auto; }
+
+/* donut is a wrapper now (see JS below) */
+.donut{ width:64px; height:64px; position:relative; display:inline-block; }
+.donut svg{ width:100%; height:100%; display:block; }
+.donut .center{
+  position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  font-weight:900; font-size:var(--step-2); line-height:1; color:var(--text);
+}
+
+/* ---------- KPI GRID & ROWS ---------- */
+.kpi-grid{ display:grid; grid-template-columns:repeat(4, minmax(180px, 1fr)); gap:8px; margin-top:10px; }
+@media (max-width:1100px){ .kpi-grid{ grid-template-columns:repeat(2, minmax(220px, 1fr)); } }
+@media (max-width:640px){  .kpi-grid{ grid-template-columns:1fr; } }
+
+.kpi{ padding:10px; border:1px solid var(--border); border-radius:12px; min-width:0; }
+.kpi-row{ display:flex; align-items:center; gap:8px; min-width:0; }
+.kpi-label{ display:flex; align-items:center; gap:6px; min-width:0; }
+.kpi-text{ min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kpi b{ margin-left:auto; flex:0 0 auto; white-space:nowrap; }
+.bar{ height:10px; border-radius:9999px; background:#0b1220; border:1px solid var(--border); overflow:hidden; margin-top:8px; }
+
+/* KPI dots + states */
+.kpi-dot{ width:10px; height:10px; border-radius:9999px; flex:0 0 10px; background:var(--muted); box-shadow:0 0 0 1px rgba(255,255,255,.05) inset; }
+.kpi.good  .kpi-dot{ background:var(--ok);  }
+.kpi.warn  .kpi-dot{ background:var(--warn); }
+.kpi.bad   .kpi-dot{ background:var(--bad);  }
+.kpi.good  .bar-fill{ background:var(--ok);  }
+.kpi.warn  .bar-fill{ background:var(--warn); }
+.kpi.bad   .bar-fill{ background:var(--bad);  }
+
+/* === FIX: KPI labels cut off (no ellipsis, allow wrap) === */
+.kpi .helper,
+.kpi-label,
+.kpi-text{
+  max-width: none !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* keep the little "i" tip from squeezing the text */
+.kpi-label{ display:flex; align-items:center; gap:8px; min-width:0; }
+.kpi .tip{ flex:0 0 auto; }      /* don't shrink the tip */
+.kpi b{ white-space:nowrap; }    /* keep 20/40 etc. on one line */
+
+/* === FIX: grid adapts so boxes aren't too narrow === */
+.kpi-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap:8px;
+}
+
+/* on very small screens show the short aliases (Prof., Struct., Read.) */
+@media (max-width: 420px){
+  .kpi-text::after{ content: attr(data-short); }
+  .kpi-text{ visibility:hidden; }
+  .kpi-text::after{ visibility:visible; }
+}
+
+/* --- FINAL GUARD OVERRIDE: keep tip icon 16px no matter what --- */
+.tip .tip-btn{
+  width:16px !important;
+  height:16px !important;
+  min-width:16px !important;
+  min-height:16px !important;
+  padding:0 !important;
+  line-height:1 !important;
+  border-radius:50% !important;
+  box-shadow:none !important;
+}

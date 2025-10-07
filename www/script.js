@@ -523,27 +523,55 @@ document.getElementById('closeCheckoutBtn').addEventListener('click', closeCheck
     }
 
     /* ===== Render results ===== */
-    function donutSVG(percent,label){
-      const r=28, c=2*Math.PI*r, off=c*(1-percent/100);
-      const gid = `g${Math.random().toString(36).slice(2,7)}`;
-      return `
-      <svg class="donut" viewBox="0 0 72 72" role="img" aria-label="Score ${percent}%">
-        <defs>
-          <!-- Updated to logo colors: yellow -> pink -->
-          <linearGradient id="${gid}" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stop-color="#ffd34d"/><stop offset="100%" stop-color="#f26e8c"/>
-          </linearGradient>
-        </defs>
+function donutSVG(percent, label){
+  const r = 28, c = 2 * Math.PI * r, off = c * (1 - percent / 100);
+  const stroke = bandColor(scoreBand(percent));
+  return `
+    <div class="donut" role="img" aria-label="Score ${percent}%">
+      <svg viewBox="0 0 72 72">
         <circle cx="36" cy="36" r="${r}" fill="none" stroke="rgba(148,163,184,.25)" stroke-width="8"/>
-        <circle cx="36" cy="36" r="${r}" fill="none" stroke="url(#${gid})" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 36 36)"/>
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="${stroke}" stroke-width="8"
+                stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
+                transform="rotate(-90 36 36)"/>
       </svg>
-      <div class="center">${label}</div>`;
-    }
+      <div class="center">${label}</div>
+    </div>`;
+}
+
     const tipHTML = inner => `
       <span class="tip">
         <button class="tip-btn" type="button" aria-label="More info">i</button>
         <span class="tip-bubble" role="tooltip">${inner}<span class="arrow" aria-hidden="true"></span></span>
       </span>`;
+
+
+/* === Color helpers for score visuals === */
+function scoreBand(pct){           // overall 0–100
+  return pct >= 85 ? 'good' : pct >= 55 ? 'warn' : 'bad';
+}
+function kpiBand(value, max){      // individual KPI 0–max
+  const pct = Math.round((value / max) * 100);
+  return scoreBand(pct);
+}
+function bandColor(band){          // returns CSS var()
+  return band === 'good' ? 'var(--ok)' : band === 'warn' ? 'var(--warn)' : 'var(--bad)';
+}
+
+/* Colorized donut (solid ring in green/yellow/red) */
+function donutSVG(percent, label){
+  const r = 28, c = 2 * Math.PI * r, off = c * (1 - percent / 100);
+  const stroke = bandColor(scoreBand(percent));
+  return `
+    <svg class="donut" viewBox="0 0 72 72" role="img" aria-label="Score ${percent}%">
+      <circle cx="36" cy="36" r="${r}" fill="none" stroke="rgba(148,163,184,.25)" stroke-width="8"/>
+      <circle cx="36" cy="36" r="${r}" fill="none" stroke="${stroke}" stroke-width="8" stroke-linecap="round"
+              stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 36 36)"/>
+    </svg>
+    <div class="center">${label}</div>`;
+}
+
+
+
 
     function analyze(){
       const gate = canConsumeScan(); if (!gate.ok){ openPaywall(); return; }
@@ -561,31 +589,124 @@ document.getElementById('closeCheckoutBtn').addEventListener('click', closeCheck
       const covPct = Math.round((result.coverage||0)*100);
       const fre = fleschReadingEase(resume);
 
-      const tipOverall = tipHTML(`<b>Overall (0–100)</b><br>ATS 0–40, Professionalism 0–35, Structure 0–15, Readability 0–10.`);
-      const tipATS = tipHTML(`<b>ATS keywords (0–40)</b><br>Score = 40 × coverage. You matched <b>${present.length}</b> of <b>${totalKW}</b> (${covPct}%).`);
-      const tipPRO = tipHTML(`<b>Professionalism (0–35)</b><br>Bonuses: bullets, metrics, length. Penalties: shouting, passive voice, long lines.`);
-      const presentSections = Object.entries(result.sectionPresence).filter(([,v])=>v).map(([k])=>k);
-      const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
-      const tipSTRUCT = tipHTML(`<b>Structure (0–15)</b><br>Present: ${presentSections.join(', ')||'—'}<br>Missing: ${missingSections.join(', ')||'—'}`);
-      const tipREAD = tipHTML(`<b>Readability (0–10)</b><br>Flesch: <b>${fre}</b>.`);
+      // --- Friendlier, detailed tooltips ---
+const presentSections = Object.entries(result.sectionPresence).filter(([,v])=>v).map(([k])=>k);
+const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
 
-      const breakdown=[
-        {label:'ATS', val:result.breakdown.ats_keywords, max:40},
-        {label:'Professionalism', val:result.breakdown.professionalism, max:35},
-        {label:'Structure', val:result.breakdown.structure, max:15},
-        {label:'Readability', val:result.breakdown.readability, max:10},
-      ];
-      const bhtml = breakdown.map(d=>`
-        <div class="kpi">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-            <span class="helper" style="letter-spacing:.02em;display:flex;align-items:center;gap:6px">
-              ${d.label} ${({'ATS':tipATS,'Professionalism':tipPRO,'Structure':tipSTRUCT,'Readability':tipREAD})[d.label]}
-            </span>
-            <b>${d.val}/${d.max}</b>
-          </div>
-          <div class="bar" style="margin-top:6px"><div class="bar-fill" style="width:${pct(d.val,d.max)}%"></div></div>
-        </div>
-      `).join('');
+const bullets      = result.profDetails.bullets;
+const exclam       = result.profDetails.exclam;
+const capsWords    = result.profDetails.capsWords;
+const longLines    = result.profDetails.longLines;
+const passiveHits  = result.profDetails.passive;
+const wordCount    = result.profDetails.words;
+const numbersUsed  = result.profDetails.numbers;
+
+const readScore10  = result.breakdown.readability; // 0–10
+const readLabel    = gradeReadability(readScore10);
+
+const tipOverall = tipHTML(`
+  <div style="font-weight:800;margin-bottom:4px">Overall score (0–100)</div>
+  <div style="margin-bottom:8px">
+    This is a weighted mix of everything below:<br>
+    <b>ATS</b> (up to 40) + <b>Professionalism</b> (up to 35) + <b>Structure</b> (up to 15) + <b>Readability</b> (up to 10).
+  </div>
+  <div style="margin-bottom:6px">
+    <b>How we color it</b>: 85–100 = green, 55–84 = yellow, &lt;55 = red.
+  </div>
+  <div>
+    Aim for green overall. Yellow usually means “a few targeted fixes will push this over the line.”
+  </div>
+`);
+
+const tipATS = tipHTML(`
+  <div style="font-weight:800;margin-bottom:4px">ATS keywords (0–40)</div>
+  <div style="margin-bottom:8px">
+    <b>What it means</b>: How well your wording matches the job post.<br>
+    <b>How we score</b>: <b>40 × keyword coverage</b> (matches ÷ total keywords).
+  </div>
+  <div style="margin-bottom:8px">
+    <b>Your scan</b>: ${present.length} matched of ${totalKW} (${covPct}% coverage). 
+    ${missing.length ? `Missing examples: <i>${missing.slice(0,8).join(', ')}</i>.` : `No obvious gaps—nice!`}
+  </div>
+  <div>
+    <b>Human tip</b>: Mirror the job’s phrasing exactly where it’s natural. If they say “<i>Power BI</i>,” prefer that over “BI dashboards.” Work those terms into bullets that describe real outcomes.
+  </div>
+`);
+
+const tipPRO = tipHTML(`
+  <div style="font-weight:800;margin-bottom:4px">Professionalism (0–35)</div>
+  <div style="margin-bottom:8px">
+    <b>What helps</b>: clear bullets, real numbers, sensible length.<br>
+    <b>What hurts</b>: shouty ALL-CAPS, passive voice, extra-long lines, exclamation marks.
+  </div>
+  <div style="margin-bottom:8px">
+    <b>Your scan</b>:
+    <ul style="margin:6px 0 0 18px; padding:0">
+      <li>Bullets: <b>${bullets}</b> (aim ~5–7 for recent roles)</li>
+      <li>Metrics used: <b>${numbersUsed}</b> (aim 3–5 wins like “cut cycle time 30%”)</li>
+      <li>Passive phrases: <b>${passiveHits}</b> (keep &lt; 3; prefer “Built/Automated/Improved”)</li>
+      <li>ALL-CAPS words: <b>${capsWords}</b> (minimize)</li>
+      <li>Very long lines (&gt;160 chars): <b>${longLines}</b> (break into bullets)</li>
+      <li>Word count: <b>${wordCount}</b> (sweet spot ≈ 400–700 for a one-pager)</li>
+      <li>Exclamation marks: <b>${exclam}</b> (skip them—let results carry the energy)</li>
+    </ul>
+  </div>
+  <div>
+    <b>Human tip</b>: Start bullets with strong verbs, then impact + metric (who/what/how much). Keep one idea per bullet.
+  </div>
+`);
+
+const tipSTRUCT = tipHTML(`
+  <div style="font-weight:800;margin-bottom:4px">Structure (0–15)</div>
+  <div style="margin-bottom:8px">
+    <b>What it checks</b>: the essential sections are there and easy to spot.
+  </div>
+  <div style="margin-bottom:8px">
+    <b>Present</b>: ${presentSections.length ? presentSections.join(', ') : '—'}<br>
+    <b>Missing</b>: ${missingSections.length ? `<i>${missingSections.join(', ')}</i>` : 'None—great!'}
+  </div>
+  <div>
+    <b>Human tip</b>: Use simple headings (no fancy templates), one column, and consistent formatting. Export to a text-based PDF.
+  </div>
+`);
+
+const tipREAD = tipHTML(`
+  <div style="font-weight:800;margin-bottom:4px">Readability (0–10)</div>
+  <div style="margin-bottom:8px">
+    We convert the Flesch Reading Ease (0–100) to a 0–10 score.<br>
+    <b>Your Flesch</b>: <b>${fre}</b> → <b>${readScore10}/10</b> (<i>${readLabel}</i>).
+  </div>
+  <div>
+    <b>Human tip</b>: Keep sentences ~12–18 words, trim filler, split long lines into bullets, and prefer everyday words over jargon. If a line feels breathy when you read it out loud, break it up.
+  </div>
+`);
+
+
+      const breakdown = [
+  { label:'ATS',            val:result.breakdown.ats_keywords, max:40, short:'ATS' },
+  { label:'Professionalism',val:result.breakdown.professionalism, max:35, short:'Prof.' },
+  { label:'Structure',      val:result.breakdown.structure, max:15, short:'Struct.' },
+  { label:'Readability',    val:result.breakdown.readability, max:10, short:'Read.' },
+];
+
+const bhtml = breakdown.map(d=>{
+  const band = kpiBand(d.val, d.max);              // good | warn | bad
+  const pctW = Math.round((d.val / d.max) * 100);  // width for bar
+  const tipMap = { 'ATS':tipATS, 'Professionalism':tipPRO, 'Structure':tipSTRUCT, 'Readability':tipREAD };
+  return `
+    <div class="kpi ${band}" data-pct="${pctW}">
+      <div class="kpi-row">
+        <span class="kpi-label">
+          <span class="kpi-dot"></span>
+          <span class="kpi-text" data-short="${d.short}">${d.label}</span>
+          ${tipMap[d.label]}
+        </span>
+        <b>${d.val}/${d.max}</b>
+      </div>
+      <div class="bar"><div class="bar-fill" style="width:${pctW}%"></div></div>
+    </div>`;
+}).join('');
+
 
       const sectionPills = Object.entries(result.sectionPresence)
         .map(([name,isOn])=>`<span class="pill ${isOn?'good':'bad'}">${name}</span>`).join('');
@@ -601,7 +722,8 @@ document.getElementById('closeCheckoutBtn').addEventListener('click', closeCheck
         <div>
           <div class="results-head">
             <div class="score-block">
-              <div style="position:relative">${donutSVG(result.total, `${result.total}`)}</div>
+       ${donutSVG(result.total, `${result.total}`)}
+
               <div>
                 <h2 class="card-title" style="margin:0;display:flex;align-items:center;gap:6px">Overall Score ${tipOverall}</h2>
                 <div class="rating">${classifyScore(result.total)}</div>
@@ -652,6 +774,17 @@ document.getElementById('closeCheckoutBtn').addEventListener('click', closeCheck
           ${relatedHTML}
           ${verifiedHTML}
         </div>`;
+
+// After:  <div class="rating">...</div> is rendered
+const ratingEl = out.querySelector('.results-head .rating');
+if (ratingEl){
+  ratingEl.classList.remove('good','warn','bad');
+  ratingEl.classList.add(scoreBand(result.total));
+}
+
+
+
+
 
       wireToolbar();
       renderJobsGrid();
