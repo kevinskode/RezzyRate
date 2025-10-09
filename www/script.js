@@ -562,12 +562,15 @@ function donutSVG(percent, label){
   const r = 28, c = 2 * Math.PI * r, off = c * (1 - percent / 100);
   const stroke = bandColor(scoreBand(percent));
   return `
-    <svg class="donut" viewBox="0 0 72 72" role="img" aria-label="Score ${percent}%">
-      <circle cx="36" cy="36" r="${r}" fill="none" stroke="rgba(148,163,184,.25)" stroke-width="8"/>
-      <circle cx="36" cy="36" r="${r}" fill="none" stroke="${stroke}" stroke-width="8" stroke-linecap="round"
-              stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 36 36)"/>
-    </svg>
-    <div class="center">${label}</div>`;
+    <div class="donut" role="img" aria-label="Score ${percent}%">
+      <svg viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="rgba(148,163,184,.25)" stroke-width="8"/>
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="${stroke}" stroke-width="8"
+                stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
+                transform="rotate(-90 36 36)"/>
+      </svg>
+      <div class="center">${label}</div>
+    </div>`;
 }
 
 
