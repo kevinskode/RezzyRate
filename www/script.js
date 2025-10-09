@@ -746,11 +746,7 @@ const bhtml = breakdown.map(d=>{
             <div class="stack" aria-label="Keyword coverage stacked bar">
               <div class="ok" style="width:${covPct}%"></div><div class="gap" style="width:${100-covPct}%"></div>
             </div>
-            <div class="metrics">
-              <div class="metric"><b>${present.length}</b> matched</div>
-              <div class="metric"><b>${missing.length}</b> missing</div>
-              <div class="metric"><b>${covPct}%</b> coverage</div>
-            </div>
+        
           </div>
 
           <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
@@ -764,7 +760,11 @@ const bhtml = breakdown.map(d=>{
 
           <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
           <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
-
+    <div class="metrics">
+              <div class="metric"><b>${present.length}</b> matched</div>
+              <div class="metric"><b>${missing.length}</b> missing</div>
+              <div class="metric"><b>${covPct}%</b> coverage</div>
+            </div>
           <h3 class="card-title" style="margin:14px 0 6px">Readability & Tone</h3>
           <p class="helper" style="margin:0 0 8px">
             ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${result.profDetails.bullets}</b>,
