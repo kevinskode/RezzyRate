@@ -1276,3 +1276,47 @@ button,
   margin-top:2px;           /* aligns nicer with title */
   border-radius:9999px;
 }
+.list-tight.list-mini li {
+  padding: 10px 12px 10px 42px;
+}
+.list-tight.list-mini li::before {
+  top: 10px;
+  left: 10px;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+}
+.ghost-wrap .helper {
+  color: var(--muted);
+}
+
+/* --- iOS/mobile background paint fix --- */
+@media (max-width: 640px){
+  /* Solid fallback so there's never a white flash */
+  html{ background:#0b1326; }
+
+  /* Use the same gradient but avoid background-attachment: fixed on iOS */
+  body{
+    background: linear-gradient(135deg,#0b1326 0%,#0b1326 45%,#0c152c 100%) !important;
+    background-attachment: scroll !important; /* override the fixed value */
+  }
+
+  /* Keep corner glow layer but ensure it paints behind content */
+  body::before{
+    z-index:0;                  /* was -1; iOS can skip painting negatives */
+  }
+
+  /* Make sure content sits above the glow layer */
+  header, main, footer, .container, .overlay{
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Extra guard: target iOS specifically (works alongside the media query) */
+@supports (-webkit-touch-callout: none){
+  html{ background:#0b1326; }
+  body{
+    background-attachment: scroll !important;
+  }
+}
