@@ -284,14 +284,49 @@ const tipHTML = inner => `
     <span class="tip-bubble" role="tooltip">${inner}<span class="arrow" aria-hidden="true"></span></span>
   </span>`;
 
-/* ===== Detail helpers for Ghost Job analysis ===== */
-function getSnippet(src, rx){
+/* ===== Improved getSnippet (fixes mid-word/sentence chops) ===== */
+function getSnippet(src, rx, { around = 140, max = 260 } = {}) {
   if (!src || !rx) return "";
-  const m = rx.exec(src);
+  const text = String(src).replace(/\s+/g, " ").trim();
+
+  const m = rx.exec(text);
   if (!m) return "";
-  const i = Math.max(0, m.index - 40);
-  const j = Math.min(src.length, m.index + m[0].length + 60);
-  return src.slice(i, j).replace(/\s+/g,' ').trim();
+
+  // symmetric window around the match
+  let start = Math.max(0, m.index - around);
+  let end   = Math.min(text.length, m.index + m[0].length + around);
+
+  // snap start to nearest sentence or word boundary
+  const lastPeriod = Math.max(
+    text.lastIndexOf(". ", start),
+    text.lastIndexOf("! ", start),
+    text.lastIndexOf("? ", start)
+  );
+  if (lastPeriod !== -1) start = lastPeriod + 2;
+  else {
+    const lastSpace = text.lastIndexOf(" ", start);
+    if (lastSpace !== -1) start = lastSpace + 1;
+  }
+
+  // snap end to a sentence or word boundary
+  const after = text.slice(end);
+  const sentMatch = after.match(/^[^.!?]*[.!?](?:["’”])?\s/);
+  if (sentMatch) end += sentMatch[0].length;
+  else {
+    const nextSpace = text.indexOf(" ", end);
+    if (nextSpace !== -1) end = nextSpace;
+  }
+
+  // clamp overly long snippets, prefer ending at a sentence
+  let snippet = text.slice(start, end).trim();
+  if (snippet.length > max) {
+    const cut = snippet.search(/([.!?](?:["’”])?\s)[^.!?]*$/);
+    snippet = (cut > 0 ? snippet.slice(0, cut + 1) : snippet.slice(0, max)).trim();
+  }
+
+  const prefix = start > 0 ? "…" : "";
+  const suffix = end < text.length ? "…" : "";
+  return `${prefix}${snippet}${suffix}`;
 }
 
 /* ===== Simplified-but-detailed Ghost Job analysis ===== */
