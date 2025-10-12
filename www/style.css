@@ -1320,3 +1320,271 @@ button,
     background-attachment: scroll !important;
   }
 }
+
+
+.overall-summary{
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+  padding:12px 14px;
+  box-shadow: var(--shadow);
+  line-height:1.75;
+}
+.overall-summary p{
+  margin:10px 0;
+  color:var(--text);
+}
+.overall-summary p strong, .overall-summary b{
+  color: var(--text);
+}
+
+/* === Overall Summary styling (clean, readable, dark-friendly) === */
+.overall-summary{
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+  box-shadow: var(--shadow);
+}
+
+.os-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
+}
+
+.os-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:9999px;
+  font-weight:800;
+  letter-spacing:.02em;
+  background:linear-gradient(180deg, var(--accent-2), var(--accent));
+  color:#06121a;
+  border:1px solid rgba(255,255,255,.14);
+  text-transform:uppercase;
+  font-size:12px;
+}
+
+.os-score{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+}
+.os-num{
+  font-size:clamp(28px, 5vw, 36px);
+  font-weight:900;
+  line-height:1;
+  color:var(--text);
+}
+.os-rank{
+  padding:4px 10px;
+  border-radius:9999px;
+  border:1px solid transparent;
+  font-weight:900;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  font-size:12.5px;
+}
+.os-rank.good{  color:#eafff5; background:linear-gradient(180deg, rgba(16,185,129,.42), rgba(16,185,129,.24)); border-color:rgba(16,185,129,.55); }
+.os-rank.warn{  color:#fff6db; background:linear-gradient(180deg, rgba(245,158,11,.46), rgba(245,158,11,.26)); border-color:rgba(245,158,11,.62); }
+.os-rank.bad{   color:#ffe5e5; background:linear-gradient(180deg, rgba(239,68,68,.44), rgba(239,68,68,.26)); border-color:rgba(239,68,68,.58); }
+
+.os-tone{
+  margin:6px 0 12px;
+  color:var(--text);
+  font-size:var(--step-1);
+  line-height:1.65;
+}
+
+.os-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:10px;
+}
+@media (max-width: 760px){
+  .os-grid{ grid-template-columns: 1fr; }
+}
+
+.os-card{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  background:rgba(255,255,255,.03);
+}
+.os-card h4{
+  margin:0 0 6px;
+  font-weight:850;
+  font-size:var(--step-1);
+}
+
+.os-list{
+  margin:0; padding-left:18px;
+  line-height:1.7;
+  color:var(--muted);
+}
+.os-list li{ margin:4px 0; }
+
+.os-chipline{
+  margin:6px 0 0;
+  color:var(--muted);
+}
+.os-chipline .os-label{
+  color:#e5faff;
+  font-weight:700;
+}
+
+.os-ghost{
+  margin-top:12px;
+  padding:12px;
+  border-radius:12px;
+  border:1px dashed var(--border);
+  background:rgba(255,255,255,.03);
+}
+.os-ghost-head{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;
+}
+.os-ghost-badge{
+  padding:4px 10px; border-radius:9999px; border:1px solid var(--border); font-weight:800; font-size:12px;
+}
+.os-ghost-badge.good{ color:#a7f3d0; background:#0d2621; border-color:rgba(52,211,153,.25); }
+.os-ghost-badge.warn{ color:#fde68a; background:#291e07; border-color:rgba(245,158,11,.25); }
+.os-ghost-badge.bad{  color:#fecaca; background:#2a1517; border-color:rgba(239,68,68,.25); }
+.os-ghost-meta{ color:var(--muted); font-size:12.5px; }
+
+.os-next{
+  margin-top:12px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:rgba(255,255,255,.035);
+}
+.os-next h4{ margin:0 0 6px; font-weight:850; font-size:var(--step-1); }
+.os-steps{ margin:0; padding-left:18px; line-height:1.8; color:var(--muted); }
+.os-steps li{ margin:4px 0; }
+
+
+/* === Softer, theme-fit summary styling (overrides) === */
+
+/* Container: subtle surface, no heavy gradients/shadows */
+.overall-summary{
+  background: rgba(255,255,255,.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 10px 12px;
+  line-height: 1.7;
+}
+
+/* Each paragraph: light structure via a left accent, not a box */
+.overall-summary p{
+  position: relative;
+  margin: 8px 0;
+  padding: 6px 0 6px 12px;
+  background: transparent;
+  border-left: 3px solid rgba(33,199,183,.28); /* uses --accent-3, softened */
+  color: var(--text);
+}
+
+/* The lead “key” token (from **Key:**) — quiet pill, small & tidy */
+.os-p{
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.os-key{
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: var(--step--1);
+  font-weight: 750;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+
+  color: #cfeff0;                           /* soft, readable */
+  background: rgba(33,199,183,.10);         /* faint teal wash */
+  border: 1px solid rgba(33,199,183,.22);   /* quiet outline */
+  box-shadow: none;
+}
+
+/* Tone down any bold inside paragraphs so the key tag is the star */
+.overall-summary p b,
+.overall-summary p strong{
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Mobile: keep it airy without feeling busy */
+@media (max-width: 640px){
+  .overall-summary{ padding: 10px 12px; }
+  .overall-summary p{ margin: 6px 0; padding-left: 10px; }
+  .os-key{ padding: 2px 7px; letter-spacing: .05em; }
+}
+
+
+/* --- Title bubble sits on its own line; paragraph flows underneath --- */
+.os-p{
+  margin: 10px 0 14px;
+}
+
+.os-key{
+  display: inline-block;              /* its own line */
+  margin-left: 2px;
+  margin-bottom: 6px;                 /* space before the text block */
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: var(--step--1);
+  font-weight: 750;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+
+  color: #cfeff0;
+  background: rgba(33,199,183,.10);
+  border: 1px solid rgba(33,199,183,.22);
+}
+
+/* Only the paragraph body gets the left accent line */
+.os-body{
+  display: block;                     /* forces line break after the pill */
+  padding: 6px 0 6px 12px;
+  border-left: 3px solid rgba(33,199,183,.28);
+  color: var(--text);
+}
+
+/* If you still have a generic .overall-summary p rule, neutralize it */
+.overall-summary p{ background: transparent; border-left: none; padding-left: 0; }
+
+/* Mobile tweaks */
+@media (max-width: 640px){
+  .os-key{ margin-bottom: 5px; padding: 2px 7px; letter-spacing: .05em; }
+  .os-body{ padding-left: 10px; }
+}
+
+.os-p {
+  display: block;
+  margin: 14px 0;
+}
+
+.os-key {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #cfeff0;
+  background: rgba(33,199,183,.10);
+  border: 1px solid rgba(33,199,183,.22);
+}
+
+.os-p {
+  color: var(--text);
+  line-height: 1.7;
+}

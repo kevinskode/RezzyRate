@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+/* ===== Checkout modal open/close ===== */
 function openCheckout(){
   const modal = document.getElementById('checkout-modal');
   modal.classList.add('open');
@@ -330,7 +331,6 @@ function getSnippet(src, rx, { around = 140, max = 260 } = {}) {
 }
 
 /* ===== Simplified-but-detailed Ghost Job analysis ===== */
-// map REALNESS (0 not real → 100 very real) to labels
 function mapScoreToRank(realness){
   if (realness <= 30) return { label: "Likely Ghost", band: "bad", next:
     "Proceed carefully. Ask whether the req is funded, who’s actively hiring, and the target start date. Consider networking into the team before applying." };
@@ -340,8 +340,7 @@ function mapScoreToRank(realness){
     "Looks active. Apply soon, mirror the job’s wording for key tools, and follow up with the hiring manager/recruiter within a week." };
 }
 
-/* Internally we still compute "ghostiness" (0–100), then flip:
-   realness = 100 - ghostiness  */
+/* Internally compute "ghostiness" (0–100), then flip to realness */
 function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
   const jd = (jdRaw || "").trim();
   if (!jd) return null;
@@ -403,6 +402,15 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
   };
 }
 
+/* ===== Lead-word styler: turns "**LEAD:** ..." into
+   <p class="os-p"><span class="os-key">LEAD</span><span class="os-body">…</span></p> ===== */
+function styleSummaryLeads(html){
+  return html.replace(
+    /<p>\s*\*\*([^*]+?)\s*:\s*\*\*\s*([\s\S]*?)<\/p>/g,
+    '<p class="os-p"><span class="os-key">$1</span><span class="os-body">$2</span></p>'
+  );
+}
+
 /* ===== Intuitive, detail-rich, color-synced UI section ===== */
 function jobRealitySectionHTML(ghost) {
   if (!ghost) return "";
@@ -462,6 +470,71 @@ function jobRealitySectionHTML(ghost) {
   `;
 }
 
+/* ===== Overall Summary (human-style narrative) ===== */
+function generateOverallSummary(result, fre, ghost, resumeText, jdText){
+  const rank = classifyScore(result.total);
+  const covPct  = Math.round((result.coverage||0)*100);
+  const present = result.presentKeywords || [];
+  const missing = result.missingKeywords || [];
+  const missingPreview = missing.slice(0, 10);
+  const presentPreview = present.slice(0, 12);
+  const read10 = result.breakdown.readability; // 0–10
+  const readLabel = gradeReadability(read10);
+
+  // Section presence
+  const presentSections = Object.entries(result.sectionPresence).filter(([,v])=>v).map(([k])=>k);
+  const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
+
+  const ghostNote = ghost ? (() => {
+    const tone =
+      ghost.band === 'good' ? "looks active and worth applying to" :
+      ghost.band === 'warn' ? "has mixed signals—apply, but clarify timing and process" :
+                              "may be a placeholder or ‘evergreen’ post—proceed thoughtfully";
+    return `The job ad reality check lands at ${ghost.score}% realness (${ghost.label}). In plain English: it ${tone}.`;
+  })() : "";
+
+  // Gentle CTA about keywords
+  const kwHint = missing.length
+    ? `You’re already aligned on ${present.length} of ${present.length + missing.length} keywords. If you can naturally weave in even a few of the missing terms — like ${missingPreview.join(', ')} — your ATS score should lift.`
+    : `Nice: there aren’t obvious keyword gaps for this post. Keep mirroring the job’s exact phrasing where it feels natural.`;
+
+  // Professionalism highlights
+  const p = result.profDetails;
+  const impactTip = p.numbers >= 3
+    ? `Good use of measurable impact (${p.numbers} data points).`
+    : `Try to add clearer impact (aim for 3–5 concrete numbers).`;
+  const passiveTip = p.passive > 3
+    ? `I noticed ${p.passive} passive constructions — swapping to active verbs will help.`
+    : `Voice reads mostly active, which keeps your accomplishments punchy.`;
+  const bulletsTip = p.bullets < 5
+    ? `Consider a few more bullets in your most recent role so each result stands on its own.`
+    : `Bullet density looks healthy — it’s skimmable.`;
+
+  // Readability nudges
+  const readNote = `Readability translates to a ${read10}/10 (“${readLabel}”). For most roles, shorter sentences (about 12–18 words) and one idea per bullet help both humans and ATS.`;
+
+  // Structure nudge
+  const structureNote = missingSections.length
+    ? `Structure wise, you’re missing ${missingSections.join(', ')}. Adding those headers helps recruiters (and ATS) find the essentials fast.`
+    : `Your structure covers the common sections — nice foundation.`;
+
+  const paragraphs = [
+    `**Overall:** Your resume scores **${result.total}/100** (${rank}). That combines ATS keyword alignment (${result.breakdown.ats_keywords}/40), professionalism (${result.breakdown.professionalism}/35), section structure (${result.breakdown.structure}/15), and readability (${result.breakdown.readability}/10).`,
+    `**Keyword fit:** Coverage sits at **${covPct}%**. ${kwHint} ${presentPreview.length ? `Strong overlaps include: ${presentPreview.join(', ')}.` : ''}`,
+    `**Professional polish:** ${impactTip} ${passiveTip} ${bulletsTip}`,
+    `**Readability:** Flesch score is **${fre}**, which maps to "${readLabel}". ${readNote}`,
+    `**Structure:** ${structureNote}`,
+    ghost ? `**Job ad reality check:** ${ghostNote} ${ghost.next ? `Next move: ${ghost.next}` : ''}` : '',
+    `**What to do next:** Pick 2–3 bullets in your most recent role and tie them to the job’s language (especially the missing keywords). Add one quantified improvement per bullet — time saved, accuracy improved, revenue influenced, costs reduced. Keep each bullet single-idea, ~1–2 lines, and lead with an action verb (Built, Automated, Forecasted, Reduced).`
+  ].filter(Boolean);
+
+  // Pipe through the lead-word styler so **Lead:** becomes a pill
+  return styleSummaryLeads(`
+    <div class="overall-summary">
+      ${paragraphs.map(p => `<p>${p}</p>`).join('')}
+    </div>
+  `);
+}
 
 /* ===== Analyze (job-free) ===== */
 function analyze(){
@@ -567,6 +640,9 @@ function analyze(){
   const ghost = analyzeGhostJob(jd, resume);
   const ghostHTML = jobRealitySectionHTML(ghost);
 
+  // NEW: Overall Summary HTML
+  const summaryHTML = generateOverallSummary(result, fre, ghost, resume, jd);
+
   const out = document.getElementById('results');
   out.innerHTML = `
     <div>
@@ -623,6 +699,10 @@ function analyze(){
 
       <!-- Job Ad Reality Check -->
       ${ghostHTML}
+
+      <!-- Overall Summary (new, human-style) -->
+      <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
+      ${summaryHTML}
     </div>`;
 
   // color the “Strong / Excellent / Fair …” pill
