@@ -1,7 +1,7 @@
 // === Stripe config ===
 const STRIPE_PUBLISHABLE_KEY = "pk_test_51RzkyvChKVWsJZcWlClLjJ1xACdszPyCjKmX1HTudOaqq5VKOM2rAdc2a9qusAWjskbaGba2IEzLhDGaBJb2NAYM00yaemtAQf";  // <-- your TEST publishable key
 const API_BASE_URL = "https://gyw1n7b24m.execute-api.us-east-2.amazonaws.com/Prod"; // <-- your API
-
+console.log("922");
 function getOrCreateToken(){
   const k = 'credit_token_v1';
   let t = localStorage.getItem(k);
