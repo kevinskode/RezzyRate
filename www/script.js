@@ -663,13 +663,6 @@ function analyze(){
 
       <div class="kpi-grid">${bhtml}</div>
 
-      <div style="margin-top:12px">
-        <h3 class="card-title" style="margin:10px 0 6px">Keyword Coverage</h3>
-        <div class="stack" aria-label="Keyword coverage stacked bar">
-          <div class="ok" style="width:${covPct}%"></div><div class="gap" style="width:${100-covPct}%"></div>
-        </div>
-      </div>
-
       <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
       <div class="section-pills">${sectionPills}</div>
 
@@ -711,6 +704,16 @@ function analyze(){
     ratingEl.classList.remove('good','warn','bad');
     ratingEl.classList.add(scoreBand(result.total));
   }
+
+  // === SIMILAR LIVE JOBS ===
+  (async () => {
+    const jdText = jd || "";
+    const kw = keywords || [];
+    const q = buildJobsQuery({ jd: jdText, keywords: kw });
+    const whereGuess = guessLocationFromText(jdText);
+    const jobs = await fetchSimilarJobs({ q, where: whereGuess, limit: 12 });
+    renderSimilarJobs(jobs);
+  })();
 }
 
 /* ===== Upload handling ===== */
@@ -933,6 +936,90 @@ function clearAll(){
   fileLabel.textContent = 'Choose PDF, DOCX, or TXT';
   setScanStatus('Ready', false);
 }
+
+/* =================== SIMILAR LIVE JOBS FEATURE =================== */
+/** Replace with your deployed jobs proxy (API Gateway / Cloudflare Worker) */
+const JOBS_API = "https://YOUR_API_GATEWAY_DOMAIN/jobs"; // <- TODO: set this
+
+function guessJobTitleFromText(t) {
+  const clean = (t||"").split(/\n+/).slice(0, 20).join(" ");
+  const titleRx = /\b(?:(?:Data|Business|Product|Software|Marketing|Operations|Financial)\s+)?(?:Analyst|Engineer|Manager|Scientist|Developer|Specialist|Associate)\b/gi;
+  const m = clean.match(titleRx);
+  return m ? m[0].replace(/\s+/g, " ").trim() : "";
+}
+function guessLocationFromText(t) {
+  if (!t) return "";
+  const remote = t.match(/\b(remote|hybrid|on[-\s]?site)\b/i);
+  const citySt = t.match(/\b([A-Z][a-zA-Z .'-]+,\s*[A-Z]{2})\b/);
+  return (citySt && citySt[1]) || (remote && remote[1]) || "";
+}
+function buildJobsQuery({ jd, keywords }) {
+  const title = guessJobTitleFromText(jd) || "Data Analyst";
+  const key   = (keywords || []).slice(0, 4).join(" ");
+  return [title, key].filter(Boolean).join(" ").trim();
+}
+function escapeHTML(s){ return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+async function fetchSimilarJobs({ q, where, limit = 12 }) {
+  if (!JOBS_API || JOBS_API.includes("YOUR_API_GATEWAY_DOMAIN")) {
+    console.warn("Set JOBS_API to your deployed jobs proxy URL.");
+    return [];
+  }
+  const url = new URL(JOBS_API);
+  url.searchParams.set("q", q || "");
+  if (where) url.searchParams.set("where", where);
+  url.searchParams.set("limit", String(limit));
+
+  try {
+    const r = await fetch(url.toString(), { cache: "no-store" });
+    if (!r.ok) throw new Error(`Jobs API ${r.status}`);
+    const data = await r.json();
+    return Array.isArray(data.jobs) ? data.jobs : [];
+  } catch (e) {
+    console.warn("Jobs fetch failed:", e);
+    return [];
+  }
+}
+
+function renderSimilarJobs(jobs = []) {
+  const sec = document.getElementById("similar-jobs");
+  const grid = document.getElementById("jobsGrid");
+  if (!sec || !grid) return;
+
+  if (!jobs.length) {
+    grid.innerHTML = `<div class="helper">No matching live jobs found right now. Try refining the job description or keywords.</div>`;
+    sec.hidden = false;
+    return;
+  }
+
+  const html = jobs.map(j => {
+    const d = (j.desc || "").replace(/\s+/g," ").trim();
+    const snippet = d.length > 220 ? d.slice(0, 220) + "…" : d;
+    const when = j.created ? new Date(j.created).toLocaleDateString() : "";
+    return `
+      <article class="job-card">
+        <div class="job-head">
+          <h4 class="job-title">${escapeHTML(j.title || "Untitled role")}</h4>
+          <div class="job-meta">
+            ${j.company ? `<span class="badge-mini">${escapeHTML(j.company)}</span>` : ""}
+            ${j.location ? `<span class="badge-mini">${escapeHTML(j.location)}</span>` : ""}
+            ${when ? `<span class="badge-mini">Posted ${when}</span>` : ""}
+          </div>
+        </div>
+        <p class="job-line">${escapeHTML(snippet)}</p>
+        <div class="job-footer">
+          <a class="job-btn brand" href="${j.url}" target="_blank" rel="noopener">View posting</a>
+          <div class="job-aux">
+            <span class="chip mini ok">Live</span>
+          </div>
+        </div>
+      </article>`;
+  }).join("");
+
+  grid.innerHTML = html;
+  sec.hidden = false;
+}
+/* ================= END SIMILAR LIVE JOBS FEATURE ================= */
 
 updateMeterUI();
 updatePricingUI();
