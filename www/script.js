@@ -519,10 +519,10 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
     : `Your structure covers the common sections — nice foundation.`;
 
   const paragraphs = [
-    `**Overall:** Your resume scores **${result.total}/100** (${rank}). That combines ATS keyword alignment (${result.breakdown.ats_keywords}/40), professionalism (${result.breakdown.professionalism}/35), section structure (${result.breakdown.structure}/15), and readability (${result.breakdown.readability}/10).`,
-    `**Keyword fit:** Coverage sits at **${covPct}%**. ${kwHint} ${presentPreview.length ? `Strong overlaps include: ${presentPreview.join(', ')}.` : ''}`,
+    `**Overall:** Your resume scores <b>${result.total}/100</b> (${rank}). That combines ATS keyword alignment (${result.breakdown.ats_keywords}/40), professionalism (${result.breakdown.professionalism}/35), section structure (${result.breakdown.structure}/15), and readability (${result.breakdown.readability}/10).`,
+    `**Keyword fit:** Coverage sits at <b>${covPct}%</b>. ${kwHint} ${presentPreview.length ? `Strong overlaps include: ${presentPreview.join(', ')}.` : ''}`,
     `**Professional polish:** ${impactTip} ${passiveTip} ${bulletsTip}`,
-    `**Readability:** Flesch score is **${fre}**, which maps to "${readLabel}". ${readNote}`,
+    `**Readability:** Flesch score is <b>${fre}</b>, which maps to "${readLabel}". ${readNote}`,
     `**Structure:** ${structureNote}`,
     ghost ? `**Job ad reality check:** ${ghostNote} ${ghost.next ? `Next move: ${ghost.next}` : ''}` : '',
     `**What to do next:** Pick 2–3 bullets in your most recent role and tie them to the job’s language (especially the missing keywords). Add one quantified improvement per bullet — time saved, accuracy improved, revenue influenced, costs reduced. Keep each bullet single-idea, ~1–2 lines, and lead with an action verb (Built, Automated, Forecasted, Reduced).`
