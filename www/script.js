@@ -431,13 +431,14 @@ function jobRealitySectionHTML(ghost) {
   const negList = reasonsNeg.slice(0,5).map(r => li('⚠️', r)).join('');
 
   const summaryChips = `
-    <div class="metrics" style="margin:6px 0 0">
-      <div class="metric"><b>${realness}%</b> realness</div>
-      <div class="metric"><b>${ghostiness}/100</b> ghostiness</div>
-      <div class="metric"><b>${confLabel}</b> confidence</div>
-      <div class="metric"><b>${reasonsPos.length}</b> hiring signals</div>
-      <div class="metric"><b>${reasonsNeg.length}</b> red flags</div>
-    </div>`;
+  <div class="stat-chips" role="list">
+    <span class="stat-chip" role="listitem"><b>${realness}%</b><span>Realness</span></span>
+    <span class="stat-chip" role="listitem"><b>${ghostiness}/100</b><span>Ghostiness</span></span>
+    <span class="stat-chip" role="listitem"><b>${confLabel}</b><span>Confidence</span></span>
+    <span class="stat-chip" role="listitem"><b>${reasonsPos.length}</b><span>Hiring signals</span></span>
+    <span class="stat-chip" role="listitem"><b>${reasonsNeg.length}</b><span>Red flags</span></span>
+  </div>`;
+
 
   return `
     <h3 class="card-title" style="margin:14px 0 6px">Job Ad Reality Check</h3>
@@ -1038,7 +1039,7 @@ function renderSimilarJobs(jobs = []) {
           </div>
         </div>
         <p class="job-line">${escapeHTML(snippet)}</p>
-        <div class="job-footer">
+        <div class="job-footer"> 
           <a class="job-btn brand" href="${j.url}" target="_blank" rel="noopener">View posting</a>
           <div class="job-aux">
             <span class="chip mini ok">Live</span>

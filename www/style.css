@@ -1651,3 +1651,46 @@ button,
   border-color: var(--border);
   filter: saturate(.85) opacity(.95);
 }
+
+
+/* === Compact stat chips for ghost-job summary === */
+.stat-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+}
+
+.stat-chip{
+  display:inline-flex;
+  align-items:baseline;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:9999px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  font-size:var(--step--1);
+  color:var(--muted);
+  line-height:1.2;
+}
+
+.stat-chip b{
+  color:var(--text);
+  font-weight:800;
+  font-variant-numeric: tabular-nums; /* tidy digits */
+}
+
+.stat-chip span{
+  opacity:.9;
+  white-space:nowrap;
+}
+
+/* subtle state tint if you ever want to color by band */
+.stat-chip.good{  border-color:rgba(16,185,129,.28);  background:rgba(16,185,129,.10);  color:#a7f3d0; }
+.stat-chip.warn{  border-color:rgba(245,158,11,.28);  background:rgba(245,158,11,.10);  color:#fde68a; }
+.stat-chip.bad{   border-color:rgba(239,68,68,.28);   background:rgba(239,68,68,.10);   color:#fecaca; }
+
+/* mobile: keep them airy and readable */
+@media (max-width:640px){
+  .stat-chip{ padding:6px 9px; }
+}
