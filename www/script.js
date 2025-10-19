@@ -572,37 +572,68 @@ function analyze(){
   const readScore10 = result.breakdown.readability; // 0–10
   const readLabel   = gradeReadability(readScore10);
 
-  // Tooltips (compact)
+  /* ---------- Rich, explanatory tooltips (drop-in replacement) ---------- */
   const tipOverall = tipHTML(`
-    <div style="font-weight:800;margin-bottom:4px">Overall score (0–100)</div>
-    <div>ATS (up to 40) + Professionalism (up to 35) + Structure (up to 15) + Readability (up to 10).</div>
-    <div><b>Colors</b>: 85–100 green, 55–84 yellow, &lt;55 red.</div>
+    <div style="font-weight:800;margin-bottom:6px">Overall Score (0–100)</div>
+    <div style="margin-bottom:6px">
+      Your resume’s composite rating. It’s the sum of ATS keywords (0–40) + Professionalism (0–35) +
+      Structure (0–15) + Readability (0–10).
+    </div>
+    <div style="margin-bottom:6px"><b>What “good” means:</b> 85–100 = ready to send, 70–84 = solid but room to polish, 55–69 = fair, &lt;55 = needs work.</div>
+    <div><b>How to lift it:</b> add job-specific keywords, quantify impact, and keep bullets short and skimmable.</div>
   `);
+
   const tipATS = tipHTML(`
-    <div style="font-weight:800;margin-bottom:4px">ATS keywords (0–40)</div>
-    <div><b>Your scan</b>: ${present.length} matched of ${totalKW} (${covPct}% coverage).</div>
-    <div>${missing.length ? `Missing examples: <i>${missing.slice(0,8).join(', ')}</i>.` : `No obvious gaps—nice!`}</div>
+    <div style="font-weight:800;margin-bottom:6px">ATS Keywords (0–40)</div>
+    <div style="margin-bottom:6px">
+      Measures how well your wording matches the job’s required tools, skills, and titles. We scan the JD,
+      merge with any custom keywords, and check coverage in your resume.
+    </div>
+    <div style="margin-bottom:6px"><b>Your scan:</b> ${present.length} matched of ${totalKW} (${covPct}% coverage).</div>
+    <div style="margin-bottom:6px"><b>What “good” means:</b> 30–40 = strong alignment; 20–29 = partial; &lt;20 = likely under-aligned.</div>
+    <div style="margin-bottom:6px">
+      <b>Quick wins:</b> mirror exact phrases from the JD (e.g., “SQL” vs. “MySQL” if the JD says SQL); keep acronyms & full names
+      (e.g., “AWS” and “Amazon Web Services”).
+    </div>
+    ${missing.length ? `<div><b>Missing examples:</b> <i>${missing.slice(0,10).join(', ')}</i></div>` : `<div><b>Nice:</b> no obvious gaps detected.</div>`}
   `);
+
   const tipPRO = tipHTML(`
-    <div style="font-weight:800;margin-bottom:4px">Professionalism (0–35)</div>
-    <ul style="margin:6px 0 0 18px; padding:0">
-      <li>Bullets: <b>${bullets}</b></li>
-      <li>Metrics used: <b>${numbersUsed}</b></li>
-      <li>Passive phrases: <b>${passiveHits}</b></li>
-      <li>ALL-CAPS words: <b>${capsWords}</b></li>
-      <li>Very long lines: <b>${longLines}</b></li>
-      <li>Word count: <b>${wordCount}</b></li>
-      <li>Exclamation marks: <b>${exclam}</b></li>
+    <div style="font-weight:800;margin-bottom:6px">Professionalism (0–35)</div>
+    <div style="margin-bottom:6px">
+      Clarity and polish signals recruiters notice: use of numbers, active voice, reasonable bullet length,
+      limited ALL-CAPS, and no shouty punctuation.
+    </div>
+    <ul style="margin:6px 0 6px 18px; padding:0">
+      <li>Bullets: <b>${bullets}</b> (aim ~5–7 for recent roles)</li>
+      <li>Metrics used: <b>${numbersUsed}</b> (target 3–5+ quantified wins)</li>
+      <li>Passive phrases: <b>${passiveHits}</b> (reduce with action verbs: Built, Automated, Reduced)</li>
+      <li>ALL-CAPS words: <b>${capsWords}</b> (use sparingly)</li>
+      <li>Very long lines: <b>${longLines}</b> (keep bullets &lt;~160 chars)</li>
+      <li>Word count: <b>${wordCount}</b> (sweet spot ≈ 400–700 for a one-pager)</li>
+      <li>Exclamation marks: <b>${exclam}</b> (avoid)</li>
     </ul>
+    <div><b>What “good” means:</b> 28–35 = polished; 20–27 = decent; &lt;20 = distracting issues present.</div>
   `);
+
   const tipSTRUCT = tipHTML(`
-    <div style="font-weight:800;margin-bottom:4px">Structure (0–15)</div>
-    <div><b>Present</b>: ${presentSections.length ? presentSections.join(', ') : '—'}</div>
-    <div><b>Missing</b>: ${missingSections.length ? `<i>${missingSections.join(', ')}</i>` : 'None—great!'}</div>
+    <div style="font-weight:800;margin-bottom:6px">Structure (0–15)</div>
+    <div style="margin-bottom:6px">
+      Checks for core sections so humans (and ATS) can find the basics fast: experience, education, skills,
+      projects, certifications, summary, contact, awards.
+    </div>
+    <div style="margin-bottom:6px"><b>Present:</b> ${presentSections.length ? presentSections.join(', ') : '—'}</div>
+    <div style="margin-bottom:6px"><b>Missing:</b> ${missingSections.length ? `<i>${missingSections.join(', ')}</i>` : 'None — great!'}</div>
+    <div><b>What “good” means:</b> 12–15 = complete; 8–11 = partial; &lt;8 = key sections likely missing.</div>
   `);
+
   const tipREAD = tipHTML(`
-    <div style="font-weight:800;margin-bottom:4px">Readability (0–10)</div>
-    <div>Flesch <b>${fre}</b> → <b>${readScore10}/10</b> (<i>${readLabel}</i>).</div>
+    <div style="font-weight:800;margin-bottom:6px">Readability (0–10)</div>
+    <div style="margin-bottom:6px">
+      Based on Flesch Reading Ease and layout cues. Short, clear sentences and one idea per bullet help both humans and ATS.
+    </div>
+    <div style="margin-bottom:6px"><b>Score:</b> Flesch <b>${fre}</b> → <b>${readScore10}/10</b> (<i>${readLabel}</i>).</div>
+    <div><b>What “good” means:</b> 8–10 = very easy to skim; 6–7 = plain & readable; 5 = somewhat dense; &lt;5 = hard to read.</div>
   `);
 
   const breakdown = [
