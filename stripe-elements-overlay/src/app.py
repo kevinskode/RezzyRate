@@ -55,8 +55,8 @@ def _response(status: int, body: dict, event: dict):
     headers = (event.get("headers") or {})
     req_origin = headers.get("origin") or headers.get("Origin")
     # Fallback to configured frontend or '*' during local testing
-    acao = req_origin or os.environ.get("FRONTEND_URL") or "*"
-    acao = "*"
+    acao = event["headers"].get("origin") if "rezzyrate.com" in event["headers"].get("origin","") else ""
+    #acao = "*"
     return {
         "statusCode": status,
         "headers": {
@@ -80,12 +80,6 @@ def _parse_json_body(event: dict) -> dict:
         return json.loads(raw)
     except json.JSONDecodeError:
         return {}
-
-# --- Minimal server-side product map (prices in cents) ---
-PRODUCTS = {
-    "basic_widget": {"amount": 2500, "currency": "usd"},  # $25.00
-    "pro_widget":   {"amount": 7900, "currency": "usd"},  # $79.00
-}
 
 # === Lambda handler ===
 def create_payment_intent(event, _context):

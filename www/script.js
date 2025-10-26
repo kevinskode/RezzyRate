@@ -1,5 +1,9 @@
 // === Stripe config ===
-const STRIPE_PUBLISHABLE_KEY = "pk_test_51RzkyvChKVWsJZcWlClLjJ1xACdszPyCjKmX1HTudOaqq5VKOM2rAdc2a9qusAWjskbaGba2IEzLhDGaBJb2NAYM00yaemtAQf";  // <-- your TEST publishable key
+// TEST KEY
+//const STRIPE_PUBLISHABLE_KEY = "pk_test_51RzkyvChKVWsJZcWlClLjJ1xACdszPyCjKmX1HTudOaqq5VKOM2rAdc2a9qusAWjskbaGba2IEzLhDGaBJb2NAYM00yaemtAQf";  // <-- your TEST publishable key
+
+// LIVE KEY
+const STRIPE_PUBLISHABLE_KEY = "pk_live_51RzkynCoSH0U9UtKSQSfYVQH6NAm4UG2xzSKeiH7JqQM8g1EnzRtQTR7F5gh9rXHpurl9zLfDjdWiCkvuetrn6m900Ij2YCcfT";
 const API_BASE_URL = "https://gyw1n7b24m.execute-api.us-east-2.amazonaws.com/Prod"; // <-- your API
 console.log("922");
 function getOrCreateToken(){
@@ -14,10 +18,18 @@ function getOrCreateToken(){
 const CREDIT_TOKEN = getOrCreateToken();
 
 // one Price per bundle (set these to your real Price IDs from Stripe)
+// TEST IDS
+// const PRICE_IDS = {
+//   1:  "price_1S5dgPChKVWsJZcWk9kacziD",   // $0.49
+//   10: "price_1S5dhfChKVWsJZcWJdjIkpfx",   // $3.99
+//   20: "price_1S5di8ChKVWsJZcWTxpXycQ0"    // $5.99
+// };
+
+// LIVE IDS
 const PRICE_IDS = {
-  1:  "price_1S5dgPChKVWsJZcWk9kacziD",   // $0.49
-  10: "price_1S5dhfChKVWsJZcWJdjIkpfx",   // $3.99
-  20: "price_1S5di8ChKVWsJZcWTxpXycQ0"    // $5.99
+  1:  "price_1SMcGTCoSH0U9UtKFpwoWFBI",   // $2.99
+  10: "price_1SMcH5CoSH0U9UtKnxQ3onfb",   // $9.99
+  20: "price_1SMcHxCoSH0U9UtKePKIwwb1"    // $14.99
 };
 
 let stripe, elements, paymentElement, clientSecret;

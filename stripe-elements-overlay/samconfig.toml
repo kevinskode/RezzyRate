@@ -5,5 +5,5 @@ resolve_s3 = true
 s3_prefix = "rezzy-rate"
 region = "us-east-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "FrontendUrl=\"https://rezzyrate.com\" StripeSecretParam=\"/stripe/test_secret\" StripeWebhookSecretParam=\"/stripe/webhook_secret_test\""
+parameter_overrides = "FrontendUrl=\"https://rezzyrate.com\" StripeSecretParam=\"/stripe/live_secret\" StripeWebhookSecretParam=\"/stripe/webhook_secret_live\""
 image_repositories = []

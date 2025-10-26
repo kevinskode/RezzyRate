@@ -33,7 +33,7 @@ Resources:
       Cors:
         AllowMethods: "'GET,POST,OPTIONS'"
         AllowHeaders: "'content-type'"
-        AllowOrigin: "'*'"
+        AllowOrigin: "'https://rezzyrate.com', 'https://www.rezzyrate.com'"
 
   CreatePaymentIntentFn:
     Type: AWS::Serverless::Function
