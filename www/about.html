@@ -4,146 +4,84 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>About – Rezzy</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#f7f8fb; --panel:#ffffff; --text:#0f172a; --muted:#475569;
-      --border:#e5e7eb; --accent:#4f46e5; --radius:14px; --shadow:0 4px 16px rgba(2,6,23,.06);
-      --content-max:1100px;
-    }
-    @media (prefers-color-scheme: dark){
-      :root{
-        --bg:#0b1020; --panel:#0f172a; --text:#e5e7eb; --muted:#9aa4b2;
-        --border:rgba(148,163,184,.18); --shadow:0 8px 28px rgba(0,0,0,.35);
-      }
-    }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg); color:var(--text); line-height:1.6;
-      display:flex; flex-direction:column;
-    }
+  <!-- Fonts & shared CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 
-    /* ====== TOP BAR: identical to index.html ====== */
-    .container{max-width:1100px; margin:0 auto; padding:20px clamp(16px,3vw,24px)}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:clamp(32px,4vw,55px);
-      height:clamp(32px,4vw,55px);
-      border-radius:12px;
-      object-fit:cover;
-      display:block;
-      box-shadow:0 2px 10px rgba(79,70,229,.25);
-      border:1px solid var(--border);
-      background:transparent;
-    }
-    h1{margin:0;font-size:clamp(18px,2.4vw,22px);font-weight:700}
-    .helper{font-size:12px;color:var(--muted)}
-    .badges{display:flex;gap:8px;align-items:center}
-    .badge{font-size:12px;padding:6px 10px;border-radius:9999px;background:var(--panel);border:1px solid var(--border);color:var(--muted)}
-
-    /* ====== Page content ====== */
-    main{flex:1}
-    .wrap{max-width:var(--content-max); margin:0 auto; padding:0 18px}
-    .panel{
-      background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
-      box-shadow:var(--shadow); padding:28px; overflow:hidden; margin-top:6px;
-    }
-    .sub{color:var(--muted); margin:8px 0 18px}
-    .grid{display:grid; gap:18px}
-    .grid-2{grid-template-columns:1fr}
-    @media(min-width:900px){ .grid-2{grid-template-columns:1.1fr .9fr} }
-    .card{
-      background:color-mix(in oklab, var(--panel) 96%, var(--bg));
-      border:1px solid var(--border); border-radius:12px; padding:18px;
-    }
-    h2{margin:0 0 10px; font-size:18px}
-    ul{margin:0; padding-left:20px}
-    a{color:var(--accent); text-decoration:none}
-    a:hover{text-decoration:underline}
-
-    footer{border-top:1px solid var(--border); margin-top:24px}
-    .foot{max-width:var(--content-max); margin:0 auto; padding:16px 18px; color:var(--muted);
-      display:flex; gap:14px; justify-content:space-between; flex-wrap:wrap}
-    .foot a{color:inherit; text-decoration:none; padding:6px 10px; border-radius:10px}
-    .foot a:hover{background:color-mix(in oklab, var(--accent) 10%, var(--panel)); color:var(--text)}
-  </style>
+  <!-- Optional: favicons to match index -->
+  <link rel="icon" href="favicon.ico">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f18">
 </head>
 <body>
   <div class="container">
+    <!-- Same pinned logo + topbar as index -->
     <header class="topbar">
-  
-      <div class="brand">
-        <img class="logo" src="logo.png" alt="Rezzy logo" />
-        <div>
-          <h1>Rezzy Rate</h1>
-          <div class="helper">The smart resume checker</div>
-        </div>
+      <div class="brand pinned-logo">
+        <img class="logo" src="logo.png" alt="Rezzy Rate logo" />
       </div>
-    
       <div class="badges">
-        <span class="badge" id="freeBadge">Free scans left today: 0</span>
+        <span class="badge" id="freeBadge">Free credits left today: 1</span>
         <span class="badge" id="creditBadge">Paid credits: 0</span>
       </div>
     </header>
 
-    <main class="wrap">
-      <section class="panel">
-        <h1 style="margin:0 0 6px">About Rezzy Rate</h1>
-        <p class="sub">A fast, friendly resume checker that highlights what matters to recruiters and ATS.</p>
+    <main class="layout">
+      <section class="card" style="grid-column:1/-1">
+        <h2 class="card-title">About Rezzy Rate</h2>
+        <p class="card-sub">A fast, friendly resume checker that highlights what matters to recruiters and ATS.</p>
 
-        <div class="grid grid-2">
+        <div class="layout" style="grid-template-columns:1.1fr .9fr; gap:12px">
           <div class="card">
-            <h2>What it checks</h2>
-            <ul>
-              <li><strong>ATS keyword coverage</strong> — match against job descriptions.</li>
-              <li><strong>Writing quality</strong> — clarity, tone, and readability.</li>
-              <li><strong>Structure</strong> — clean sections for Experience, Education, Skills.</li>
-              <li><strong>Scanability</strong> — recruiter-friendly bullets and metrics.</li>
+            <h3 class="card-title" style="margin-top:0">What it checks</h3>
+            <ul class="helper" style="margin:8px 0 0; color:var(--text)">
+              <li><b>ATS keyword coverage</b> — match against job descriptions.</li>
+              <li><b>Writing quality</b> — clarity, tone, and readability.</li>
+              <li><b>Structure</b> — clean sections for Experience, Education, Skills.</li>
+              <li><b>Scanability</b> — recruiter-friendly bullets and metrics.</li>
             </ul>
           </div>
 
           <div class="card">
-            <h2>Why it helps</h2>
-            <p>Rezzy gives quick, actionable suggestions so you can improve and send with confidence.</p>
-            <p><a href="index.html">Back to the Resume Checker →</a></p>
+            <h3 class="card-title" style="margin-top:0">Why it helps</h3>
+            <p class="helper" style="color:var(--text)">
+              Rezzy gives quick, actionable suggestions so you can improve and send with confidence.
+            </p>
+            <p style="margin:10px 0 0">
+              <a class="job-btn brand" href="index.html" style="text-decoration:none">Back to the Resume Checker →</a>
+            </p>
           </div>
         </div>
       </section>
     </main>
 
-    <footer>
-      <div class="foot">
-        <span>© <script>document.write(new Date().getFullYear())</script> Rezzy Rate</span>
-        <span>
-          <a href="about.html">About</a>
-          <a href="privacy.html">Privacy</a>
-        </span>
-      </div>
+    <!-- Footer (IDENTICAL to index) -->
+    <footer style="margin-top:40px;padding:20px 0;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--muted)">
+      <p style="margin:6px 0">
+        <a href="about.html" style="color:var(--accent);text-decoration:none;margin:0 10px">About</a> •
+        <a href="privacy.html" style="color:var(--accent);text-decoration:none;margin:0 10px">Privacy Policy</a>
+      </p>
+      <p style="margin:6px 0">&copy; <script>document.write(new Date().getFullYear())</script> Rezzy Rate. All rights reserved.</p>
     </footer>
   </div>
 
-  <!-- Small shared-meter script so pills match index -->
+  <!-- Shared badges mini-script (safe to keep) -->
   <script>
     const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_credits', unlimitedUntil:'rc_unlimited_until' };
     const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
     function isUnlimited(){ const until = parseInt(localStorage.getItem(LS_KEYS.unlimitedUntil)||'0',10); return Date.now() < until; }
-    function readMeter(){
+    (function updateHeader(){
       const today = todayStr();
       const last = localStorage.getItem(LS_KEYS.lastDate);
       if (last !== today){ localStorage.setItem(LS_KEYS.lastDate, today); localStorage.setItem(LS_KEYS.dailyUsed, '0'); }
       const freeUsed = parseInt(localStorage.getItem(LS_KEYS.dailyUsed)||'0',10);
       const credits  = parseInt(localStorage.getItem(LS_KEYS.credits)||'0',10);
-      return { freeLeft: Math.max(0, 1 - freeUsed), credits };
-    }
-    (function updateHeader(){
-      const {freeLeft, credits} = readMeter();
+      const freeLeft = Math.max(0, 1 - freeUsed);
       document.getElementById('creditBadge').textContent = `Paid credits: ${credits}`;
-      document.getElementById('freeBadge').textContent = isUnlimited() ? 'Free scans left today: ∞ (temp)' : `Free scans left today: ${freeLeft}`;
+      document.getElementById('freeBadge').textContent = isUnlimited() ? 'Free credits left today: ∞ (temp)' : `Free credits left today: ${freeLeft}`;
     })();
   </script>
+  <script src="script.js" defer></script>
 </body>
 </html>
