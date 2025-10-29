@@ -1,6 +1,6 @@
 // === Stripe config ===
 // TEST KEY
-//const STRIPE_PUBLISHABLE_KEY = "pk_test_51RzkyvChKVWsJZcWlClLjJ1xACdszPyCjKmX1HTudOaqq5VKOM2rAdc2a9qusAWjskbaGba2IEzLhDGaBJb2NAYM00yaemtAQf";  // <-- your TEST publishable key
+// const STRIPE_PUBLISHABLE_KEY = "pk_test_51RzkyvChKVWsJZcWlClLjJ1xACdszPyCjKmX1HTudOaqq5VKOM2rAdc2a9qusAWjskbaGba2IEzLhDGaBJb2NAYM00yaemtAQf";  // <-- your TEST publishable key
 
 // LIVE KEY
 const STRIPE_PUBLISHABLE_KEY = "pk_live_51RzkynCoSH0U9UtKSQSfYVQH6NAm4UG2xzSKeiH7JqQM8g1EnzRtQTR7F5gh9rXHpurl9zLfDjdWiCkvuetrn6m900Ij2YCcfT";
@@ -177,7 +177,7 @@ function professionalismScore(r){
   if(bullets>=5)score+=2;
   if(countNumbers(r)>=3)score+=3;
   if(words>=250&&words<=900)score+=2;
-  return {score:Math.max(0,Math.min(35,Math.round(score))), details:{bullets,exclam,capsWords,longLines,passive:pv,words,numbers:countNumbers(r)}};
+  return {score:Math.max(0,Math.min(35,Math.round(score))), details:{bullets,exclam,capsWords,longLines,passive:pv,words:numbers=countNumbers(r)}};
 }
 const readabilityScore = r => Math.round((fleschReadingEase(r)/100)*10);
 function scoreResume(resume,jd,userKeywords){
@@ -276,7 +276,7 @@ function bandColor(band){          // returns CSS var()
 /* Donut SVG (now allows explicit band override to color-match label) */
 function donutSVG(percent, label, opts = {}){
   const r = 28, c = 2 * Math.PI * r, off = c * (1 - percent / 100);
-  const band = opts.band || scoreBand(percent);               // <-- explicit band wins
+  const band = opts.band || scoreBand(percent);
   const stroke = bandColor(band);
   return `
     <div class="donut" role="img" aria-label="Score ${percent}%">
@@ -305,11 +305,9 @@ function getSnippet(src, rx, { around = 140, max = 260 } = {}) {
   const m = rx.exec(text);
   if (!m) return "";
 
-  // symmetric window around the match
   let start = Math.max(0, m.index - around);
   let end   = Math.min(text.length, m.index + m[0].length + around);
 
-  // snap start to nearest sentence or word boundary
   const lastPeriod = Math.max(
     text.lastIndexOf(". ", start),
     text.lastIndexOf("! ", start),
@@ -321,7 +319,6 @@ function getSnippet(src, rx, { around = 140, max = 260 } = {}) {
     if (lastSpace !== -1) start = lastSpace + 1;
   }
 
-  // snap end to a sentence or word boundary
   const after = text.slice(end);
   const sentMatch = after.match(/^[^.!?]*[.!?](?:["’”])?\s/);
   if (sentMatch) end += sentMatch[0].length;
@@ -330,7 +327,6 @@ function getSnippet(src, rx, { around = 140, max = 260 } = {}) {
     if (nextSpace !== -1) end = nextSpace;
   }
 
-  // clamp overly long snippets, prefer ending at a sentence
   let snippet = text.slice(start, end).trim();
   if (snippet.length > max) {
     const cut = snippet.search(/([.!?](?:["’”])?\s)[^.!?]*$/);
@@ -357,7 +353,6 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
   const jd = (jdRaw || "").trim();
   if (!jd) return null;
 
-  // Positive (reduce ghostiness)
   const pos = [
     { w:14, rx:/\b(?:salary|compensation|pay range|base pay|usd|\$\s*\d)/i,  label:'Lists salary or pay range' },
     { w:10, rx:/\b(?:remote|hybrid|on[-\s]?site)\b|[A-Za-z .'-]+,\s*[A-Z]{2}\b/i, label:'Clear location or work mode' },
@@ -368,7 +363,6 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
     { w: 4, rx:/\b(sql|python|react|tableau|power\s*bi|excel|etl|terraform|kubernetes|aws|gcp|azure|java(script)?)\b/i, label:'Concrete tools/tech named' },
   ];
 
-  // Negative (increase ghostiness)
   const neg = [
     { w:18, rx:/\b(accepting applications|future opportunities|talent pool|pipeline of candidates|evergreen|ongoing basis|rolling basis|open until filled|always hiring|not actively hiring)\b/i, label:'Evergreen/pipeline phrasing' },
     { w:10, rx:/\b(responsible for|duties include|requirements include)\b/i, label:'Very vague responsibilities' },
@@ -379,7 +373,6 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
     { w: 4, rx:/\b(no sponsorship|work authorization required|h-?1b|opt|cpt)\b/i, label:'Visa/sponsorship caveat' },
   ];
 
-  // Start with neutral ghostiness and adjust
   let ghostiness = 50;
   const hitsPos = [];
   const hitsNeg = [];
@@ -398,7 +391,7 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
   }
 
   ghostiness = Math.max(0, Math.min(100, Math.round(ghostiness)));
-  const realness = 100 - ghostiness; // flipped scale: higher = more real
+  const realness = 100 - ghostiness;
 
   const totalSignals = pos.length + neg.length;
   const matched = hitsPos.length + hitsNeg.length;
@@ -407,15 +400,14 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
 
   const { label, band, next } = mapScoreToRank(realness);
   return {
-    score: realness,          // expose REALNESS as "score" for the UI
-    ghostiness,               // keep ghostiness for chips
+    score: realness,
+    ghostiness,
     label, band, confLabel, next,
     reasonsPos: hitsPos, reasonsNeg: hitsNeg
   };
 }
 
-/* ===== Lead-word styler: turns "**LEAD:** ..." into
-   <p class="os-p"><span class="os-key">LEAD</span><span class="os-body">…</span></p> ===== */
+/* ===== Lead-word styler ===== */
 function styleSummaryLeads(html){
   return html.replace(
     /<p>\s*\*\*([^*]+?)\s*:\s*\*\*\s*([\s\S]*?)<\/p>/g,
@@ -423,16 +415,15 @@ function styleSummaryLeads(html){
   );
 }
 
-/* ===== Intuitive, detail-rich, color-synced UI section ===== */
+/* ===== Job Reality Check UI ===== */
 function jobRealitySectionHTML(ghost) {
   if (!ghost) return "";
   const { score, ghostiness, label, band, confLabel, next, reasonsPos = [], reasonsNeg = [] } = ghost;
 
-  const realness = score; // 0–100, higher = more real
-  const donut = donutSVG(realness, `${realness}`, { band }); // color matches label
+  const realness = score;
+  const donut = donutSVG(realness, `${realness}`, { band });
   const labelClass = band === 'good' ? 'good' : band === 'warn' ? 'warn' : 'bad';
 
-  // richer lists (cap 5 each), show snippets when available
   const li = (icon, r) => `<li class="ghost-li">
       <div class="fix-row"><span class="pill ${icon==='✅'?'good':'bad'}">${icon}</span>
       <span class="fix-title">${r.title}</span></div>
@@ -451,20 +442,15 @@ function jobRealitySectionHTML(ghost) {
     <span class="stat-chip" role="listitem"><b>${reasonsNeg.length}</b><span>Red flags</span></span>
   </div>`;
 
-
   return `
     <h3 class="card-title" style="margin:14px 0 6px">Job Ad Reality Check</h3>
     <div class="ghost-wrap">
       <div class="results-head" style="margin-bottom:8px">
         <div class="score-block">
-          
-          <!-- LEFT: rating ABOVE the donut -->
           <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
             <div class="rating ${labelClass}" aria-label="Ghost likelihood">${label}</div>
             ${donut}
           </div>
-
-          <!-- RIGHT: helper + summary chips -->
           <div>
             <div class="helper">This shows how “real” the ad looks. Higher is better.</div>
             ${summaryChips}
@@ -483,7 +469,7 @@ function jobRealitySectionHTML(ghost) {
   `;
 }
 
-/* ===== Overall Summary (human-style narrative) ===== */
+/* ===== Overall Summary ===== */
 function generateOverallSummary(result, fre, ghost, resumeText, jdText){
   const rank = classifyScore(result.total);
   const covPct  = Math.round((result.coverage||0)*100);
@@ -491,10 +477,9 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
   const missing = result.missingKeywords || [];
   const missingPreview = missing.slice(0, 10);
   const presentPreview = present.slice(0, 12);
-  const read10 = result.breakdown.readability; // 0–10
+  const read10 = result.breakdown.readability;
   const readLabel = gradeReadability(read10);
 
-  // Section presence
   const presentSections = Object.entries(result.sectionPresence).filter(([,v])=>v).map(([k])=>k);
   const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
 
@@ -506,12 +491,10 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
     return `The job ad reality check lands at ${ghost.score}% realness (${ghost.label}). In plain English: it ${tone}.`;
   })() : "";
 
-  // Gentle CTA about keywords
   const kwHint = missing.length
     ? `You’re already aligned on ${present.length} of ${present.length + missing.length} keywords. If you can naturally weave in even a few of the missing terms — like ${missingPreview.join(', ')} — your ATS score should lift.`
     : `Nice: there aren’t obvious keyword gaps for this post. Keep mirroring the job’s exact phrasing where it feels natural.`;
 
-  // Professionalism highlights
   const p = result.profDetails;
   const impactTip = p.numbers >= 3
     ? `Good use of measurable impact (${p.numbers} data points).`
@@ -523,10 +506,8 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
     ? `Consider a few more bullets in your most recent role so each result stands on its own.`
     : `Bullet density looks healthy — it’s skimmable.`;
 
-  // Readability nudges
   const readNote = `Readability translates to a ${read10}/10 (“${readLabel}”). For most roles, shorter sentences (about 12–18 words) and one idea per bullet help both humans and ATS.`;
 
-  // Structure nudge
   const structureNote = missingSections.length
     ? `Structure wise, you’re missing ${missingSections.join(', ')}. Adding those headers helps recruiters (and ATS) find the essentials fast.`
     : `Your structure covers the common sections — nice foundation.`;
@@ -541,7 +522,6 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
     `**What to do next:** Pick 2–3 bullets in your most recent role and tie them to the job’s language (especially the missing keywords). Add one quantified improvement per bullet — time saved, accuracy improved, revenue influenced, costs reduced. Keep each bullet single-idea, ~1–2 lines, and lead with an action verb (Built, Automated, Forecasted, Reduced).`
   ].filter(Boolean);
 
-  // Pipe through the lead-word styler so **Lead:** becomes a pill
   return styleSummaryLeads(`
     <div class="overall-summary">
       ${paragraphs.map(p => `<p>${p}</p>`).join('')}
@@ -549,7 +529,7 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
   `);
 }
 
-/* ===== Analyze (job-free) ===== */
+/* ===== Analyze ===== */
 function analyze(){
   const gate = canConsumeScan(); 
   if (!gate.ok){ openPaywall(); return; }
@@ -569,11 +549,9 @@ function analyze(){
   const covPct  = Math.round((result.coverage||0)*100);
   const fre     = fleschReadingEase(resume);
 
-  // Section presence lists
   const presentSections = Object.entries(result.sectionPresence).filter(([,v])=>v).map(([k])=>k);
   const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
 
-  // Shorthands for tips
   const bullets     = result.profDetails.bullets;
   const exclam      = result.profDetails.exclam;
   const capsWords   = result.profDetails.capsWords;
@@ -582,10 +560,9 @@ function analyze(){
   const wordCount   = result.profDetails.words;
   const numbersUsed = result.profDetails.numbers;
 
-  const readScore10 = result.breakdown.readability; // 0–10
+  const readScore10 = result.breakdown.readability;
   const readLabel   = gradeReadability(readScore10);
 
-  /* ---------- Rich, explanatory tooltips (drop-in replacement) ---------- */
   const tipOverall = tipHTML(`
     <div style="font-weight:800;margin-bottom:6px">Overall Score (0–100)</div>
     <div style="margin-bottom:6px">
@@ -680,11 +657,9 @@ function analyze(){
   const fixes = friendlyFixes(result, fre).join('') 
     || '<li><div class="fix-row"><span class="pill p-low">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Tailor a couple bullets to the job post.</p></li>';
 
-  // Job Ad Reality Check
   const ghost = analyzeGhostJob(jd, resume);
   const ghostHTML = jobRealitySectionHTML(ghost);
 
-  // NEW: Overall Summary HTML
   const summaryHTML = generateOverallSummary(result, fre, ghost, resume, jd);
 
   const out = document.getElementById('results');
@@ -734,22 +709,18 @@ function analyze(){
       <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
       <ul class="list-tight">${fixes}</ul>
 
-      <!-- Job Ad Reality Check -->
       ${ghostHTML}
 
-      <!-- Overall Summary (new, human-style) -->
       <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
       ${summaryHTML}
     </div>`;
 
-  // color the “Strong / Excellent / Fair …” pill
   const ratingEl = out.querySelector('.results-head .rating');
   if (ratingEl){
     ratingEl.classList.remove('good','warn','bad');
     ratingEl.classList.add(scoreBand(result.total));
   }
 
-  // === SIMILAR LIVE JOBS ===
   (async () => {
     const jdText = jd || "";
     const kw = keywords || [];
@@ -841,11 +812,11 @@ async function extractTextFromDOCX(file){
 function openPaywall(n=1){
   window.__desiredCredits = n;
   document.getElementById('paywall').classList.add('open');
-  document.body.classList.add('modal-open');   // lock background scroll (iOS friendly)
+  document.body.classList.add('modal-open');
 }
 function closePaywall(){
   document.getElementById('paywall').classList.remove('open');
-  document.body.classList.remove('modal-open'); // unlock
+  document.body.classList.remove('modal-open');
 }
 
 async function startCheckout(n = 1){
@@ -853,18 +824,16 @@ async function startCheckout(n = 1){
   const priceId = PRICE_IDS[n];
   if (!priceId){ alert('Unknown product'); return; }
 
-  // close the paywall; we’ll show the Stripe overlay
   closePaywall();
 
-  // 1) Create PaymentIntent via your Lambda (server looks up Price and sets the amount)
   const res = await fetch(`${API_BASE_URL}/create-payment-intent`, {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ 
       priceId, 
       quantity: 1,
-      token: CREDIT_TOKEN,          // NEW
-      credits: n                    // NEW: 1, 10, or 20
+      token: CREDIT_TOKEN,
+      credits: n
     })
   });
   const data = await res.json();
@@ -874,25 +843,23 @@ async function startCheckout(n = 1){
   }
   clientSecret = data.client_secret;
 
-  // ensure any previous instance is gone
   try { if (paymentElement) paymentElement.unmount(); } catch(_) {}
   paymentElement = null;
   elements = null;
 
-  // 2) Mount Payment Element inside our checkout modal
   elements = stripe.elements({
     clientSecret,
     appearance: {
       theme: 'night',
       variables: {
-        colorPrimary: '#f26e8c',      // --accent
+        colorPrimary: '#f26e8c',
         colorPrimaryText: '#0b1020',
-        colorBackground: '#0d1422',   // --panel
-        colorText: '#f7f9ff',         // --text
-        colorTextSecondary: '#aeb7c6',// --muted
-        colorDanger: '#ef4444',       // --bad
+        colorBackground: '#0d1422',
+        colorText: '#f7f9ff',
+        colorTextSecondary: '#aeb7c6',
+        colorDanger: '#ef4444',
         fontFamily: "'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-        borderRadius: '16px'          // --radius
+        borderRadius: '16px'
       },
       rules: {
         '.Input': {
@@ -913,7 +880,6 @@ async function startCheckout(n = 1){
 
   openCheckout();
 
-  // 3) Wire the Pay Now button (idempotently)
   const payBtn = document.getElementById('pay-now');
   const msg    = document.getElementById('checkout-msg');
 
@@ -982,7 +948,6 @@ function clearAll(){
 }
 
 /* =================== SIMILAR LIVE JOBS FEATURE =================== */
-/** Replace with your deployed jobs proxy (API Gateway / Cloudflare Worker) */
 const JOBS_API = "https://YOUR_API_GATEWAY_DOMAIN/jobs"; // <- TODO: set this
 
 function guessJobTitleFromText(t) {
@@ -1070,58 +1035,69 @@ updatePricingUI();
 setScanStatus('Ready', false);
 document.addEventListener('DOMContentLoaded', () => { claimCredits(); });
 
-
-// ===== Mobile "Use desktop for best experience" hint =====
+/* ===== Mobile "Use desktop for best experience" hint (8s delay) ===== */
 (function mobileHint(){
   const LS_KEY = 'rezzy_mobile_hint_v1';
-  const shownThisSession = { value: false };
+  const HINT_DELAY_MS = 8000; // open after 8 seconds
+  let hintTimer = null;
+  let shownThisSession = false;
 
-  function isSmallScreen(){
-    return window.matchMedia('(max-width: 760px)').matches;
-  }
-
-  function alreadyDismissed(){
+  const isSmallScreen = () => window.matchMedia('(max-width: 760px)').matches;
+  const alreadyDismissed = () => {
     try { return localStorage.getItem(LS_KEY) === '1'; } catch { return false; }
-  }
+  };
 
   function openHint(){
     const el = document.getElementById('mobile-hint');
     if (!el) return;
+    clearTimeout(hintTimer); hintTimer = null;
     el.classList.add('open');
     el.setAttribute('aria-hidden', 'false');
+    shownThisSession = true;
   }
+
+  function scheduleHint(){
+    if (hintTimer || shownThisSession || alreadyDismissed() || !isSmallScreen()) return;
+    hintTimer = setTimeout(openHint, HINT_DELAY_MS);
+  }
+
+  function cancelHint(){
+    clearTimeout(hintTimer);
+    hintTimer = null;
+  }
+
   function closeHint({ persist = false } = {}){
     const el = document.getElementById('mobile-hint');
     if (!el) return;
     el.classList.remove('open');
     el.setAttribute('aria-hidden', 'true');
+    cancelHint();
     if (persist){
       try { localStorage.setItem(LS_KEY, '1'); } catch {}
     }
   }
 
-  // Wire buttons once DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
     const ok = document.getElementById('mf-ok');
     const dismiss = document.getElementById('mf-dismiss');
     if (ok) ok.addEventListener('click', () => closeHint());
     if (dismiss) dismiss.addEventListener('click', () => closeHint({ persist: true }));
 
-    // Show after a short delay on first small-screen visit, unless dismissed
-    if (isSmallScreen() && !alreadyDismissed() && !shownThisSession.value){
-      shownThisSession.value = true;
-      setTimeout(openHint, 900);
-    }
+    // initial schedule with 8s delay if conditions are met
+    scheduleHint();
   });
 
-  // If they rotate/resize into mobile, show once per session
-  let resizeTimer;
+  // if they rotate/resize into mobile, respect the same 8s delay (once per session)
+  let resizeDebounce;
   window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      if (isSmallScreen() && !alreadyDismissed() && !shownThisSession.value){
-        shownThisSession.value = true;
-        openHint();
+    clearTimeout(resizeDebounce);
+    resizeDebounce = setTimeout(() => {
+      if (!isSmallScreen()) {
+        cancelHint(); // cancel pending if they left mobile
+        return;
+      }
+      if (!shownThisSession && !alreadyDismissed()) {
+        scheduleHint();
       }
     }, 200);
   });
