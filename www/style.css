@@ -1983,3 +1983,89 @@ header.topbar .badges {
   }
 }
 
+/* ===== Rezzy Topbar — fully responsive, clean, consistent ===== */
+
+/* 0) kill any old absolute/pinned behavior */
+header.topbar,
+.topbar{
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(14px, env(safe-area-inset-right))
+    10px
+    max(14px, env(safe-area-inset-left)) !important;
+
+  margin: 0 !important;
+  background: linear-gradient(180deg, rgba(9,14,28,.92), rgba(9,14,28,.75)) !important;
+  backdrop-filter: saturate(1.1) blur(8px) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* the logo should participate in layout, not float */
+.pinned-logo{
+  position: static !important;
+  inset: auto !important;
+  margin: 0 !important;
+  z-index: 1 !important;
+}
+
+/* 1) logo: square, tidy, consistent on all screens */
+.pinned-logo .logo,
+.topbar .logo{
+  display: block !important;
+  width: clamp(56px, 7.5vw, 88px) !important; /* phone → big desktop */
+  aspect-ratio: 1 / 1 !important;            /* keeps it square */
+  height: auto !important;
+  object-fit: cover !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25) !important;
+}
+
+/* 2) badges aligned to the right */
+.badges{
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* pill look tuned for header contrast */
+.badge{
+  flex: 0 0 auto;
+  font-size: 12.5px !important;
+  padding: 6px 10px !important;
+  border-radius: 9999px !important;
+  background: rgba(7,16,32,.60) !important;
+  border: 1px solid #ffffff22 !important;
+  color: #ffffff !important;
+  line-height: 1.1;
+}
+
+/* 3) small phones: keep a single row and enable smooth horizontal scroll */
+@media (max-width: 640px){
+  .badges{
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .badges::-webkit-scrollbar{ display: none !important; }
+}
+
+/* 4) tablets & up: allow wrapping so it never feels cramped */
+@media (min-width: 641px){
+  .badges{ flex-wrap: wrap !important; }
+}
+
+/* 5) give page content a little breathing room under the sticky bar */
+.container{ padding-top: 12px !important; }
+
+/* 6) guardrails: remove any leftover large left padding / negative margins */
+.topbar{ padding-left: max(14px, env(safe-area-inset-left)) !important; }
