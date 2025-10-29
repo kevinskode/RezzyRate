@@ -1694,3 +1694,292 @@ button,
 @media (max-width:640px){
   .stat-chip{ padding:6px 9px; }
 }
+
+/* --- Mobile Hint (bottom sheet) --- */
+.mf-overlay{
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;               /* center vertically */
+  justify-content: center;           /* center horizontally */
+  background: rgba(5,10,25,.35);     /* subtle dim */
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.mf-overlay.open{
+  display: flex;
+  pointer-events: auto;
+}
+
+.mf-card{
+  width: min(680px, 92vw);
+  margin: 0 auto;
+  border-radius: 16px 16px max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-bottom));
+  border: 1px solid var(--border);
+  background: rgba(13,19,36,.96);
+  box-shadow: var(--shadow);
+  padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+  transform: translateY(8px); /* softer drop animation */
+
+  opacity: 0;
+  transition: transform .25s ease, opacity .25s ease;
+}
+
+.mf-overlay.open .mf-card{
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.mf-icon{
+  width: 44px; height: 44px; border-radius: 9999px;
+  margin: 2px 0 8px;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  box-shadow: 0 8px 24px rgba(242,110,140,.25);
+}
+
+.mf-title{
+  margin: 0 0 6px;
+  font-size: var(--step-2);
+  font-weight: 800;
+  color: var(--text);
+}
+.mf-text{
+  margin: 0 0 10px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.mf-actions{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Only show on small screens */
+@media (min-width: 761px){
+  #mobile-hint{ display: none !important; }
+}
+
+/* Make buttons full width + stacked */
+.mf-actions{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.mf-btn-full{
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 15px;
+}
+
+/* Match button styling system */
+.btn-primary{
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.btn-secondary{
+  background: rgba(255,255,255,0.08);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+
+/* ===== Static content pages (About / Privacy) ===== */
+
+/* Page shell */
+.page-main{
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* Compact hero with strong hierarchy */
+.page-hero{
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.03);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.page-hero h1{
+  margin: 2px 0 8px;
+  font-size: clamp(22px, 5.2vw, 32px);
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: .003em;
+}
+.page-hero p{
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--step-0);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+/* Content grid: single column on iPhone, 2-up on tablet+ */
+.page-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+@media (min-width: 760px){
+  .page-grid{ grid-template-columns: 1fr 1fr; }
+}
+
+/* Cards for sections */
+.card.soft{
+  background: rgba(13,19,36,.86);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+.card.soft h3{
+  margin: 0 0 6px;
+  font-size: clamp(16px, 4.2vw, 20px);
+  line-height: 1.25;
+  font-weight: 850;
+}
+
+/* Readable list spacing on mobile */
+.prose{
+  line-height: 1.75;
+  color: var(--text);
+}
+.prose p{ margin: 8px 0; }
+.prose ul{ margin: 8px 0 0; padding-left: 18px; }
+.prose li{ margin: 6px 0; }
+.prose b{ color: var(--text); }
+
+/* Back link button */
+.page-actions{
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.page-actions .brand{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 900;
+  font-size: var(--step--1);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg,var(--accent-2),var(--accent));
+  color: #0b1020;
+  text-decoration: none;
+}
+
+/* Footer: bigger tap targets on iPhone */
+.site-footer a{
+  display: inline-block;
+  padding: 6px 8px;
+  min-height: var(--tap);
+}
+
+/* Header badges: allow collapse on tiny screens */
+@media (max-width: 420px){
+  .badges .badge{ font-size: 11.5px; padding: 5px 8px; }
+}
+
+/* === Desktop: fix logo/badge overlap by using layout instead of absolute === */
+@media (min-width: 641px){
+  /* Header becomes a 2-col grid: [logo | badges] */
+  .topbar{
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding-left: 12px !important;   /* remove old big left pad */
+    margin-top: 0 !important;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Make the logo participate in layout (no absolute) */
+  .pinned-logo{
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: 1 !important;
+    margin: 0 !important;
+  }
+  .pinned-logo .logo{
+    width: 110px !important;         /* adjust as you like */
+    height: auto !important;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.25);
+  }
+
+  /* Badges stay on the right and won’t slip under the logo */
+  .badges{
+    margin-left: 0 !important;
+    justify-self: end !important;
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+  }
+}
+
+/* Mobile (<=640px) already uses flowing logo; keep that behavior */
+@media (max-width: 640px){
+  .pinned-logo{ position: static !important; }
+  .topbar{ padding-left: 0 !important; }
+}
+/* === FIX TOPBAR LOGO OVERLAP ON ABOUT/PRIVACY === */
+header.topbar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-left: 0 !important;
+  margin-top: 0 !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* Force logo to be INLINE, not pinned, on these pages */
+header.topbar .pinned-logo {
+  position: static !important;
+  margin: 0 !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: 1 !important;
+  padding-right: 12px !important;
+}
+
+/* Desktop logo size here */
+header.topbar .logo {
+  width: 95px !important;
+  height: auto !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25) !important;
+}
+
+/* Badges right side, no underlap */
+header.topbar .badges {
+  margin-left: auto !important;
+  display: flex !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+}
+
+/* Mobile keeps current behavior */
+@media (max-width: 640px){
+  header.topbar .logo {
+    width: 72px !important;
+  }
+}
+

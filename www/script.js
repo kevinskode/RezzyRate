@@ -1069,3 +1069,60 @@ updateMeterUI();
 updatePricingUI();
 setScanStatus('Ready', false);
 document.addEventListener('DOMContentLoaded', () => { claimCredits(); });
+
+
+// ===== Mobile "Use desktop for best experience" hint =====
+(function mobileHint(){
+  const LS_KEY = 'rezzy_mobile_hint_v1';
+  const shownThisSession = { value: false };
+
+  function isSmallScreen(){
+    return window.matchMedia('(max-width: 760px)').matches;
+  }
+
+  function alreadyDismissed(){
+    try { return localStorage.getItem(LS_KEY) === '1'; } catch { return false; }
+  }
+
+  function openHint(){
+    const el = document.getElementById('mobile-hint');
+    if (!el) return;
+    el.classList.add('open');
+    el.setAttribute('aria-hidden', 'false');
+  }
+  function closeHint({ persist = false } = {}){
+    const el = document.getElementById('mobile-hint');
+    if (!el) return;
+    el.classList.remove('open');
+    el.setAttribute('aria-hidden', 'true');
+    if (persist){
+      try { localStorage.setItem(LS_KEY, '1'); } catch {}
+    }
+  }
+
+  // Wire buttons once DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const ok = document.getElementById('mf-ok');
+    const dismiss = document.getElementById('mf-dismiss');
+    if (ok) ok.addEventListener('click', () => closeHint());
+    if (dismiss) dismiss.addEventListener('click', () => closeHint({ persist: true }));
+
+    // Show after a short delay on first small-screen visit, unless dismissed
+    if (isSmallScreen() && !alreadyDismissed() && !shownThisSession.value){
+      shownThisSession.value = true;
+      setTimeout(openHint, 900);
+    }
+  });
+
+  // If they rotate/resize into mobile, show once per session
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (isSmallScreen() && !alreadyDismissed() && !shownThisSession.value){
+        shownThisSession.value = true;
+        openHint();
+      }
+    }, 200);
+  });
+})();
