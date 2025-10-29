@@ -83,7 +83,7 @@ function closeCheckout(){
 document.getElementById('closeCheckoutBtn').addEventListener('click', closeCheckout);
 
 /* ===== Prices ===== */
-const PRICES = { single: 0.50, pack10: 3.99, pack20: 5.99 };
+const PRICES = { single: 2.99, pack10: 9.99, pack20: 14.99 };
 const fmt = n => `$${n.toFixed(2)}`;
 function updatePricingUI(){
   const p1 = fmt(PRICES.single), p10 = fmt(PRICES.pack10), p20 = fmt(PRICES.pack20);
