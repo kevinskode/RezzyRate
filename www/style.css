@@ -1780,7 +1780,7 @@ button,
 
 /* Match button styling system */
 .btn-primary{
-  background: var(--accent);
+  background: #328093;
   color: #fff;
   border: none;
 }
