@@ -1937,6 +1937,13 @@ button,
 @media (max-width: 640px){
   .pinned-logo{ position: static !important; }
   .topbar{ padding-left: 0 !important; }
+
+  header.topbar .pinned-logo {
+ 
+    padding-left: 12px !important;
+  }
+  
+
 }
 /* === FIX TOPBAR LOGO OVERLAP ON ABOUT/PRIVACY === */
 header.topbar {
