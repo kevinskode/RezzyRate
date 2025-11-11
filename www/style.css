@@ -1992,11 +1992,40 @@ header.topbar .badges {
 }
 
 /* --- Payment / overlay stacking fixes (keep these at the very end) --- */
+/* --- Payment / overlay stacking fixes (keep these at the very end) --- */
 #paywall,
 #checkout-modal {
-  position: fixed !important;   /* ensure they stay fixed on iOS */
-  z-index: 2000 !important;     /* above header (50) and mobile hint (1000) */
+  position: fixed !important;
+  z-index: 2000 !important;
 }
+
+/* ✅ NEW — tap/click fix block */
+#paywall, #checkout-modal {
+  pointer-events: auto;
+  -webkit-overflow-scrolling: touch;
+  contain: layout paint size;
+}
+
+.sheet, .sheet * {
+  transform: none !important;
+}
+
+.sheet-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10002;
+  pointer-events: auto;
+}
+
+button, .btn, .job-btn, .brand {
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  touch-action: manipulation;
+}
+
+.modal-open #backdrop {
+  pointer-events: none;
+}
+
 
 #mobile-hint {
   z-index: 900 !important;      /* keep the hint below payment modals */

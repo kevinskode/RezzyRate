@@ -1211,3 +1211,104 @@ document.addEventListener('DOMContentLoaded', () => { claimCredits(); });
     }, 200);
   });
 })();
+
+/* ==================== Mobile tap fixes + iOS scroll lock ==================== */
+(function mobilePurchaseFixes(){
+  const IS_IOS = /iP(ad|hone|od)/.test(navigator.userAgent) ||
+                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  // Bind reliable tap handlers to all purchase buttons
+  function bindBuyButtons(){
+    const btns = document.querySelectorAll('[data-buy]');
+    btns.forEach(btn => {
+      if (btn.__buyBound) return;
+      btn.__buyBound = true;
+
+      const credits = parseInt(btn.getAttribute('data-buy'), 10) || 1;
+      const handler = (e) => {
+        // prevent anchor jumps or double default
+        if (btn.tagName === 'A') e.preventDefault();
+        // debounce per button
+        if (btn.__buyBusy) return;
+        btn.__buyBusy = true;
+        try { window.openPaywall(credits); } finally {
+          setTimeout(() => { btn.__buyBusy = false; }, 400);
+        }
+      };
+
+      if (window.PointerEvent) {
+        btn.addEventListener('pointerup', handler, { passive: false });
+      } else {
+        btn.addEventListener('touchend', handler, { passive: false });
+        btn.addEventListener('click', handler, { passive: false });
+      }
+    });
+  }
+
+  // Ensure every relevant button is type="button" to avoid form submits
+  function normalizeButtonTypes(){
+    document.querySelectorAll('#paywall button, #checkout-modal button, [data-buy]')
+      .forEach(b => { if (!b.getAttribute('type')) b.setAttribute('type','button'); });
+  }
+
+  // Strong scroll lock for iOS so fixed/sticky footers remain tappable
+  let _savedScrollY = 0;
+  const _orig = { position:'', top:'', width:'', left:'' };
+
+  function lockScroll(){
+    if (!IS_IOS) return;
+    if (document.body.__locked) return;
+    _savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    _orig.position = document.body.style.position;
+    _orig.top      = document.body.style.top;
+    _orig.width    = document.body.style.width;
+    _orig.left     = document.body.style.left;
+
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${_savedScrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.width = '100%';
+    document.body.__locked = true;
+  }
+
+  function unlockScroll(){
+    if (!IS_IOS) return;
+    if (!document.body.__locked) return;
+    document.body.style.position = _orig.position;
+    document.body.style.top      = _orig.top;
+    document.body.style.left     = _orig.left;
+    document.body.style.width    = _orig.width;
+    document.body.__locked = false;
+    window.scrollTo(0, _savedScrollY || 0);
+  }
+
+  // Hook into existing open/close functions to apply scroll lock on iOS
+  const _openPaywall = window.openPaywall;
+  window.openPaywall = function(n=1){
+    lockScroll();
+    _openPaywall(n);
+  };
+  const _closePaywall = window.closePaywall;
+  window.closePaywall = function(){
+    _closePaywall();
+    unlockScroll();
+  };
+  const _openCheckout = window.openCheckout;
+  window.openCheckout = function(){
+    lockScroll();
+    _openCheckout();
+  };
+  const _closeCheckout = window.closeCheckout;
+  window.closeCheckout = function(){
+    _closeCheckout();
+    unlockScroll();
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    normalizeButtonTypes();
+    bindBuyButtons();
+  });
+
+  // Rebind helper if UI dynamically re-renders buttons
+  window.__rezzyBindBuyButtons = bindBuyButtons;
+})();
