@@ -1307,10 +1307,11 @@ button,
   }
 
   /* Make sure content sits above the glow layer */
-  header, main, footer, .container, .overlay{
+  header, main, footer, .container{
     position: relative;
     z-index: 1;
   }
+  
 }
 
 /* Extra guard: target iOS specifically (works alongside the media query) */
@@ -1990,3 +1991,18 @@ header.topbar .badges {
   }
 }
 
+/* --- Payment / overlay stacking fixes (keep these at the very end) --- */
+#paywall,
+#checkout-modal {
+  position: fixed !important;   /* ensure they stay fixed on iOS */
+  z-index: 2000 !important;     /* above header (50) and mobile hint (1000) */
+}
+
+#mobile-hint {
+  z-index: 900 !important;      /* keep the hint below payment modals */
+}
+
+/* Safety: if any mobile block downranks overlays, pin them back on top */
+@media (max-width: 640px){
+  .overlay { position: fixed !important; z-index: 2000 !important; }
+}
