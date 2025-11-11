@@ -2006,3 +2006,39 @@ header.topbar .badges {
 @media (max-width: 640px){
   .overlay { position: fixed !important; z-index: 2000 !important; }
 }
+
+/* iPhone modal comfort & scroll guards */
+.overlay{
+  overscroll-behavior: contain;           /* stop bg scroll bounce */
+  -webkit-overflow-scrolling: touch;
+  padding: 16px max(16px, env(safe-area-inset-right)) 
+           max(16px, env(safe-area-inset-bottom)) 
+           max(16px, env(safe-area-inset-left));
+}
+
+/* Keep pay button clear of the home indicator */
+#checkout-modal .card.modal{
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+/* When the modal opens, absolutely freeze the page on iOS */
+body.modal-open{
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;                          /* you already had this—keep it */
+  overflow: hidden;
+}
+
+/* Make Stripe’s input tap targets comfy on small iPhones */
+@media (max-width: 480px){
+  #checkout-modal .card.modal { font-size: 16px; } /* prevents zoom on focus */
+}
+
+/* Focus visibility in dark mode inside Stripe Element */
+.StripeElement--focus, .Input--focused{
+  outline: 0 !important;
+  box-shadow: 0 0 0 3px rgba(33,199,183,.22) !important;
+  border-color: #21c7b7 !important;
+}
+

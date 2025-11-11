@@ -5,24 +5,29 @@
 // LIVE KEY
 const STRIPE_PUBLISHABLE_KEY = "pk_live_51RzkynCoSH0U9UtKSQSfYVQH6NAm4UG2xzSKeiH7JqQM8g1EnzRtQTR7F5gh9rXHpurl9zLfDjdWiCkvuetrn6m900Ij2YCcfT";
 const API_BASE_URL = "https://gyw1n7b24m.execute-api.us-east-2.amazonaws.com/Prod"; // <-- your API
+
 console.log("922");
+
+/* ==================== UTIL: persistent credit token ==================== */
 function getOrCreateToken(){
   const k = 'credit_token_v1';
   let t = localStorage.getItem(k);
   if (!t){
-    t = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
-    localStorage.setItem(k, t);
+    t = (globalThis.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : String(Date.now()) + Math.random().toString(16).slice(2);
+    try { localStorage.setItem(k, t); } catch {}
   }
   return t;
 }
 const CREDIT_TOKEN = getOrCreateToken();
 
-// one Price per bundle (set these to your real Price IDs from Stripe)
+/* ==================== STRIPE PRICE IDS ==================== */
 // TEST IDS
 // const PRICE_IDS = {
-//   1:  "price_1S5dgPChKVWsJZcWk9kacziD",   // $0.49
-//   10: "price_1S5dhfChKVWsJZcWJdjIkpfx",   // $3.99
-//   20: "price_1S5di8ChKVWsJZcWTxpXycQ0"    // $5.99
+//   1:  "price_1S5dgPChKVWsJZcWk9kacziD",
+//   10: "price_1S5dhfChKVWsJZcWJdjIkpfx",
+//   20: "price_1S5di8ChKVWsJZcWTxpXycQ0"
 // };
 
 // LIVE IDS
@@ -34,6 +39,7 @@ const PRICE_IDS = {
 
 let stripe, elements, paymentElement, clientSecret;
 
+/* ==================== STRIPE INIT ==================== */
 document.addEventListener('DOMContentLoaded', () => {
   if (!window.Stripe) {
     console.error('Stripe.js failed to load (CSP or network)');
@@ -47,9 +53,52 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* ===== Checkout modal open/close ===== */
+/* ==================== iPHONE MODAL HELPERS (NEW) ==================== */
+// Close the bottom-sheet hint if it’s open (prevents overlay stacking weirdness)
+function hideMobileHintIfOpen(){
+  const hint = document.getElementById('mobile-hint');
+  if (hint && hint.classList.contains('open')){
+    hint.classList.remove('open');
+    hint.setAttribute('aria-hidden', 'true');
+  }
+}
+
+// Basic focus trap so keyboard stays in the checkout/paywall modal on iPhone
+let modalLastFocus = null;
+function trapFocus(modal){
+  if (!modal) return;
+  const focusable = modal.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last  = focusable[focusable.length - 1];
+
+  function loop(e){
+    if (e.key !== 'Tab') return;
+    if (e.shiftKey && document.activeElement === first){
+      e.preventDefault(); last.focus();
+    } else if (!e.shiftKey && document.activeElement === last){
+      e.preventDefault(); first.focus();
+    }
+  }
+  modal.addEventListener('keydown', loop);
+  modal.__untrap = () => modal.removeEventListener('keydown', loop);
+}
+
+// Smoothly ensure the Pay button is visible above the keyboard/home bar
+function keepPayVisible(){
+  const btn = document.getElementById('pay-now');
+  if (!btn) return;
+  try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch {}
+}
+
+/* ==================== CHECKOUT MODAL OPEN/CLOSE ==================== */
 function openCheckout(){
+  hideMobileHintIfOpen();
   const modal = document.getElementById('checkout-modal');
+  if (!modal) return;
+
   modal.classList.add('open');
   document.body.classList.add('modal-open');
 
@@ -58,12 +107,23 @@ function openCheckout(){
   const msg    = document.getElementById('checkout-msg');
   if (payBtn) payBtn.disabled = false;
   if (msg) msg.textContent = '';
+
+  modalLastFocus = document.activeElement;
+  trapFocus(modal);
+  setTimeout(keepPayVisible, 120);
 }
 
 function closeCheckout(){
   const modal = document.getElementById('checkout-modal');
+  if (!modal) return;
+
   modal.classList.remove('open');
   document.body.classList.remove('modal-open');
+
+  // untrap focus + restore previous focus
+  if (modal.__untrap) modal.__untrap();
+  if (modalLastFocus) { try { modalLastFocus.focus(); } catch {} }
+  modalLastFocus = null;
 
   // unmount Element if present
   try { if (paymentElement) paymentElement.unmount(); } catch(_) {}
@@ -80,9 +140,12 @@ function closeCheckout(){
   if (msg) msg.textContent = '';
 }
 
-document.getElementById('closeCheckoutBtn').addEventListener('click', closeCheckout);
+(() => {
+  const closeBtn = document.getElementById('closeCheckoutBtn');
+  if (closeBtn) closeBtn.addEventListener('click', closeCheckout);
+})();
 
-/* ===== Prices ===== */
+/* ==================== PRICING ==================== */
 const PRICES = { single: 2.99, pack10: 9.99, pack20: 14.99 };
 const fmt = n => `$${n.toFixed(2)}`;
 function updatePricingUI(){
@@ -98,17 +161,21 @@ function updatePricingUI(){
   setBtn('btnBuy1Modal', 1,  p1); setBtn('btnBuy10Modal',10, p10); setBtn('btnBuy20Modal',20, p20);
 }
 
-/* ===== Metering & Paywall ===== */
+/* ==================== METERING & PAYWALL ==================== */
 const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_credits', unlimitedUntil:'rc_unlimited_until' };
 (function handleUnlimitedFlag(){
   const params = new URLSearchParams(location.search);
   const hours = 48;
   if (params.get('unlimited') === '1'){
-    localStorage.setItem(LS_KEYS.unlimitedUntil, String(Date.now() + hours*60*60*1000));
-    try{ history.replaceState(null,'',location.pathname); }catch(e){}
+    try {
+      localStorage.setItem(LS_KEYS.unlimitedUntil, String(Date.now() + hours*60*60*1000));
+      history.replaceState(null,'',location.pathname);
+    } catch {}
   } else if (params.get('unlimited') === '0'){
-    localStorage.removeItem(LS_KEYS.unlimitedUntil);
-    try{ history.replaceState(null,'',location.pathname); }catch(e){}
+    try {
+      localStorage.removeItem(LS_KEYS.unlimitedUntil);
+      history.replaceState(null,'',location.pathname);
+    } catch {}
   }
 })();
 function isUnlimited(){ const until = parseInt(localStorage.getItem(LS_KEYS.unlimitedUntil)||'0',10); return Date.now() < until; }
@@ -116,7 +183,7 @@ const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+String(d
 function readMeter(){
   const today = todayStr();
   const last = localStorage.getItem(LS_KEYS.lastDate);
-  if (last !== today){ localStorage.setItem(LS_KEYS.lastDate, today); localStorage.setItem(LS_KEYS.dailyUsed, '0'); }
+  if (last !== today){ try { localStorage.setItem(LS_KEYS.lastDate, today); localStorage.setItem(LS_KEYS.dailyUsed, '0'); } catch{} }
   const freeUsed = parseInt(localStorage.getItem(LS_KEYS.dailyUsed)||'0',10);
   const credits = parseInt(localStorage.getItem(LS_KEYS.credits)||'0',10);
   return { freeLeft: Math.max(0, 1 - freeUsed), credits };
@@ -124,8 +191,10 @@ function readMeter(){
 function writeMeter({freeConsumed=0, creditConsumed=0, creditAdd=0}={}){
   const used = parseInt(localStorage.getItem(LS_KEYS.dailyUsed)||'0',10) + freeConsumed;
   const credits = Math.max(0, parseInt(localStorage.getItem(LS_KEYS.credits)||'0',10) - creditConsumed + creditAdd);
-  localStorage.setItem(LS_KEYS.dailyUsed, String(used));
-  localStorage.setItem(LS_KEYS.credits, String(credits));
+  try {
+    localStorage.setItem(LS_KEYS.dailyUsed, String(used));
+    localStorage.setItem(LS_KEYS.credits, String(credits));
+  } catch {}
   updateMeterUI();
 }
 function updateMeterUI(){
@@ -144,7 +213,7 @@ function canConsumeScan(){
 }
 function consumeScan(mode){ if (mode==='free') writeMeter({freeConsumed:1}); else if (mode==='credit') writeMeter({creditConsumed:1}); }
 
-/* ===== Heuristic scoring ===== */
+/* ==================== HEURISTIC SCORING ==================== */
 const STOPWORDS = new Set(["the","a","an","and","or","but","if","then","else","of","to","in","for","on","at","with","by","from","as","that","this","these","those","is","are","was","were","be","been","being","it","its","your","you","i","me","my","we","our","they","their"]);
 const SECTION_HINTS = ["experience","education","skills","projects","certifications","summary","contact","awards"];
 const normalize = t => (t||"").replace(/\u2022/g,"-").replace(/[\t\r]/g," ").trim();
@@ -165,19 +234,21 @@ function keywordScore(resume,keywords){
   const coverage=list.length?present.length/list.length:0;
   return { score:Math.round(40*coverage), missing, present, coverage, total:list.length };
 }
+/* FIX: words/numbers separation in details */
 function professionalismScore(r){
   const {bullets,exclam,capsWords,longLines}=bulletStats(r);
   const pv=passiveVoiceCount(r);
   const words=tokenize(r).length;
+  const nums=countNumbers(r);
   let score=35;
   if(exclam>0)score-=Math.min(5,exclam*2);
   score-=Math.min(5,Math.floor(capsWords/5));
   score-=Math.min(5,Math.floor(pv/4));
   score-=Math.min(5,longLines);
   if(bullets>=5)score+=2;
-  if(countNumbers(r)>=3)score+=3;
+  if(nums>=3)score+=3;
   if(words>=250&&words<=900)score+=2;
-  return {score:Math.max(0,Math.min(35,Math.round(score))), details:{bullets,exclam,capsWords,longLines,passive:pv,words:numbers=countNumbers(r)}};
+  return {score:Math.max(0,Math.min(35,Math.round(score))), details:{bullets,exclam,capsWords,longLines,passive:pv,words, numbers:nums}};
 }
 const readabilityScore = r => Math.round((fleschReadingEase(r)/100)*10);
 function scoreResume(resume,jd,userKeywords){
@@ -261,7 +332,7 @@ function friendlyFixes(result, fre){
   return tips.slice(0, 12);
 }
 
-/* ===== Render helpers (visuals) ===== */
+/* ==================== Render helpers (visuals) ==================== */
 function scoreBand(pct){           // overall 0–100
   return pct >= 85 ? 'good' : pct >= 55 ? 'warn' : 'bad';
 }
@@ -273,7 +344,7 @@ function bandColor(band){          // returns CSS var()
   return band === 'good' ? 'var(--ok)' : band === 'warn' ? 'var(--warn)' : 'var(--bad)';
 }
 
-/* Donut SVG (now allows explicit band override to color-match label) */
+/* Donut SVG (allows band override to color-match label) */
 function donutSVG(percent, label, opts = {}){
   const r = 28, c = 2 * Math.PI * r, off = c * (1 - percent / 100);
   const band = opts.band || scoreBand(percent);
@@ -297,7 +368,7 @@ const tipHTML = inner => `
     <span class="tip-bubble" role="tooltip">${inner}<span class="arrow" aria-hidden="true"></span></span>
   </span>`;
 
-/* ===== Improved getSnippet (fixes mid-word/sentence chops) ===== */
+/* ==================== getSnippet (clean sentence slicing) ==================== */
 function getSnippet(src, rx, { around = 140, max = 260 } = {}) {
   if (!src || !rx) return "";
   const text = String(src).replace(/\s+/g, " ").trim();
@@ -338,7 +409,7 @@ function getSnippet(src, rx, { around = 140, max = 260 } = {}) {
   return `${prefix}${snippet}${suffix}`;
 }
 
-/* ===== Simplified-but-detailed Ghost Job analysis ===== */
+/* ==================== Ghost Job analysis ==================== */
 function mapScoreToRank(realness){
   if (realness <= 30) return { label: "Likely Ghost", band: "bad", next:
     "Proceed carefully. Ask whether the req is funded, who’s actively hiring, and the target start date. Consider networking into the team before applying." };
@@ -348,7 +419,6 @@ function mapScoreToRank(realness){
     "Looks active. Apply soon, mirror the job’s wording for key tools, and follow up with the hiring manager/recruiter within a week." };
 }
 
-/* Internally compute "ghostiness" (0–100), then flip to realness */
 function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
   const jd = (jdRaw || "").trim();
   if (!jd) return null;
@@ -407,7 +477,7 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
   };
 }
 
-/* ===== Lead-word styler ===== */
+/* ==================== Lead-word styler ==================== */
 function styleSummaryLeads(html){
   return html.replace(
     /<p>\s*\*\*([^*]+?)\s*:\s*\*\*\s*([\s\S]*?)<\/p>/g,
@@ -415,7 +485,7 @@ function styleSummaryLeads(html){
   );
 }
 
-/* ===== Job Reality Check UI ===== */
+/* ==================== Job Reality Check UI ==================== */
 function jobRealitySectionHTML(ghost) {
   if (!ghost) return "";
   const { score, ghostiness, label, band, confLabel, next, reasonsPos = [], reasonsNeg = [] } = ghost;
@@ -469,7 +539,7 @@ function jobRealitySectionHTML(ghost) {
   `;
 }
 
-/* ===== Overall Summary ===== */
+/* ==================== Overall Summary ==================== */
 function generateOverallSummary(result, fre, ghost, resumeText, jdText){
   const rank = classifyScore(result.total);
   const covPct  = Math.round((result.coverage||0)*100);
@@ -529,14 +599,19 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
   `);
 }
 
-/* ===== Analyze ===== */
+/* ==================== Analyze ==================== */
 function analyze(){
   const gate = canConsumeScan(); 
   if (!gate.ok){ openPaywall(); return; }
 
-  const resume = document.getElementById('resume').value;
-  const jd     = document.getElementById('jd').value;
-  const keywords = (document.getElementById('keywords').value||'')
+  const resumeEl  = document.getElementById('resume');
+  const jdEl      = document.getElementById('jd');
+  const kwEl      = document.getElementById('keywords');
+  const out       = document.getElementById('results');
+
+  const resume = (resumeEl && resumeEl.value) || '';
+  const jd     = (jdEl && jdEl.value) || '';
+  const keywords = ((kwEl && kwEl.value) || '')
     .split(/,|\n/).map(s=>s.trim()).filter(Boolean);
 
   const result = scoreResume(resume, jd, keywords);
@@ -545,7 +620,6 @@ function analyze(){
 
   const present = (result.presentKeywords||[]);
   const missing = (result.missingKeywords||[]);
-  const totalKW = present.length + missing.length;
   const covPct  = Math.round((result.coverage||0)*100);
   const fre     = fleschReadingEase(resume);
 
@@ -579,7 +653,7 @@ function analyze(){
       Measures how well your wording matches the job’s required tools, skills, and titles. We scan the JD,
       merge with any custom keywords, and check coverage in your resume.
     </div>
-    <div style="margin-bottom:6px"><b>Your scan:</b> ${present.length} matched of ${totalKW} (${covPct}% coverage).</div>
+    <div style="margin-bottom:6px"><b>Your scan:</b> ${present.length} matched of ${present.length + missing.length} (${covPct}% coverage).</div>
     <div style="margin-bottom:6px"><b>What “good” means:</b> 30–40 = strong alignment; 20–29 = partial; &lt;20 = likely under-aligned.</div>
     <div style="margin-bottom:6px">
       <b>Quick wins:</b> mirror exact phrases from the JD (e.g., “SQL” vs. “MySQL” if the JD says SQL); keep acronyms & full names
@@ -662,65 +736,67 @@ function analyze(){
 
   const summaryHTML = generateOverallSummary(result, fre, ghost, resume, jd);
 
-  const out = document.getElementById('results');
-  out.innerHTML = `
-    <div>
-      <div class="results-head">
-        <div class="score-block">
-          ${donutSVG(result.total, `${result.total}`)}
-          <div>
-            <h2 class="card-title" style="margin:0;display:flex;align-items:center;gap:6px">Overall Score ${tipOverall}</h2>
-            <div class="rating">${classifyScore(result.total)}</div>
+  if (out) {
+    out.innerHTML = `
+      <div>
+        <div class="results-head">
+          <div class="score-block">
+            ${donutSVG(result.total, `${result.total}`)}
+            <div>
+              <h2 class="card-title" style="margin:0;display:flex;align-items:center;gap:6px">Overall Score ${tipOverall}</h2>
+              <div class="rating">${classifyScore(result.total)}</div>
+            </div>
           </div>
+          <span class="pill">${
+            gate.mode==='free' ? 'Free scan used'
+            : gate.mode==='credit' ? '1 paid credit used'
+            : 'Unlimited (temp)'
+          }</span>
         </div>
-        <span class="pill">${
-          gate.mode==='free' ? 'Free scan used'
-          : gate.mode==='credit' ? '1 paid credit used'
-          : 'Unlimited (temp)'
-        }</span>
-      </div>
 
-      <div class="kpi-grid">${bhtml}</div>
+        <div class="kpi-grid">${bhtml}</div>
 
-      <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
-      <div class="section-pills">${sectionPills}</div>
+        <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
+        <div class="section-pills">${sectionPills}</div>
 
-      <h3 class="card-title" style="margin:14px 0 6px">Extracted from Job Description</h3>
-      <div>${result.extractedKeywords.map(k=>`<span class='pill good'>${k}</span>`).join('')}</div>
+        <h3 class="card-title" style="margin:14px 0 6px">Extracted from Job Description</h3>
+        <div>${result.extractedKeywords.map(k=>`<span class='pill good'>${k}</span>`).join('')}</div>
 
-      <h3 class="card-title" style="margin:14px 0 6px">Matched Keywords</h3>
-      <div>${present.map(k=>`<span class='pill good'>${k}</span>`).join('') || '<span class="pill bad">No matches yet</span>'}</div>
+        <h3 class="card-title" style="margin:14px 0 6px">Matched Keywords</h3>
+        <div>${present.map(k=>`<span class='pill good'>${k}</span>`).join('') || '<span class="pill bad">No matches yet</span>'}</div>
 
-      <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
-      <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
+        <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
+        <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
 
-      <div class="metrics">
-        <div class="metric"><b>${present.length}</b> matched</div>
-        <div class="metric"><b>${missing.length}</b> missing</div>
-        <div class="metric"><b>${covPct}%</b> coverage</div>
-      </div>
+        <div class="metrics">
+          <div class="metric"><b>${present.length}</b> matched</div>
+          <div class="metric"><b>${missing.length}</b> missing</div>
+          <div class="metric"><b>${covPct}%</b> coverage</div>
+        </div>
 
-      <h3 class="card-title" style="margin:14px 0 6px">Readability & Tone</h3>
-      <p class="helper" style="margin:0 0 8px">
-        ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${result.profDetails.bullets}</b>,
-        metrics used: <b>${result.profDetails.numbers}</b>, passive uses: <b>${result.profDetails.passive}</b>.
-      </p>
+        <h3 class="card-title" style="margin:14px 0 6px">Readability & Tone</h3>
+        <p class="helper" style="margin:0 0 8px">
+          ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${result.profDetails.bullets}</b>,
+          metrics used: <b>${result.profDetails.numbers}</b>, passive uses: <b>${result.profDetails.passive}</b>.
+        </p>
 
-      <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
-      <ul class="list-tight">${fixes}</ul>
+        <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
+        <ul class="list-tight">${fixes}</ul>
 
-      ${ghostHTML}
+        ${ghostHTML}
 
-      <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
-      ${summaryHTML}
-    </div>`;
+        <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
+        ${summaryHTML}
+      </div>`;
+  }
 
-  const ratingEl = out.querySelector('.results-head .rating');
+  const ratingEl = out?.querySelector('.results-head .rating');
   if (ratingEl){
     ratingEl.classList.remove('good','warn','bad');
     ratingEl.classList.add(scoreBand(result.total));
   }
 
+  // Similar jobs (best-effort; safe if JOBS_API not set)
   (async () => {
     const jdText = jd || "";
     const kw = keywords || [];
@@ -731,39 +807,48 @@ function analyze(){
   })();
 }
 
-/* ===== Upload handling ===== */
+/* ==================== Upload handling ==================== */
 const fileInput = document.getElementById('resumeFile');
 const fileLabel = document.getElementById('fileLabel');
 const dropzone  = document.getElementById('dropzone');
 const scanSpinner = document.getElementById('scanSpinner');
 const scanText = document.getElementById('scanText');
-document.getElementById('btnPick').addEventListener('click', ()=> fileInput.click());
-fileInput.addEventListener('change', e => { if (e.target.files?.[0]) handleResumeFile(e.target.files[0]); });
-['dragenter','dragover'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add('drag'); }));
-['dragleave','drop'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove('drag'); }));
-dropzone.addEventListener('drop', e=>{ const f = e.dataTransfer?.files?.[0]; if (f) handleResumeFile(f); });
+
+(() => {
+  const btnPick = document.getElementById('btnPick');
+  if (btnPick) btnPick.addEventListener('click', ()=> fileInput && fileInput.click());
+
+  if (fileInput) {
+    fileInput.addEventListener('change', e => { if (e.target.files?.[0]) handleResumeFile(e.target.files[0]); });
+  }
+  if (dropzone) {
+    ['dragenter','dragover'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add('drag'); }));
+    ['dragleave','drop'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove('drag'); }));
+    dropzone.addEventListener('drop', e=>{ const f = e.dataTransfer?.files?.[0]; if (f) handleResumeFile(f); });
+  }
+})();
 
 function setScanStatus(msg, spinning=false){
   const led = document.getElementById('statusLed');
   const spin = document.getElementById('scanSpinner');
   const txt  = document.getElementById('scanText');
   const m = String(msg||'').toLowerCase();
-  led.classList.remove('ready','scanning','done','error');
-  if (spinning){ led.classList.add('scanning'); spin.classList.add('show'); }
+  if (led) led.classList.remove('ready','scanning','done','error');
+  if (spinning){ led?.classList.add('scanning'); spin?.classList.add('show'); }
   else {
-    spin.classList.remove('show');
-    if (/(error|unsupported|fail)/.test(m)) led.classList.add('error');
-    else if (/(extracted|success|done|✓|scored)/.test(m)) led.classList.add('done');
-    else led.classList.add('ready');
+    spin?.classList.remove('show');
+    if (/(error|unsupported|fail)/.test(m)) led?.classList.add('error');
+    else if (/(extracted|success|done|✓|scored)/.test(m)) led?.classList.add('done');
+    else led?.classList.add('ready');
   }
-  txt.textContent = msg;
+  if (txt) txt.textContent = msg;
 }
 
 async function handleResumeFile(file){
-  fileLabel.textContent = file.name;
+  if (fileLabel) fileLabel.textContent = file.name;
   setScanStatus('Scanning...', true);
   try{
-    const ext = file.name.split('.').pop().toLowerCase();
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
     let text = '';
     if (ext === 'pdf'){ text = await extractTextFromPDF(file); }
     else if (ext === 'docx'){ text = await extractTextFromDOCX(file); }
@@ -773,11 +858,13 @@ async function handleResumeFile(file){
       text = raw.replace(/\\'[0-9a-fA-F]{2}/g,' ').replace(/\\[a-z]+\d*/g,' ').replace(/[{}]/g,' ').replace(/\\par/g,'\n');
     } else { setScanStatus('Unsupported file type. Use PDF, DOCX, or TXT.', false); return; }
     text = (text||'').trim();
+    const resumeEl = document.getElementById('resume');
     if (text.length < 20){
       setScanStatus('Could not extract much text — is it a scanned image PDF?', false);
-      document.getElementById('resume').value = text; return;
+      if (resumeEl) resumeEl.value = text; 
+      return;
     }
-    document.getElementById('resume').value = text;
+    if (resumeEl) resumeEl.value = text;
     setScanStatus('Text extracted ✓', false);
     analyze();
   } catch(err){
@@ -808,17 +895,28 @@ async function extractTextFromDOCX(file){
   return (result.value || '').replace(/\r/g,'').trim();
 }
 
-/* ===== Paywall & misc ===== */
+/* ==================== Paywall & misc (with iPhone focus trap) ==================== */
 function openPaywall(n=1){
+  hideMobileHintIfOpen();
   window.__desiredCredits = n;
-  document.getElementById('paywall').classList.add('open');
+  const modal = document.getElementById('paywall');
+  if (!modal) return;
+  modal.classList.add('open');
   document.body.classList.add('modal-open');
+  modalLastFocus = document.activeElement;
+  trapFocus(modal);
 }
 function closePaywall(){
-  document.getElementById('paywall').classList.remove('open');
+  const modal = document.getElementById('paywall');
+  if (!modal) return;
+  modal.classList.remove('open');
   document.body.classList.remove('modal-open');
+  if (modal.__untrap) modal.__untrap();
+  if (modalLastFocus) { try { modalLastFocus.focus(); } catch {} }
+  modalLastFocus = null;
 }
 
+/* ==================== Checkout flow ==================== */
 async function startCheckout(n = 1){
   if (!stripe) { alert('Payment library not loaded yet. Please retry.'); return; }
   const priceId = PRICE_IDS[n];
@@ -882,6 +980,7 @@ async function startCheckout(n = 1){
 
   const payBtn = document.getElementById('pay-now');
   const msg    = document.getElementById('checkout-msg');
+  if (!payBtn || !msg) return;
 
   let paying = false;
   payBtn.onclick = async () => {
@@ -911,20 +1010,23 @@ async function startCheckout(n = 1){
   };
 }
 
+/* ==================== Credit claim ==================== */
 async function claimCredits({ retries = 6, delay = 400 } = {}) {
   const url = `${API_BASE_URL}/credits?token=${encodeURIComponent(CREDIT_TOKEN)}`;
 
   for (let i = 0; i < retries; i++) {
-    const r = await fetch(url, { cache: 'no-store' });
-    if (r.ok) {
-      const { credits = 0 } = await r.json();
-      if (credits > 0) {
-        if (typeof addCredits === 'function') addCredits(credits);
-        if (typeof renderCreditBadges === 'function') renderCreditBadges();
-        if (typeof updateCreditUI === 'function') updateCreditUI();
-        return credits;
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (r.ok) {
+        const { credits = 0 } = await r.json();
+        if (credits > 0) {
+          if (typeof addCredits === 'function') addCredits(credits);
+          if (typeof renderCreditBadges === 'function') renderCreditBadges();
+          if (typeof updateCreditUI === 'function') updateCreditUI();
+          return credits;
+        }
       }
-    }
+    } catch {}
     await new Promise(res => setTimeout(res, delay));
     delay = Math.min(delay * 1.6, 3000);
   }
@@ -933,17 +1035,24 @@ async function claimCredits({ retries = 6, delay = 400 } = {}) {
 
 function addCredits(n){ writeMeter({creditAdd:n}); }
 function clearAll(){
-  document.getElementById('resume').value='';
-  document.getElementById('jd').value='';
-  document.getElementById('keywords').value='';
-  document.getElementById('results').innerHTML = `
+  const resume = document.getElementById('resume');
+  const jd = document.getElementById('jd');
+  const keywords = document.getElementById('keywords');
+  const out = document.getElementById('results');
+
+  if (resume) resume.value='';
+  if (jd) jd.value='';
+  if (keywords) keywords.value='';
+  if (out) {
+    out.innerHTML = `
     <div style="text-align:center;color:var(--muted)">
       <div style="width:44px;height:44px;border-radius:9999px;margin:8px auto;background:linear-gradient(135deg,#ffd34d,#f26e8c)"></div>
       <h3 style="margin:6px 0 4px;color:var(--text)">Ready to score your resume</h3>
       <div class="helper">Paste your resume and click <b>Analyze</b>.</div>
     </div>`;
-  fileInput.value = '';
-  fileLabel.textContent = 'Choose PDF, DOCX, or TXT';
+  }
+  if (fileInput) fileInput.value = '';
+  if (fileLabel) fileLabel.textContent = 'Choose PDF, DOCX, or TXT';
   setScanStatus('Ready', false);
 }
 
@@ -1035,7 +1144,7 @@ updatePricingUI();
 setScanStatus('Ready', false);
 document.addEventListener('DOMContentLoaded', () => { claimCredits(); });
 
-/* ===== Mobile "Use desktop for best experience" hint (8s delay) ===== */
+/* ==================== Mobile "Use desktop" hint (8s delay) ==================== */
 (function mobileHint(){
   const LS_KEY = 'rezzy_mobile_hint_v1';
   const HINT_DELAY_MS = 8000; // open after 8 seconds
