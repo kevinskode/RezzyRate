@@ -2370,17 +2370,71 @@ body.modal-open{
   padding-bottom: 10px;
 }
 
-
-/* === KPI label gap fix (remove left indent) === */
-.kpi{
-  padding-left: 4px !important;   /* was 10px – tighten left side */
-}
-
+/* === FINAL OVERRIDE: KPI dot + label on ALL sizes === */
 .kpi-row{
-  margin-left: 0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:0 !important;
 }
 
-.kpi-label{
-  margin-left: 0 !important;
-  gap: 4px !important;            /* shrink space between dot and text */
+.kpi-row .kpi-label{
+  display:flex !important;
+  align-items:center !important;
+  gap:0 !important;          /* kill the old 8px gap */
+  min-width:0;
+}
+
+.kpi-row .kpi-dot{
+  flex:0 0 10px;
+  width:10px;
+  height:10px;
+  border-radius:9999px;
+  margin-right:4px !important;   /* tiny space between dot + text */
+}
+
+.kpi-row .kpi-text{
+  display:inline-block;
+  margin:0 !important;
+  padding:0 !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+}
+
+/* keep a little room before the info "i" icon */
+.kpi-row .tip{
+  margin-left:6px !important;
+  flex:0 0 auto;
+}
+
+
+/* === MOBILE KPI GAP FIX – override old alias rules === */
+@media (max-width: 480px){
+  /* use the real text again, no alias hacks */
+  .kpi-text{
+    display:inline-block !important;
+    visibility:visible !important;
+    white-space:nowrap !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+
+  /* kill any ::after / ::before replacements */
+  .kpi-text::before,
+  .kpi-text::after{
+    content:none !important;
+  }
+}
+
+/* keep dot snug to the label on all sizes */
+.kpi-row .kpi-label{
+  display:flex !important;
+  align-items:center !important;
+  gap:4px !important;        /* tiny gap between dot + text */
+  margin:0 !important;
+}
+
+.kpi-row .kpi-dot{
+  margin:0 4px 0 0 !important;
 }
