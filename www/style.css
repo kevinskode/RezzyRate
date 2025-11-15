@@ -2254,3 +2254,68 @@ body.modal-open{
   border:1px solid rgba(22,163,74,.7);
   color:#ecfdf5;
 }
+
+
+/* Locking for premium-only sections on free scans */
+.results-section {
+  position: relative;
+  margin-top: 10px;
+}
+
+.results-section.locked {
+  opacity: 0.25;
+  filter: blur(0.4px);
+  pointer-events: none; /* underlying content not clickable */
+}
+
+/* The overlay itself sits on top and *is* clickable */
+.results-section.locked .lock-overlay {
+  pointer-events: auto;
+}
+
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.96),
+    rgba(22, 33, 62, 0.98)
+  );
+  border-radius: 18px;
+}
+
+.lock-overlay-inner {
+  max-width: 280px;
+  text-align: center;
+}
+
+.lock-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.08);
+  color: var(--accent, #bbf5a2);
+}
+
+.lock-overlay-inner p {
+  margin: 4px 0 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--muted, #cbd5f5);
+}
+
+/* tiny button variant for the overlay */
+.lock-overlay .btn.small {
+  padding: 6px 12px;
+  font-size: 13px;
+}

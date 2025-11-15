@@ -615,7 +615,22 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
     </div>
   `);
 }
+/* ==================== Premium lock overlay helper ==================== */
+function buildLockOverlay(message){
+  return `
+    <div class="lock-overlay">
+      <div class="lock-overlay-inner">
+        <div class="lock-tag">Paid feature</div>
+        <p>${message}</p>
+        <button type="button" class="btn small brand" data-buy="1">
+          Unlock with a paid scan
+        </button>
+      </div>
+    </div>
+  `;
+}
 
+/* ==================== Analyze ==================== */
 /* ==================== Analyze ==================== */
 function analyze(){
   const gate = canConsumeScan(); 
@@ -633,7 +648,10 @@ function analyze(){
 
   const result = scoreResume(resume, jd, keywords);
 
+  // mark whether we just used the free scan or a paid/ unlimited one
   consumeScan(gate.mode);
+  const lockAdvanced = (gate.mode === 'free' && !isUnlimited());
+  window.__rezzyLastScanWasFree = lockAdvanced;
 
   const present = (result.presentKeywords||[]);
   const missing = (result.missingKeywords||[]);
@@ -750,17 +768,21 @@ function analyze(){
 
   const ghost = analyzeGhostJob(jd, resume);
   const ghostHTML = jobRealitySectionHTML(ghost);
-
   const summaryHTML = generateOverallSummary(result, fre, ghost, resume, jd);
+
+  // helper: only include overlay markup if this scan was free
+  const sectionOverlay = (msg) => lockAdvanced ? buildLockOverlay(msg) : '';
 
   if (out) {
     out.innerHTML = `
-      <div>
+      <div class="results-root ${lockAdvanced ? 'mode-free' : 'mode-paid'}">
         <div class="results-head">
           <div class="score-block">
             ${donutSVG(result.total, `${result.total}`)}
             <div>
-              <h2 class="card-title" style="margin:0;display:flex;align-items:center;gap:6px">Overall Score ${tipOverall}</h2>
+              <h2 class="card-title" style="margin:0;display:flex;align-items:center;gap:6px">
+                Overall Score ${tipOverall}
+              </h2>
               <div class="rating">${classifyScore(result.total)}</div>
             </div>
           </div>
@@ -773,37 +795,69 @@ function analyze(){
 
         <div class="kpi-grid">${bhtml}</div>
 
-        <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
-        <div class="section-pills">${sectionPills}</div>
+        <!-- STRUCTURE -->
+        <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="structure">
+          <div class="results-section-body">
+            <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
+            <div class="section-pills">${sectionPills}</div>
+          </div>
+          ${sectionOverlay('See which core sections (experience, projects, skills, etc.) are missing or present. This detailed checklist unlocks with any paid scan.')}
+        </section>
 
-        <h3 class="card-title" style="margin:14px 0 6px">Extracted from Job Description</h3>
-        <div>${result.extractedKeywords.map(k=>`<span class='pill good'>${k}</span>`).join('')}</div>
+        <!-- KEYWORDS -->
+        <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="keywords">
+          <div class="results-section-body">
+            <h3 class="card-title" style="margin:14px 0 6px">Extracted from Job Description</h3>
+            <div>${result.extractedKeywords.map(k=>`<span class='pill good'>${k}</span>`).join('')}</div>
 
-        <h3 class="card-title" style="margin:14px 0 6px">Matched Keywords</h3>
-        <div>${present.map(k=>`<span class='pill good'>${k}</span>`).join('') || '<span class="pill bad">No matches yet</span>'}</div>
+            <h3 class="card-title" style="margin:14px 0 6px">Matched Keywords</h3>
+            <div>${present.map(k=>`<span class='pill good'>${k}</span>`).join('') || '<span class="pill bad">No matches yet</span>'}</div>
 
-        <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
-        <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
+            <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
+            <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
 
-        <div class="metrics">
-          <div class="metric"><b>${present.length}</b> matched</div>
-          <div class="metric"><b>${missing.length}</b> missing</div>
-          <div class="metric"><b>${covPct}%</b> coverage</div>
-        </div>
+            <div class="metrics">
+              <div class="metric"><b>${present.length}</b> matched</div>
+              <div class="metric"><b>${missing.length}</b> missing</div>
+              <div class="metric"><b>${covPct}%</b> coverage</div>
+            </div>
+          </div>
+          ${sectionOverlay('See exactly which job keywords you match, which you are missing, and your overall coverage. Full keyword breakdown is available with a paid scan.')}
+        </section>
 
-        <h3 class="card-title" style="margin:14px 0 6px">Readability & Tone</h3>
-        <p class="helper" style="margin:0 0 8px">
-          ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${result.profDetails.bullets}</b>,
-          metrics used: <b>${result.profDetails.numbers}</b>, passive uses: <b>${result.profDetails.passive}</b>.
-        </p>
+        <!-- READABILITY & TOP FIXES -->
+        <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="readability">
+          <div class="results-section-body">
+            <h3 class="card-title" style="margin:14px 0 6px">Readability & Tone</h3>
+            <p class="helper" style="margin:0 0 8px">
+              ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${bullets}</b>,
+              metrics used: <b>${numbersUsed}</b>, passive uses: <b>${passiveHits}</b>.
+            </p>
 
-        <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
-        <ul class="list-tight">${fixes}</ul>
+            <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
+            <ul class="list-tight">${fixes}</ul>
+          </div>
+          ${sectionOverlay('Get personalized rewrite suggestions: where to add metrics, how to fix passive voice, and the top changes that move your score the most. Available with a paid scan.')}
+        </section>
 
-        ${ghostHTML}
+        <!-- GHOST JOB CHECK -->
+        ${ghostHTML ? `
+          <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="ghost">
+            <div class="results-section-body">
+              ${ghostHTML}
+            </div>
+            ${sectionOverlay('Check how “real” the job ad looks, with hiring signals and red flags called out. This Job Ad Reality Check is part of paid scans.')}
+          </section>
+        ` : ''}
 
-        <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
-        ${summaryHTML}
+        <!-- OVERALL SUMMARY -->
+        <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="summary">
+          <div class="results-section-body">
+            <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
+            ${summaryHTML}
+          </div>
+          ${sectionOverlay('Read a tailored summary of your strengths, gaps, and what to do next. The full write-up unlocks with a paid scan.')}
+        </section>
       </div>`;
   }
 
@@ -811,6 +865,11 @@ function analyze(){
   if (ratingEl){
     ratingEl.classList.remove('good','warn','bad');
     ratingEl.classList.add(scoreBand(result.total));
+  }
+
+  // re-bind any "Unlock with a paid scan" buttons we just injected
+  if (typeof window.__rezzyBindBuyButtons === 'function') {
+    window.__rezzyBindBuyButtons();
   }
 
   // Similar jobs (best-effort; safe if JOBS_API not set)
@@ -823,6 +882,7 @@ function analyze(){
     renderSimilarJobs(jobs);
   })();
 }
+
 
 /* ==================== Upload handling ==================== */
 const fileInput = document.getElementById('resumeFile');
