@@ -2085,18 +2085,21 @@ body.modal-open{
   }
 
   /* Card: full-width sheet, rounded top corners only */
-  #checkout-modal .card.modal {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -8px 28px rgba(0,0,0,.65);
-    padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
-    max-height: 82vh;                    /* keep some air at the top */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    font-size: 16px;                     /* prevents iOS zoom on inputs */
-  }
+ #checkout-modal .card.modal
+ {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 30%;
+        margin-left: 2%;
+        margin-right: 2%;
+        border-radius: 16px;
+        box-shadow: 0 -8px 18px rgba(0, 0, 0, .65);
+        padding: 14px 34px calc(14px + env(safe-area-inset-bottom));
+        max-height: 82vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        font-size: 16px;
+    }
 
   /* Title + close button area gets a bit tighter */
   #checkout-modal .card.modal h2 {
