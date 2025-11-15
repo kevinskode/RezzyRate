@@ -152,24 +152,46 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
     <div class="actions">
 
       <!-- NEW unified pricing buttons -->
-      <div class="pricing-options">
+     <div class="pricing-options">
 
-        <button class="pricing-btn" data-buy="1" onclick="startCheckout(1)">
-          <span class="left">1 Scan</span>
-          <span class="right">$2.99</span>
-        </button>
+  <!-- 1 scan -->
+  <button class="pricing-btn" data-buy="1" onclick="startCheckout(1)">
+    <div class="pricing-main">
+      <span class="left">1 Scan</span>
+      <span class="right">$2.99</span>
+    </div>
+    <div class="pricing-sub">
+      <span class="per-scan">$2.99 per scan</span>
+      <span class="deal-pill neutral">Single scan</span>
+    </div>
+  </button>
 
-        <button class="pricing-btn" data-buy="10" onclick="startCheckout(10)">
-          <span class="left">10 Scans</span>
-          <span class="right">$9.99</span>
-        </button>
+  <!-- 10 scans -->
+  <button class="pricing-btn" data-buy="10" onclick="startCheckout(10)">
+    <div class="pricing-main">
+      <span class="left">10 Scans</span>
+      <span class="right">$9.99</span>
+    </div>
+    <div class="pricing-sub">
+      <span class="per-scan">$1.00 per scan</span>
+      <span class="deal-pill popular">Save ~67%</span>
+    </div>
+  </button>
 
-        <button class="pricing-btn" data-buy="20" onclick="startCheckout(20)">
-          <span class="left">20 Scans</span>
-          <span class="right">$14.99</span>
-        </button>
+  <!-- 20 scans -->
+  <button class="pricing-btn" data-buy="20" onclick="startCheckout(20)">
+    <div class="pricing-main">
+      <span class="left">20 Scans</span>
+      <span class="right">$14.99</span>
+    </div>
+    <div class="pricing-sub">
+      <span class="per-scan">$0.75 per scan</span>
+      <span class="deal-pill best">Save ~75%</span>
+    </div>
+  </button>
 
-      </div>
+</div>
+
 
       <span class="spacer"></span>
 
