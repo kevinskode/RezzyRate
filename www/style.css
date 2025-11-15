@@ -2398,3 +2398,27 @@ body.modal-open{
   flex: 0 0 auto;
   margin-left: 0;                /* remove old auto-margin tricks */
 }
+
+/* === FINAL OVERRIDE: FIX KPI ALIGNMENT === */
+.kpi-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.kpi-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-right: auto !important;
+}
+
+.kpi-label .tip {
+  flex: 0 0 auto !important;
+}
+
+.kpi b {
+  margin-left: 8px !important;
+  flex: 0 0 auto !important;
+}
+
