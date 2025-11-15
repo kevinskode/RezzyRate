@@ -295,7 +295,8 @@ function friendlyFixes(result, fre){
   if (result.profDetails.numbers < 3){
     addTip('high','Show the impact with numbers',`You’ve got ${result.profDetails.numbers}. Aim for 3–5 clear wins like “cut processing time 30%,” “saved $50K,” or “reduced variance 18%.”`);
   }
-  const missingSections = Object.entries(result.sectionPresence).filter(([, v]) => !v).map(([k]) => k);
+  const missingSections =
+    Object.entries(result.sectionPresence).filter(([, v]) => !v).map(([k]) => k);
   if (missingSections.length){
     addTip('med','Fill the missing sections',`Add ${missingSections.join(', ')} so recruiters (and ATS) can find the essentials fast.`);
   }
@@ -449,13 +450,25 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
 
   for (const s of pos){
     let matched = false, snippet = "";
-    if (s.rx && s.rx.test(jd)){ matched = true; snippet = getSnippet(jd, new RegExp(s.rx.source, s.rx.flags.replace('g',''))); }
+    if (s.rx && s.rx.test(jd)){
+      matched = true;
+      snippet = getSnippet(
+        jd,
+        new RegExp(s.rx.source, s.rx.flags.replace('g',''))
+      );
+    }
     if (s.eval && s.eval(jd)){ matched = true; }
     if (matched){ ghostiness -= s.w; hitsPos.push({title:s.label, snippet}); }
   }
   for (const s of neg){
     let matched = false, snippet = "";
-    if (s.rx && s.rx.test(jd)){ matched = true; snippet = getSnippet(jd, new RegExp(s.rx.source, s.rx.flags.replace('g',''))); }
+    if (s.rx && s.rx.test(jd)){
+      matched = true;
+      snippet = getSnippet(
+        jd,
+        new RegExp(s.rx.source, s.rx.flags.replace('g',''))
+      );
+    }
     if (s.eval && s.eval(jd)){ matched = true; }
     if (matched){ ghostiness += s.w; hitsNeg.push({title:s.label, snippet}); }
   }
@@ -465,8 +478,12 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
 
   const totalSignals = pos.length + neg.length;
   const matched = hitsPos.length + hitsNeg.length;
-  const confidence = totalSignals ? Math.min(1, Math.max(0.2, matched / totalSignals)) : 0.4;
-  const confLabel = confidence >= 0.75 ? 'High' : confidence >= 0.5 ? 'Medium' : 'Low';
+  const confidence = totalSignals
+    ? Math.min(1, Math.max(0.2, matched / totalSignals))
+    : 0.4;
+  const confLabel = confidence >= 0.75 ? 'High'
+                   : confidence >= 0.5 ? 'Medium'
+                   : 'Low';
 
   const { label, band, next } = mapScoreToRank(realness);
   return {
@@ -917,31 +934,70 @@ function closePaywall(){
 }
 
 /* ==================== Checkout flow ==================== */
+/* ==================== Checkout flow ==================== */
 async function startCheckout(n = 1){
-  if (!stripe) { alert('Payment library not loaded yet. Please retry.'); return; }
-  const priceId = PRICE_IDS[n];
-  if (!priceId){ alert('Unknown product'); return; }
-
-  closePaywall();
-
-  const res = await fetch(`${API_BASE_URL}/create-payment-intent`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ 
-      priceId, 
-      quantity: 1,
-      token: CREDIT_TOKEN,
-      credits: n
-    })
-  });
-  const data = await res.json();
-  if (!res.ok || !data.client_secret){
-    alert(data.error || 'Error creating payment'); 
+  if (!stripe) {
+    alert('Payment library not loaded yet. Please retry.');
     return;
   }
+  const priceId = PRICE_IDS[n];
+  if (!priceId){
+    alert('Unknown product');
+    return;
+  }
+
+  // Close paywall, open checkout in "loading" state
+  closePaywall();
+  openCheckout();
+
+  const payBtn = document.getElementById('pay-now');
+  const msg    = document.getElementById('checkout-msg');
+
+  if (payBtn) payBtn.disabled = true;
+  if (msg) msg.textContent = 'Preparing secure checkout…';
+
+  let data;
+  try {
+    const res = await fetch(`${API_BASE_URL}/create-payment-intent`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        priceId,
+        quantity: 1,
+        token: CREDIT_TOKEN,
+        credits: n
+      })
+    });
+
+    // Try to parse JSON but don't crash if it fails
+    data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data.client_secret){
+      const errText = data && data.error ? data.error : 'Error creating payment intent.';
+      console.error('Create payment intent failed', res.status, errText);
+      if (msg) {
+        msg.textContent =
+          'Checkout error: ' +
+          errText +
+          ' (If you are testing locally, this may be a CORS issue on the server.)';
+      }
+      if (payBtn) payBtn.disabled = false;
+      return;
+    }
+  } catch (err) {
+    console.error('Network/CORS error creating payment intent', err);
+    if (msg) {
+      msg.textContent =
+        'Could not reach the payment server. If you are on 127.0.0.1 / localhost, update the API CORS to allow this origin.';
+    }
+    if (payBtn) payBtn.disabled = false;
+    return;
+  }
+
   clientSecret = data.client_secret;
 
-  try { if (paymentElement) paymentElement.unmount(); } catch(_) {}
+  // Reset any previous Stripe Element
+  try { if (paymentElement) paymentElement.unmount(); } catch (_) {}
   paymentElement = null;
   elements = null;
 
@@ -976,10 +1032,9 @@ async function startCheckout(n = 1){
   paymentElement = elements.create('payment');
   paymentElement.mount('#payment-element');
 
-  openCheckout();
-
-  const payBtn = document.getElementById('pay-now');
-  const msg    = document.getElementById('checkout-msg');
+  // Ready for user to pay
+  if (msg) msg.textContent = '';
+  if (payBtn) payBtn.disabled = false;
   if (!payBtn || !msg) return;
 
   let paying = false;
@@ -1006,9 +1061,13 @@ async function startCheckout(n = 1){
     const granted = await claimCredits();
     if (!granted) setTimeout(() => claimCredits(), 1500);
 
-    setTimeout(() => { paying = false; closeCheckout(); }, 1200);
+    setTimeout(() => {
+      paying = false;
+      closeCheckout();
+    }, 1200);
   };
 }
+
 
 /* ==================== Credit claim ==================== */
 async function claimCredits({ retries = 6, delay = 400 } = {}) {
@@ -1214,10 +1273,11 @@ document.addEventListener('DOMContentLoaded', () => { claimCredits(); });
 
 /* ==================== Mobile tap fixes + iOS scroll lock ==================== */
 (function mobilePurchaseFixes(){
-  const IS_IOS = /iP(ad|hone|od)/.test(navigator.userAgent) ||
-                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const IS_IOS =
+    /iP(ad|hone|od)/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  // Bind reliable tap handlers to all purchase buttons
+  // 1) Make all [data-buy] buttons safely start purchase flow
   function bindBuyButtons(){
     const btns = document.querySelectorAll('[data-buy]');
     btns.forEach(btn => {
@@ -1225,23 +1285,33 @@ document.addEventListener('DOMContentLoaded', () => { claimCredits(); });
       btn.__buyBound = true;
 
       const credits = parseInt(btn.getAttribute('data-buy'), 10) || 1;
+
       const handler = (e) => {
-        // prevent anchor jumps or double default
-        if (btn.tagName === 'A') e.preventDefault();
-        // debounce per button
+        // prevent anchor jumps or default submits
+        e.preventDefault();
         if (btn.__buyBusy) return;
         btn.__buyBusy = true;
-        try { window.openPaywall(credits); } finally {
-          setTimeout(() => { btn.__buyBusy = false; }, 400);
-        }
+
+        const insidePaywall = !!btn.closest('#paywall');
+
+        Promise.resolve()
+          .then(() => {
+            // Outside paywall: open the paywall sheet first
+            if (!insidePaywall) {
+              openPaywall(credits);
+            } else {
+              // Inside paywall: go straight to Stripe checkout
+              return startCheckout(credits);
+            }
+          })
+          .catch(console.error)
+          .finally(() => {
+            setTimeout(() => { btn.__buyBusy = false; }, 400);
+          });
       };
 
-      if (window.PointerEvent) {
-        btn.addEventListener('pointerup', handler, { passive: false });
-      } else {
-        btn.addEventListener('touchend', handler, { passive: false });
-        btn.addEventListener('click', handler, { passive: false });
-      }
+      // simple + reliable: click only
+      btn.addEventListener('click', handler);
     });
   }
 
@@ -1252,55 +1322,60 @@ document.addEventListener('DOMContentLoaded', () => { claimCredits(); });
   }
 
   // Strong scroll lock for iOS so fixed/sticky footers remain tappable
-  let _savedScrollY = 0;
-  const _orig = { position:'', top:'', width:'', left:'' };
+  let savedScrollY = 0;
+  const orig = { position:'', top:'', width:'', left:'' };
 
   function lockScroll(){
-    if (!IS_IOS) return;
-    if (document.body.__locked) return;
-    _savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-    _orig.position = document.body.style.position;
-    _orig.top      = document.body.style.top;
-    _orig.width    = document.body.style.width;
-    _orig.left     = document.body.style.left;
+    if (!IS_IOS || document.body.__locked) return;
+    savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+
+    orig.position = document.body.style.position;
+    orig.top      = document.body.style.top;
+    orig.width    = document.body.style.width;
+    orig.left     = document.body.style.left;
 
     document.body.style.position = 'fixed';
-    document.body.style.top = `-${_savedScrollY}px`;
-    document.body.style.left = '0';
-    document.body.style.width = '100%';
+    document.body.style.top      = `-${savedScrollY}px`;
+    document.body.style.left     = '0';
+    document.body.style.width    = '100%';
     document.body.__locked = true;
   }
 
   function unlockScroll(){
-    if (!IS_IOS) return;
-    if (!document.body.__locked) return;
-    document.body.style.position = _orig.position;
-    document.body.style.top      = _orig.top;
-    document.body.style.left     = _orig.left;
-    document.body.style.width    = _orig.width;
+    if (!IS_IOS || !document.body.__locked) return;
+
+    document.body.style.position = orig.position;
+    document.body.style.top      = orig.top;
+    document.body.style.left     = orig.left;
+    document.body.style.width    = orig.width;
     document.body.__locked = false;
-    window.scrollTo(0, _savedScrollY || 0);
+
+    window.scrollTo(0, savedScrollY || 0);
   }
 
-  // Hook into existing open/close functions to apply scroll lock on iOS
-  const _openPaywall = window.openPaywall;
-  window.openPaywall = function(n=1){
+  // Safely wrap existing open/close functions
+  const baseOpenPaywall   = window.openPaywall   || function(){};
+  const baseClosePaywall  = window.closePaywall  || function(){};
+  const baseOpenCheckout  = window.openCheckout  || function(){};
+  const baseCloseCheckout = window.closeCheckout || function(){};
+
+  window.openPaywall = function(n = 1){
     lockScroll();
-    _openPaywall(n);
+    try { baseOpenPaywall(n); } catch (e) { console.error(e); }
   };
-  const _closePaywall = window.closePaywall;
+
   window.closePaywall = function(){
-    _closePaywall();
+    try { baseClosePaywall(); } catch (e) { console.error(e); }
     unlockScroll();
   };
-  const _openCheckout = window.openCheckout;
+
   window.openCheckout = function(){
     lockScroll();
-    _openCheckout();
+    try { baseOpenCheckout(); } catch (e) { console.error(e); }
   };
-  const _closeCheckout = window.closeCheckout;
+
   window.closeCheckout = function(){
-    _closeCheckout();
+    try { baseCloseCheckout(); } catch (e) { console.error(e); }
     unlockScroll();
   };
 

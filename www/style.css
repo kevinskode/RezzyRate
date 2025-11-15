@@ -1116,11 +1116,13 @@ button,
 
 /* keep single row even on mobile (override earlier mobile grid) */
 @media (max-width: 640px){
-  .pricing-buttons{
-    display:flex !important;
-    flex-wrap:nowrap !important;
-    gap:6px !important;
-  }
+.pricing-buttons {
+  display: flex;
+  flex-wrap: wrap;   /* <-- wrap to remove scroll */
+  gap: 6px;
+  overflow-x: visible !important;  /* no horizontal scroll */
+}
+
 }
 
 
