@@ -1006,7 +1006,7 @@ async function startCheckout(n = 1){
     appearance: {
       theme: 'night',
       variables: {
-        colorPrimary: '#b2ff92',
+        colorPrimary: '#bbf5a2ff',
         colorPrimaryText: '#0b1020',
         colorBackground: '#0d1422',
         colorText: '#f7f9ff',
