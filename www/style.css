@@ -316,44 +316,6 @@ button:active{ transform:translateY(1px); }
   mix-blend-mode:screen;
 }
 
-
-/* second line discount blurb inside buy buttons */
-.buy-btn {
-  /* you already have display:grid etc.; just tighten row gap a bit */
-  row-gap: 4px;
-}
-
-/* discount line spans full width under label/price */
-.buy-btn .btn-deal{
-  grid-column: 1 / -1;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 2px;
-  font-size: var(--step--1);
-  color: var(--muted);
-  opacity: .95;
-}
-
-/* small pill for "Popular / Best value" */
-.buy-btn .deal-tag{
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  background: rgba(16,185,129,.16);
-  border: 1px solid rgba(16,185,129,.35);
-  color: #bbf7d0;
-}
-
-/* text after pill (per-scan + % off) */
-.buy-btn .deal-copy{
-  white-space: nowrap;
-}
-
-
 /* remove old neon style if still applied to specific IDs */
 #btnBuy1Top,#btnBuy10Top,#btnBuy20Top,
 #btnBuy1Modal,#btnBuy10Modal,#btnBuy20Modal{
@@ -2190,45 +2152,8 @@ body.modal-open{
   }
 }
 
-.pricing-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  margin-top: 6px;
+ .Tab--selected{
+background-color: #b2ff92 !important;
+border-color: #ffffff !important;
 }
 
-.pricing-btn {
-  width: 100%;
-  padding: 14px 16px;
-
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  font-size: 16px;
-  color: var(--text);
-  font-weight: 500;
-
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.pricing-btn:hover {
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(255,255,255,0.25);
-}
-
-.pricing-btn:active {
-  transform: scale(0.97);
-  background: rgba(255,255,255,0.12);
-}
-
-.pricing-btn .right {
-  color: #4ade80; /* Green price */
-  font-weight: 600;
-}
