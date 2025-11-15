@@ -530,7 +530,6 @@ function jobRealitySectionHTML(ghost) {
   </div>`;
 
   return `
-    <h3 class="card-title" style="margin:14px 0 6px">Job Ad Reality Check</h3>
     <div class="ghost-wrap">
       <div class="results-head" style="margin-bottom:8px">
         <div class="score-block">
@@ -615,12 +614,13 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
     </div>
   `);
 }
+
 /* ==================== Premium lock overlay helper ==================== */
-function buildLockOverlay(message){
+function premiumOverlayHTML(message){
   return `
     <div class="lock-overlay">
       <div class="lock-overlay-inner">
-        <div class="lock-tag">Paid feature</div>
+        <span class="lock-tag">PAID FEATURE</span>
         <p>${message}</p>
         <button type="button" class="btn small brand" data-buy="1">
           Unlock with a paid scan
@@ -630,7 +630,6 @@ function buildLockOverlay(message){
   `;
 }
 
-/* ==================== Analyze ==================== */
 /* ==================== Analyze ==================== */
 function analyze(){
   const gate = canConsumeScan(); 
@@ -770,9 +769,6 @@ function analyze(){
   const ghostHTML = jobRealitySectionHTML(ghost);
   const summaryHTML = generateOverallSummary(result, fre, ghost, resume, jd);
 
-  // helper: only include overlay markup if this scan was free
-  const sectionOverlay = (msg) => lockAdvanced ? buildLockOverlay(msg) : '';
-
   if (out) {
     out.innerHTML = `
       <div class="results-root ${lockAdvanced ? 'mode-free' : 'mode-paid'}">
@@ -795,68 +791,104 @@ function analyze(){
 
         <div class="kpi-grid">${bhtml}</div>
 
-        <!-- STRUCTURE -->
-        <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="structure">
-          <div class="results-section-body">
+        <!-- STRUCTURE CHECKLIST -->
+        <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="structure">
+          <div class="results-section-header">
             <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
-            <div class="section-pills">${sectionPills}</div>
+            ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
           </div>
-          ${sectionOverlay('See which core sections (experience, projects, skills, etc.) are missing or present. This detailed checklist unlocks with any paid scan.')}
+          <div class="results-section-body">
+            <div class="results-section-inner">
+              <div class="section-pills">${sectionPills}</div>
+            </div>
+            ${lockAdvanced ? premiumOverlayHTML(
+              'See which core sections (experience, projects, skills, etc.) are missing or present. This detailed checklist unlocks with any paid scan.'
+            ) : ''}
+          </div>
         </section>
 
-        <!-- KEYWORDS -->
-        <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="keywords">
-          <div class="results-section-body">
+        <!-- KEYWORDS (EXTRACTED, MATCHED, MISSING) -->
+        <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="keywords">
+          <div class="results-section-header">
             <h3 class="card-title" style="margin:14px 0 6px">Extracted from Job Description</h3>
-            <div>${result.extractedKeywords.map(k=>`<span class='pill good'>${k}</span>`).join('')}</div>
-
-            <h3 class="card-title" style="margin:14px 0 6px">Matched Keywords</h3>
-            <div>${present.map(k=>`<span class='pill good'>${k}</span>`).join('') || '<span class="pill bad">No matches yet</span>'}</div>
-
-            <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
-            <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
-
-            <div class="metrics">
-              <div class="metric"><b>${present.length}</b> matched</div>
-              <div class="metric"><b>${missing.length}</b> missing</div>
-              <div class="metric"><b>${covPct}%</b> coverage</div>
-            </div>
+            ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
           </div>
-          ${sectionOverlay('See exactly which job keywords you match, which you are missing, and your overall coverage. Full keyword breakdown is available with a paid scan.')}
+          <div class="results-section-body">
+            <div class="results-section-inner">
+              <div>${result.extractedKeywords.map(k=>`<span class='pill good'>${k}</span>`).join('')}</div>
+
+              <h3 class="card-title" style="margin:14px 0 6px">Matched Keywords</h3>
+              <div>${present.map(k=>`<span class='pill good'>${k}</span>`).join('') || '<span class="pill bad">No matches yet</span>'}</div>
+
+              <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
+              <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
+
+              <div class="metrics">
+                <div class="metric"><b>${present.length}</b> matched</div>
+                <div class="metric"><b>${missing.length}</b> missing</div>
+                <div class="metric"><b>${covPct}%</b> coverage</div>
+              </div>
+            </div>
+            ${lockAdvanced ? premiumOverlayHTML(
+              'See exactly which job keywords you match, which you are missing, and your overall coverage. Full keyword breakdown is available with a paid scan.'
+            ) : ''}
+          </div>
         </section>
 
         <!-- READABILITY & TOP FIXES -->
-        <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="readability">
-          <div class="results-section-body">
+        <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="readability">
+          <div class="results-section-header">
             <h3 class="card-title" style="margin:14px 0 6px">Readability & Tone</h3>
-            <p class="helper" style="margin:0 0 8px">
-              ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${bullets}</b>,
-              metrics used: <b>${numbersUsed}</b>, passive uses: <b>${passiveHits}</b>.
-            </p>
-
-            <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
-            <ul class="list-tight">${fixes}</ul>
+            ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
           </div>
-          ${sectionOverlay('Get personalized rewrite suggestions: where to add metrics, how to fix passive voice, and the top changes that move your score the most. Available with a paid scan.')}
+          <div class="results-section-body">
+            <div class="results-section-inner">
+              <p class="helper" style="margin:0 0 8px">
+                ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${bullets}</b>,
+                metrics used: <b>${numbersUsed}</b>, passive uses: <b>${passiveHits}</b>.
+              </p>
+
+              <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
+              <ul class="list-tight">${fixes}</ul>
+            </div>
+            ${lockAdvanced ? premiumOverlayHTML(
+              'Get personalized rewrite suggestions: where to add metrics, how to fix passive voice, and the top changes that move your score the most. Available with a paid scan.'
+            ) : ''}
+          </div>
         </section>
 
-        <!-- GHOST JOB CHECK -->
+        <!-- JOB AD REALITY CHECK -->
         ${ghostHTML ? `
-          <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="ghost">
-            <div class="results-section-body">
-              ${ghostHTML}
+          <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="ghost">
+            <div class="results-section-header">
+              <h3 class="card-title" style="margin:14px 0 6px">Job Ad Reality Check</h3>
+              ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
             </div>
-            ${sectionOverlay('Check how “real” the job ad looks, with hiring signals and red flags called out. This Job Ad Reality Check is part of paid scans.')}
+            <div class="results-section-body">
+              <div class="results-section-inner">
+                ${ghostHTML}
+              </div>
+              ${lockAdvanced ? premiumOverlayHTML(
+                'Check how “real” the job ad looks, with hiring signals and red flags called out. This Job Ad Reality Check is part of paid scans.'
+              ) : ''}
+            </div>
           </section>
         ` : ''}
 
         <!-- OVERALL SUMMARY -->
-        <section class="results-section ${lockAdvanced ? 'locked' : ''}" data-section="summary">
-          <div class="results-section-body">
+        <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="summary">
+          <div class="results-section-header">
             <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
-            ${summaryHTML}
+            ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
           </div>
-          ${sectionOverlay('Read a tailored summary of your strengths, gaps, and what to do next. The full write-up unlocks with a paid scan.')}
+          <div class="results-section-body">
+            <div class="results-section-inner">
+              ${summaryHTML}
+            </div>
+            ${lockAdvanced ? premiumOverlayHTML(
+              'Read a tailored summary of your strengths, gaps, and what to do next. The full write-up unlocks with a paid scan.'
+            ) : ''}
+          </div>
         </section>
       </div>`;
   }
@@ -891,7 +923,7 @@ const dropzone  = document.getElementById('dropzone');
 const scanSpinner = document.getElementById('scanSpinner');
 const scanText = document.getElementById('scanText');
 
-(() => {
+(()=>{
   const btnPick = document.getElementById('btnPick');
   if (btnPick) btnPick.addEventListener('click', ()=> fileInput && fileInput.click());
 
@@ -993,7 +1025,6 @@ function closePaywall(){
   modalLastFocus = null;
 }
 
-/* ==================== Checkout flow ==================== */
 /* ==================== Checkout flow ==================== */
 async function startCheckout(n = 1){
   if (!stripe) {

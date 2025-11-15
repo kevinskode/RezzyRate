@@ -2255,55 +2255,59 @@ body.modal-open{
   color:#ecfdf5;
 }
 
-/* Locking for premium-only sections on free scans */
+/* ===== Premium lock styling ===== */
+
 .results-section {
-  position: relative;
-  margin-top: 10px;
+  margin-top: 16px;
 }
 
-/* Don't fade the whole section, just the body content */
+/* Header row (NOT blurred) */
+.results-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Only the body panel gets blurred/dimmed */
 .results-section-body {
   position: relative;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--panel, rgba(15,23,42,0.96));
 }
 
-/* When locked, underlying content is blurred/dimmed and not clickable */
-.results-section.locked {
+.results-section-inner {
+  position: relative;
+}
+
+/* blur + dim ONLY the inner content, not the header, not the overlay */
+.results-section.locked .results-section-inner {
+  filter: blur(2px);
+  opacity: 0.25;
   pointer-events: none;
 }
 
-.results-section.locked .results-section-body {
-  filter: blur(1.5px);
-  opacity: 0.25;
-}
-
-/* Overlay sits ABOVE the blur but BELOW the section header area */
+/* overlay sits perfectly on top of the body panel */
 .lock-overlay {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  /* leave space for the section heading at the top */
-  top: 40px; /* tweak 32–48px to taste so headers are fully visible */
-
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px;
-
+  padding: 16px;
   border-radius: 18px;
+
   background: linear-gradient(
     135deg,
-    rgba(15, 23, 42, 0.88),
-    rgba(22, 33, 62, 0.94)
+    rgba(15, 23, 42, 0.9),
+    rgba(22, 33, 62, 0.96)
   );
-
-  /* blur the stuff behind the overlay while keeping overlay text crisp */
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 
+  pointer-events: auto; /* lets the button be clickable */
   z-index: 2;
-  pointer-events: auto; /* overlay is clickable */
 }
 
 .lock-overlay-inner {
@@ -2311,18 +2315,24 @@ body.modal-open{
   text-align: center;
 }
 
+/* little "PAID FEATURE" chip */
 .lock-tag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 2px 8px;
-  margin-bottom: 6px;
+  margin-left: 6px;
   font-size: 11px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   border-radius: 999px;
   background: rgba(248, 250, 252, 0.08);
-  color: var(--accent, #bbf5a2);
+  color: var(--accent, #f97373);
+}
+
+.lock-overlay-inner > .lock-tag {
+  margin-left: 0;
+  margin-bottom: 6px;
 }
 
 .lock-overlay-inner p {
@@ -2332,7 +2342,7 @@ body.modal-open{
   color: var(--muted, #cbd5f5);
 }
 
-/* tiny button variant for the overlay */
+/* small CTA button inside overlay */
 .lock-overlay .btn.small {
   padding: 6px 12px;
   font-size: 13px;
