@@ -2256,62 +2256,69 @@ body.modal-open{
 }
 
 /* ===== Premium lock styling ===== */
+/* ===== Premium lock styling ===== */
 
+/* each section is a positioned container so overlay can anchor to it */
 .results-section {
   margin-top: 16px;
+  position: relative;
 }
 
-/* Header row (NOT blurred) */
-.results-section-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Only the body panel gets blurred/dimmed */
+/* header lives outside the body blur; body holds the blurred content */
 .results-section-body {
   position: relative;
   margin-top: 6px;
   padding: 12px 14px;
   border-radius: 18px;
   background: var(--panel, rgba(15,23,42,0.96));
+  overflow: hidden;
 }
 
+/* inner wrapper = only thing that gets blurred when locked */
 .results-section-inner {
   position: relative;
+  z-index: 1;
 }
 
-/* blur + dim ONLY the inner content, not the header, not the overlay */
+/* blur + dim ONLY the inner content, not the header */
 .results-section.locked .results-section-inner {
   filter: blur(2px);
   opacity: 0.25;
   pointer-events: none;
 }
 
-/* overlay sits perfectly on top of the body panel */
+/* --- DYNAMIC OVERLAY LAYOUT --- */
+/* fills the section body but leaves room above for the header */
 .lock-overlay {
   position: absolute;
   inset: 0;
+  padding: 3rem 1rem 1.25rem;   /* pushes card below the header area */
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 16px;
-  border-radius: 18px;
-
-  background: linear-gradient(
-    135deg,
-    rgba(15, 23, 42, 0.9),
-    rgba(22, 33, 62, 0.96)
-  );
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-
-  pointer-events: auto; /* lets the button be clickable */
+  align-items: stretch;         /* inner card stretches with section height */
+  border-radius: inherit;
+  pointer-events: none;         /* only inner card is clickable */
+  background: transparent;      /* let the blurred content show through */
   z-index: 2;
 }
 
 .lock-overlay-inner {
-  max-width: 90%;
+  pointer-events: auto;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 420px;
+
+  border-radius: 18px;
+  padding: 1rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+
+  background: radial-gradient(circle at top,
+              rgba(255,255,255,.06),
+              rgba(15,23,42,.98));
+  box-shadow: 0 18px 45px rgba(15,23,42,.80);
   text-align: center;
 }
 
@@ -2321,29 +2328,29 @@ body.modal-open{
   align-items: center;
   justify-content: center;
   padding: 2px 8px;
-  margin-left: 6px;
+  margin-bottom: 6px;
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   border-radius: 999px;
-  background: rgba(248, 250, 252, 0.08);
+  background: rgba(248,250,252,0.08);
   color: var(--accent, #f97373);
 }
 
-.lock-overlay-inner > .lock-tag {
-  margin-left: 0;
-  margin-bottom: 6px;
-}
-
+/* description text – more readable */
 .lock-overlay-inner p {
-  margin: 4px 0 10px;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--muted, #cbd5f5);
+  margin: 0 0 8px;
+  max-width: 25rem;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: rgba(235,240,255,0.92);
 }
 
-/* small CTA button inside overlay */
+/* small CTA button inside overlay, centered */
 .lock-overlay .btn.small {
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: 0.82rem;
+  min-height: 32px;
+  border-radius: 999px;
+  align-self: center;
 }
