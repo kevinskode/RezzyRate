@@ -178,8 +178,7 @@ function updateCheckoutSummary(n) {
   }
 
   el.innerHTML = `
-    You’re buying <b>${n}</b> ${n === 1 ? 'scan' : 'scans'} for <b>${fmt(base)}</b>.<br>
-    Transaction/processing cost: <b>${fmt(fee)}</b> · Total charge: <b>${fmt(total)}</b>.
+    You’re buying <b>${n}</b> ${n === 1 ? 'scan' : 'scans'} for <b>${fmt(total)}</b>.<br>
   `;
 }
 /* --- END NEW HELPERS --- */
