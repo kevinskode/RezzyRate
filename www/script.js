@@ -621,26 +621,28 @@ function premiumOverlayHTML(message){
     <div class="lock-overlay">
       <div class="lock-overlay-inner">
 
-        <!-- Modern large lock icon -->
+        <!-- Modern, thin, premium lock icon -->
         <div aria-hidden="true"
              style="
-               width:64px;
-               height:64px;
-               margin:4px auto 16px;
-               opacity:0.55;
+               width:58px;
+               height:58px;
+               margin:2px auto 14px;
+               opacity:0.65;
              ">
-          <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="rgba(255,255,255,0.82)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="10" width="18" height="12" rx="2.5"></rect>
-            <path d="M7 10V7a5 5 0 0 1 10 0v3"></path>
-            <circle cx="12" cy="16" r="1.8"></circle>
+          <svg viewBox="0 0 24 24" width="100%" height="100%" 
+               fill="none" stroke="rgba(255,255,255,0.85)"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 10V7.5A5 5 0 0 1 12 3a5 5 0 0 1 5 4.5V10" />
+              <rect x="4" y="10" width="16" height="11" rx="2.5" />
+              <circle cx="12" cy="16" r="1.7" />
           </svg>
         </div>
 
-        <!-- Clean readable description -->
+        <!-- Clean readable text -->
         <p style="
           max-width:25rem;
-          margin:0 auto 1rem;
-          font-size:0.88rem;
+          margin:0 auto 0.9rem;
+          font-size:0.86rem;
           line-height:1.55;
           text-align:center;
           color:rgba(235,240,255,0.92);
@@ -649,26 +651,27 @@ function premiumOverlayHTML(message){
           ${message}
         </p>
 
-        <!-- Smaller, tighter button -->
+        <!-- TRUE small button (very compact) -->
         <button
           type="button"
           class="btn brand"
           data-buy="1"
           style="
-            padding:0.34rem 0.85rem;
-            font-size:0.72rem;
-            border-radius:9999px;
+            padding:0.22rem 0.7rem;
+            font-size:0.68rem;
+            border-radius:10px;
             background:var(--accent);
             white-space:nowrap;
-            letter-spacing:0.2px;
+            font-weight:500;
           ">
-          Unlock with a paid scan
+          Unlock
         </button>
 
       </div>
     </div>
   `;
 }
+
 
 
 /* ==================== Analyze ==================== */
