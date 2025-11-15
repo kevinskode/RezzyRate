@@ -620,7 +620,7 @@ function premiumOverlayHTML(message){
   return `
     <div class="lock-overlay">
       <div class="lock-overlay-inner">
-        <span class="lock-tag">PAID FEATURE</span>
+   
         <p>${message}</p>
         <button type="button" class="btn small brand" data-buy="1">
           Unlock with a paid scan
