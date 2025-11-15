@@ -148,6 +148,42 @@ function closeCheckout(){
 /* ==================== PRICING ==================== */
 const PRICES = { single: 2.99, pack10: 9.99, pack20: 14.99 };
 const fmt = n => `$${n.toFixed(2)}`;
+
+/* --- NEW: transaction cost / total helpers --- */
+const PRICE_MAP = {
+  1: PRICES.single,
+  10: PRICES.pack10,
+  20: PRICES.pack20
+};
+
+// Adjust these if you want different fee assumptions
+const FEE_RATE  = 0.029; // 2.9%
+const FEE_FIXED = 0.30;  // $0.30 per transaction
+
+function calcTotalsForCredits(n) {
+  const base = PRICE_MAP[n] || 0;
+  const fee  = base * FEE_RATE + FEE_FIXED;
+  const total = base + fee;
+  return { base, fee, total };
+}
+
+function updateCheckoutSummary(n) {
+  const el = document.getElementById('checkout-summary');
+  if (!el) return;
+
+  const { base, fee, total } = calcTotalsForCredits(n);
+  if (!base) {
+    el.textContent = '';
+    return;
+  }
+
+  el.innerHTML = `
+    You’re buying <b>${n}</b> ${n === 1 ? 'scan' : 'scans'} for <b>${fmt(base)}</b>.<br>
+    Transaction/processing cost: <b>${fmt(fee)}</b> · Total charge: <b>${fmt(total)}</b>.
+  `;
+}
+/* --- END NEW HELPERS --- */
+
 function updatePricingUI(){
   const p1 = fmt(PRICES.single), p10 = fmt(PRICES.pack10), p20 = fmt(PRICES.pack20);
   const lead = document.getElementById('paywallLeadText');
@@ -304,7 +340,7 @@ function friendlyFixes(result, fre){
     addTip('med','Write a short summary',`Two–three lines: your title, core tools, and one impact line. Example: “Business Data Analyst • SQL, Python, Tableau • automate reporting and improve forecast accuracy.”`);
   }
   if (result.profDetails.passive > 3){
-    addTip('med','Use active verbs',`I spotted ${result.profDetails.passive} passive phrases. Swap “was built / were automated” for “Built,” “Automated,” “Forecasted.”`);
+    addTip('med','Use active verbs',`I noticed ${result.profDetails.passive} passive phrases. Swap “was built / were automated” for “Built,” “Automated,” “Forecasted.”`);
   }
   if (result.profDetails.bullets < 5){
     addTip('med','Add a few more bullets',`You have ${result.profDetails.bullets}. Aim ~5–7 bullets for recent roles and ~3–5 for older ones.`);
@@ -1061,6 +1097,9 @@ async function startCheckout(n = 1){
   // Close paywall, open checkout in "loading" state
   closePaywall();
   openCheckout();
+
+  // NEW: show transaction cost / total for this selection
+  updateCheckoutSummary(n);
 
   const payBtn = document.getElementById('pay-now');
   const msg    = document.getElementById('checkout-msg');
