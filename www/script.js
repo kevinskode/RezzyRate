@@ -6,7 +6,7 @@
 const STRIPE_PUBLISHABLE_KEY = "pk_live_51RzkynCoSH0U9UtKSQSfYVQH6NAm4UG2xzSKeiH7JqQM8g1EnzRtQTR7F5gh9rXHpurl9zLfDjdWiCkvuetrn6m900Ij2YCcfT";
 const API_BASE_URL = "https://gyw1n7b24m.execute-api.us-east-2.amazonaws.com/Prod"; // <-- your API
 
-console.log("922");
+console.log("Version: 1");
 
 /* ==================== UTIL: persistent credit token ==================== */
 function getOrCreateToken(){
