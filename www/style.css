@@ -2354,3 +2354,18 @@ body.modal-open{
   border-radius: 999px;
   align-self: center;
 }
+
+
+/* === Special case: Structure Checklist lock layout === */
+/* Only affect the Structure Checklist section; leave others as-is */
+.results-section[data-section="structure"] .lock-overlay {
+  /* remove the big top gap used on taller sections */
+  padding: 1.25rem 1rem;
+  align-items: center;       /* center the lock card over the pills */
+}
+
+/* keep body padding snug so overlay hugs the text/graphics */
+.results-section[data-section="structure"] .results-section-body {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
