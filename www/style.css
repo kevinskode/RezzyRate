@@ -2311,7 +2311,7 @@ body.modal-open{
 }
 
 .lock-overlay-inner {
-  max-width: 280px;
+  max-width: 90%;
   text-align: center;
 }
 

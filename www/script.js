@@ -620,15 +620,59 @@ function premiumOverlayHTML(message){
   return `
     <div class="lock-overlay">
       <div class="lock-overlay-inner">
-   
-        <p>${message}</p>
-        <button type="button" class="btn small brand" data-buy="1">
+
+        <!-- Big subtle lock icon -->
+        <div class="lock-icon" aria-hidden="true"
+             style="
+               width:48px;
+               height:48px;
+               border-radius:9999px;
+               margin:8px auto 14px;
+               display:flex;
+               align-items:center;
+               justify-content:center;
+               background:rgba(255,255,255,0.05);
+               border:1px solid rgba(255,255,255,0.08);
+               color:rgba(240,240,255,0.85);
+               font-size:22px;
+               backdrop-filter:blur(4px);
+             ">
+          🔒
+        </div>
+
+        <!-- Improved readable description -->
+        <p style="
+          max-width:26rem;
+          margin:0 auto 1rem;
+          font-size:0.9rem;
+          line-height:1.55;
+          text-align:center;
+          color:rgba(235,240,255,0.92);
+          font-weight:400;
+        ">
+          ${message}
+        </p>
+
+        <!-- Smaller button -->
+        <button
+          type="button"
+          class="btn brand"
+          data-buy="1"
+          style="
+            padding:0.42rem 1rem;
+            font-size:0.78rem;
+            border-radius:9999px;
+            background:var(--accent);
+            white-space:nowrap;
+          ">
           Unlock with a paid scan
         </button>
+
       </div>
     </div>
   `;
 }
+
 
 /* ==================== Analyze ==================== */
 function analyze(){
