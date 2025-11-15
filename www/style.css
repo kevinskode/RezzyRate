@@ -2152,7 +2152,7 @@ body.modal-open{
   }
 }
 
-.card-tab{
+#card-tab{
 background-color: #b2ff92 !important;
 border-color: #ffffff !important;
 }
