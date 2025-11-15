@@ -144,54 +144,40 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
 <div id="paywall" class="overlay" aria-modal="true" role="dialog">
   <div class="card modal">
     <h2 class="card-title" style="margin-top:0">Get more scans</h2>
+
     <p id="paywallLeadText" class="card-sub" style="margin-bottom:12px">
-      You used your free daily scan. Buy additional scans for <strong>$0.49</strong> or save with a pack.
+      You used your free daily scan. Buy additional scans for <strong>$2.99</strong> or save with a pack.
     </p>
 
     <div class="actions">
-      <div class="pricing-buttons">
-        <!-- 1 scan -->
-        <button id="btnBuy1Modal"
-                class="btn-primary btn-compact buy-btn"
-                onclick="startCheckout(1)">
-          <span class="btn-label">1 Scan</span>
-          <span class="btn-price">$2.99</span>
-          <span class="btn-deal">
-            <span class="deal-tag">Single</span>
-            <span class="deal-copy">Standard price</span>
-          </span>
+
+      <!-- NEW unified pricing buttons -->
+      <div class="pricing-options">
+
+        <button class="pricing-btn" data-buy="1" onclick="startCheckout(1)">
+          <span class="left">1 Scan</span>
+          <span class="right">$2.99</span>
         </button>
 
-        <!-- 10 scans -->
-        <button id="btnBuy10Modal"
-                class="btn-primary btn-compact buy-btn"
-                onclick="startCheckout(10)">
-          <span class="btn-label">10 Scans</span>
-          <span class="btn-price">$9.99</span>
-          <span class="btn-deal">
-            <span class="deal-tag">Popular</span>
-            <span class="deal-copy">$1.00/scan · Save ~67%</span>
-          </span>
+        <button class="pricing-btn" data-buy="10" onclick="startCheckout(10)">
+          <span class="left">10 Scans</span>
+          <span class="right">$9.99</span>
         </button>
 
-        <!-- 20 scans -->
-        <button id="btnBuy20Modal"
-                class="btn-primary btn-compact buy-btn"
-                onclick="startCheckout(20)">
-          <span class="btn-label">20 Scans</span>
-          <span class="btn-price">$14.99</span>
-          <span class="btn-deal">
-            <span class="deal-tag">Best value</span>
-            <span class="deal-copy">$0.75/scan · Save ~75%</span>
-          </span>
+        <button class="pricing-btn" data-buy="20" onclick="startCheckout(20)">
+          <span class="left">20 Scans</span>
+          <span class="right">$14.99</span>
         </button>
+
       </div>
 
       <span class="spacer"></span>
+
       <button class="btn-secondary btn-compact" onclick="closePaywall()">Close</button>
     </div>
   </div>
 </div>
+
 
 
   <div id="checkout-modal" class="overlay" aria-modal="true" role="dialog">
