@@ -2220,6 +2220,7 @@ body.modal-open{
 /* per-scan text */
 .pricing-sub .per-scan{
   opacity:.95;
+      font-style: italic;
 }
 
 /* savings pill */
