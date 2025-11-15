@@ -2371,54 +2371,16 @@ body.modal-open{
 }
 
 
-/* === KPI row: keep label + info icon flush left === */
-.kpi {
-  text-align: left;
+/* === KPI label gap fix (remove left indent) === */
+.kpi{
+  padding-left: 4px !important;   /* was 10px – tighten left side */
 }
 
 .kpi-row{
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;   /* no space-between */
+  margin-left: 0 !important;
 }
 
 .kpi-label{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-right: auto;            /* pushes the score to the far right */
-  justify-content: flex-start;
+  margin-left: 0 !important;
+  gap: 4px !important;            /* shrink space between dot and text */
 }
-
-.kpi .tip{
-  flex: 0 0 auto;                /* don't let the i icon stretch or move */
-}
-
-.kpi b{
-  flex: 0 0 auto;
-  margin-left: 0;                /* remove old auto-margin tricks */
-}
-
-/* === FINAL OVERRIDE: FIX KPI ALIGNMENT === */
-.kpi-row {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-}
-
-.kpi-label {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  margin-right: auto !important;
-}
-
-.kpi-label .tip {
-  flex: 0 0 auto !important;
-}
-
-.kpi b {
-  margin-left: 8px !important;
-  flex: 0 0 auto !important;
-}
-
