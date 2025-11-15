@@ -2073,3 +2073,78 @@ body.modal-open{
   border-color: #21c7b7 !important;
 }
 
+/* ============ STRIPE CHECKOUT MODAL – MOBILE RESPONSIVE ============ */
+
+/* 1) Treat it like a bottom sheet on phones */
+@media (max-width: 640px) {
+  /* Overlay: no extra padding, card hugs bottom & spans width */
+  #checkout-modal.overlay {
+    align-items: flex-end;               /* bottom sheet */
+    justify-content: center;
+    padding: 0;                          /* we’ll pad on the card instead */
+  }
+
+  /* Card: full-width sheet, rounded top corners only */
+  #checkout-modal .card.modal {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 28px rgba(0,0,0,.65);
+    padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+    max-height: 82vh;                    /* keep some air at the top */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 16px;                     /* prevents iOS zoom on inputs */
+  }
+
+  /* Title + close button area gets a bit tighter */
+  #checkout-modal .card.modal h2 {
+    font-size: clamp(18px, 4.8vw, 22px);
+    margin-bottom: 8px;
+  }
+
+  /* Any header row inside the modal: stack instead of cramped row */
+  #checkout-modal .results-head {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Donut + score shrink slightly on phones */
+  #checkout-modal .donut {
+    width: 52px;
+    height: 52px;
+  }
+  #checkout-modal .donut .center {
+    font-size: var(--step-1);
+  }
+
+  /* KPI grid / metrics collapse to single column so nothing squishes */
+  #checkout-modal .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  #checkout-modal .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 2) Very short screens (landscape or small devices) – push card up, allow more scroll */
+@media (max-height: 580px) {
+  #checkout-modal.overlay {
+    align-items: center;                 /* center vertically instead of bottom */
+  }
+  #checkout-modal .card.modal {
+    max-height: 92vh;                    /* almost full height, fully scrollable */
+  }
+}
+
+/* 3) Ultra-small phones – trim padding even more */
+@media (max-width: 360px) {
+  #checkout-modal .card.modal {
+    padding: 10px 10px calc(12px + env(safe-area-inset-bottom));
+  }
+  #checkout-modal .card.modal h2 {
+    font-size: 17px;
+  }
+}
