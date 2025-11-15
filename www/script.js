@@ -619,51 +619,27 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
 function premiumOverlayHTML(message){
   return `
     <div class="lock-overlay">
-      <div class="lock-overlay-inner">
+      <div class="lock-overlay-inner"
+           style="display:flex;flex-direction:column;align-items:center;text-align:center;">
 
-        <!-- Modern, thin, premium lock icon -->
         <div aria-hidden="true"
-             style="
-               width:58px;
-               height:58px;
-               margin:2px auto 14px;
-               opacity:0.65;
-             ">
-          <svg viewBox="0 0 24 24" width="100%" height="100%" 
-               fill="none" stroke="rgba(255,255,255,0.85)"
-               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M7 10V7.5A5 5 0 0 1 12 3a5 5 0 0 1 5 4.5V10" />
-              <rect x="4" y="10" width="16" height="11" rx="2.5" />
-              <circle cx="12" cy="16" r="1.7" />
+             style="width:58px;height:58px;margin:2px auto 14px;opacity:.65;">
+          <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none"
+               stroke="rgba(255,255,255,0.85)" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 10V7.5A5 5 0 0 1 12 3a5 5 0 0 1 5 4.5V10" />
+            <rect x="4" y="10" width="16" height="11" rx="2.5" />
+            <circle cx="12" cy="16" r="1.7" />
           </svg>
         </div>
 
-        <!-- Clean readable text -->
-        <p style="
-          max-width:25rem;
-          margin:0 auto 0.9rem;
-          font-size:0.86rem;
-          line-height:1.55;
-          text-align:center;
-          color:rgba(235,240,255,0.92);
-          font-weight:400;
-        ">
+        <p style="max-width:25rem;margin:0 auto 1rem;font-size:.86rem;line-height:1.55;
+                  color:rgba(235,240,255,.92);font-weight:400;">
           ${message}
         </p>
 
-        <!-- TRUE small button (very compact) -->
-        <button
-          type="button"
-          class="btn brand"
-          data-buy="1"
-          style="
-            padding:0.22rem 0.7rem;
-            font-size:0.68rem;
-            border-radius:10px;
-            background:var(--accent);
-            white-space:nowrap;
-            font-weight:500;
-          ">
+        <button type="button" class="btn brand" data-buy="1"
+                style="padding:.22rem .7rem;font-size:.68rem;border-radius:10px;background:var(--accent);">
           Unlock
         </button>
 
@@ -671,6 +647,7 @@ function premiumOverlayHTML(message){
     </div>
   `;
 }
+
 
 
 
