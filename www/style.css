@@ -2231,6 +2231,7 @@ body.modal-open{
   letter-spacing:.08em;
   text-transform:uppercase;
   white-space:nowrap;
+  margin-right: -4px !important;
 }
 
 /* neutral (single scan) */
