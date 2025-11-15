@@ -2369,3 +2369,32 @@ body.modal-open{
   padding-top: 10px;
   padding-bottom: 10px;
 }
+
+
+/* === KPI row: keep label + info icon flush left === */
+.kpi {
+  text-align: left;
+}
+
+.kpi-row{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;   /* no space-between */
+}
+
+.kpi-label{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;            /* pushes the score to the far right */
+  justify-content: flex-start;
+}
+
+.kpi .tip{
+  flex: 0 0 auto;                /* don't let the i icon stretch or move */
+}
+
+.kpi b{
+  flex: 0 0 auto;
+  margin-left: 0;                /* remove old auto-margin tricks */
+}
