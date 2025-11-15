@@ -178,7 +178,8 @@ function updateCheckoutSummary(n) {
   }
 
   el.innerHTML = `
-    You’re buying <b>${n}</b> ${n === 1 ? 'scan' : 'scans'} for <b>${fmt(total)}</b>.<br>
+    You’re buying <b>${n}</b> ${n === 1 ? 'scan' : 'scans'} for <b>${fmt(base)}</b>.<br>
+   
   `;
 }
 /* --- END NEW HELPERS --- */
