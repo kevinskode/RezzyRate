@@ -848,21 +848,32 @@ function analyze(){
 
         <div class="kpi-grid">${bhtml}</div>
 
-        <!-- STRUCTURE CHECKLIST -->
-        <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="structure">
-          <div class="results-section-header">
-            <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
-            ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
-          </div>
-          <div class="results-section-body">
-            <div class="results-section-inner">
-              <div class="section-pills">${sectionPills}</div>
-            </div>
-            ${lockAdvanced ? premiumOverlayHTML(
-              'See which core sections (experience, projects, skills, etc.) are missing or present. This detailed checklist unlocks with any paid scan.'
-            ) : ''}
-          </div>
-        </section>
+/* STRUCTURE CHECKLIST */
+<section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="structure">
+  <div class="results-section-header">
+    <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
+    ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
+  </div>
+  <div class="results-section-body">
+    <div class="results-section-inner">
+      <div class="section-pills">${sectionPills}</div>
+    </div>
+
+    ${lockAdvanced ? `
+      <div class="lock-overlay">
+        <div class="lock-overlay-inner"
+             style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0.85rem 1.1rem;">
+          <p style="max-width:25rem;margin:0;font-size:.86rem;line-height:1.55;
+                    color:rgba(235,240,255,.92);font-weight:400;">
+            See which core sections (experience, projects, skills, etc.) are missing or present.
+            This detailed checklist unlocks with any paid scan.
+          </p>
+        </div>
+      </div>
+    ` : ''}
+  </div>
+</section>
+
 
         <!-- KEYWORDS (EXTRACTED, MATCHED, MISSING) -->
         <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="keywords">
