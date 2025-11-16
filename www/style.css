@@ -2446,3 +2446,366 @@ body.modal-open{
 #pay-now{
   background-color: #328093 ;
 }
+
+
+
+
+/* =========================
+   ABOUT PAGE – SINGLE COLUMN + COLOR
+   ========================= */
+
+main.layout.page-main.about-page {
+  display: block;
+  padding: 15px;
+}
+
+.about-page {
+  padding-bottom: 72px;
+  position: relative;
+}
+
+/* Soft background blobs behind the content */
+.about-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(106,174,176,0.25) 0%, transparent 50%),
+    radial-gradient(circle at 90% 20%, rgba(242,110,140,0.22) 0%, transparent 55%),
+    radial-gradient(circle at 50% 100%, rgba(255,211,77,0.2) 0%, transparent 55%);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 11px;
+}
+
+/* Center column feel */
+.about-page .page-hero,
+.about-page .page-section,
+.about-page .page-grid {
+  max-width: 760px;
+  margin: 0 auto 32px;
+}
+
+/* Make all page-grid areas single column */
+.about-page .page-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* HERO – give it a colorful banner look */
+.about-page .page-hero {
+  padding: 28px 24px 2px;
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(106,174,176,0.16), rgba(242,110,140,0.16)),
+    linear-gradient(145deg, #0d1422, #080b15);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.about-page .page-hero::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(255,211,77,0.4), transparent 60%);
+  top: -80px;
+  right: -60px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.about-page .page-hero h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.about-page .page-hero .hero-subtitle {
+  margin: 0 0 18px;
+  color: var(--muted);
+  max-width: 540px;
+}
+
+/* Hero badges / pills */
+.about-page .hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 24px;
+}
+
+.about-page .pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background:
+    linear-gradient(135deg, rgba(242,110,140,0.35), rgba(255,211,77,0.18));
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+}
+
+/* Give cards more life */
+.about-page .card.soft.prose {
+  position: relative;
+  border-radius: 20px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+  background:
+    linear-gradient(140deg, rgba(10,15,24,0.98), rgba(13,20,34,0.98));
+  border: 1px solid rgba(255,255,255,0.05);
+  overflow: hidden;
+}
+
+.about-page .card.soft.prose::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(106,174,176,0.12), transparent 55%);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Inner content sits above the gradient overlay */
+.about-page .card.soft.prose > * {
+  position: relative;
+}
+
+/* Heading accent bar */
+.about-page h2 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  position: relative;
+  padding-left: 12px;
+}
+
+.about-page h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--bg3), var(--bg2));
+}
+
+/* Better spacing for paragraphs/lists */
+.about-page p {
+  line-height: 1.55;
+}
+
+/* Colored bullets */
+.about-page ul {
+  padding-left: 1.2rem;
+}
+.about-page ul li::marker {
+  color: var(--bg3);
+}
+
+/* Step list styling */
+.about-page .steps-list {
+  padding-left: 1.2rem;
+  margin-bottom: 0.75rem;
+}
+.about-page .steps-list li + li {
+  margin-top: 0.4rem;
+}
+
+/* Testimonials: stacked with tinted backgrounds */
+.about-page .testimonials-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.about-page .testimonial {
+  background:
+    linear-gradient(135deg, rgba(242,110,140,0.25), rgba(106,174,176,0.2));
+  border: 1px solid rgba(255,255,255,0.16);
+}
+
+.about-page .testimonial-quote {
+  font-style: italic;
+}
+
+.about-page .testimonial-meta {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.about-page .testimonial-name {
+  font-weight: 600;
+}
+
+.about-page .stars {
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+}
+
+/* Section header text */
+.about-page .section-header {
+  margin-bottom: 16px;
+}
+.about-page .section-header p {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+/* CTA card pops a bit more */
+.about-page .page-section:last-of-type .card.soft.prose {
+  text-align: center;
+  background:
+    linear-gradient(135deg, rgba(255,211,77,0.25), rgba(242,110,140,0.25)),
+    linear-gradient(145deg, #0d1422, #080b15);
+}
+
+/* =========================
+   ABOUT – TESTIMONIALS POP
+   ========================= */
+
+.about-page .testimonials-section {
+  position: relative;
+  padding: 28px 24px 24px;
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(242,110,140,0.28), rgba(106,174,176,0.24)),
+    linear-gradient(145deg, #0d1422, #080b15);
+  box-shadow: 0 26px 60px rgba(0,0,0,0.65);
+  border: 1px solid rgba(255,255,255,0.25);
+  overflow: hidden;
+}
+
+/* subtle glow stripe */
+.about-page .testimonials-section::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle at 0% 0%, rgba(255,211,77,0.55), transparent 55%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* tiny label chip above the heading */
+.about-page .testimonials-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(8,11,21,0.7);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* grid: stacked on mobile, 2-up on desktop */
+.about-page .testimonials-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 16px;
+}
+
+@media (min-width: 900px) {
+  .about-page .testimonials-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* individual cards get depth + hover */
+.about-page .testimonial {
+  background: rgba(8,11,21,0.96);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 14px 35px rgba(0,0,0,0.6);
+  transform: translateY(0) scale(1);
+  transition:
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out,
+    border-color 0.18s ease-out;
+}
+
+/* slight stagger so it feels more “alive” */
+.about-page .testimonial:nth-child(2n) {
+  transform: translateY(4px);
+}
+
+.about-page .testimonial:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.75);
+  border-color: rgba(255,211,77,0.9);
+}
+
+/* big quotation mark accent */
+.about-page .testimonial-quote {
+  position: relative;
+  font-style: italic;
+  padding-left: 20px;
+}
+
+.about-page .testimonial-quote::before {
+  content: "“";
+  position: absolute;
+  left: 0;
+  top: -8px;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--bg3);
+  opacity: 0.9;
+}
+
+/* meta stays, but a touch tighter */
+.about-page .testimonial-meta {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.about-page .testimonial-name {
+  font-weight: 600;
+}
+
+.about-page .stars {
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+}
+
+/* =========================
+   CTA Link Button
+   ========================= */
+
+.about-page .cta-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  margin-top: 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--bg2), var(--bg3));
+  color: #0a0f18;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 15px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 18px rgba(255,211,77,0.35);
+}
+
+.about-page .cta-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(255,211,77,0.47);
+}
+
+.about-page .cta-link:active {
+  transform: translateY(0);
+}
