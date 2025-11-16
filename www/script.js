@@ -856,7 +856,7 @@ function analyze(){
           </div>
           <div class="results-section-body">
             <div class="results-section-inner">
-          
+              <div class="section-pills">${sectionPills}</div>
             </div>
             ${lockAdvanced ? premiumOverlayHTML(
               'See which core sections (experience, projects, skills, etc.) are missing or present. This detailed checklist unlocks with any paid scan.'
