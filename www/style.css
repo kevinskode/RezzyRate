@@ -2036,6 +2036,9 @@ button, .btn, .job-btn, .brand {
 /* Safety: if any mobile block downranks overlays, pin them back on top */
 @media (max-width: 640px){
   .overlay { position: fixed !important; z-index: 2000 !important; }
+  .dropzone{ display: none;
+
+  }
 }
 
 /* iPhone modal comfort & scroll guards */
