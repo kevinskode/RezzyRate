@@ -855,7 +855,9 @@ function analyze(){
             ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
           </div>
           <div class="results-section-body">
-      
+            <div class="results-section-inner">
+          
+            </div>
             ${lockAdvanced ? premiumOverlayHTML(
               'See which core sections (experience, projects, skills, etc.) are missing or present. This detailed checklist unlocks with any paid scan.'
             ) : ''}
