@@ -932,21 +932,20 @@ function analyze(){
           </section>
         ` : ''}
 
-        <!-- OVERALL SUMMARY -->
-        <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="summary">
-          <div class="results-section-header">
-            <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
-            ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
-          </div>
-          <div class="results-section-body">
-            <div class="results-section-inner">
-              ${summaryHTML}
-            </div>
-            ${lockAdvanced ? premiumOverlayHTML(
-              'Read a tailored summary of your strengths, gaps, and what to do next. The full write-up unlocks with a paid scan.'
-            ) : ''}
-          </div>
-        </section>
+ /* OVERALL SUMMARY – always free (no lock icon, no Unlock button) */
+<section class="results-section" data-section="summary">
+  <div class="results-section-header">
+    <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
+    <!-- no lock-tag here -->
+  </div>
+  <div class="results-section-body">
+    <div class="results-section-inner">
+      ${summaryHTML}
+    </div>
+    <!-- no premiumOverlayHTML here -->
+  </div>
+</section>
+
       </div>`;
   }
 
