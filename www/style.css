@@ -2887,9 +2887,4 @@ main.layout.page-main.about-page {
   margin-top: 4px;
 }
 
-/* Mobile: keep full-width single column */
-@media (max-width: 760px) {
-  .privacy-page .page-grid {
-    grid-template-columns: 1fr;
-  }
-}
+
