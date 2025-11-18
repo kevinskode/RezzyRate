@@ -848,7 +848,7 @@ function analyze(){
 
         <div class="kpi-grid">${bhtml}</div>
 
-/* STRUCTURE CHECKLIST */
+
 <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="structure">
   <div class="results-section-header">
     <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
