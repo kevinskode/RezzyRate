@@ -1,3 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Privacy – Rezzy</title>
+
+  <!-- Fonts & shared CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Optional: favicons to match index -->
+  <link rel="icon" href="favicon.ico">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f18">
+</head>
+<body>
+  <div class="container">
+    <!-- Same pinned logo + topbar as index -->
+    <header class="topbar">
+      <div class="brand pinned-logo">
+        <img class="logo" src="logo.png" alt="Rezzy Rate logo" />
+      </div>
+      <div class="badges">
+        <span class="badge" id="freeBadge">Free credits left today: 1</span>
+        <span class="badge" id="creditBadge">Paid credits: 0</span>
+      </div>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7940734884065019"
+     crossorigin="anonymous"></script>
+
+    </header>
+
 <main class="layout page-main privacy-page">
   <section class="page-hero">
     <h1>Privacy & Data Use</h1>
@@ -158,3 +191,35 @@
     </article>
   </section>
 </main>
+
+    
+
+    <!-- Footer (IDENTICAL to index) -->
+    <footer style="margin-top:40px;padding:20px 0;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--muted)">
+      <p style="margin:6px 0">
+        <a href="about.html" style="color:var(--accent);text-decoration:none;margin:0 10px">About</a> •
+        <a href="privacy.html" style="color:var(--accent);text-decoration:none;margin:0 10px">Privacy Policy</a>
+      </p>
+      <p style="margin:6px 0">&copy; <script>document.write(new Date().getFullYear())</script> Rezzy Rate. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- Shared badges mini-script (safe to keep) -->
+  <script>
+    const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_credits', unlimitedUntil:'rc_unlimited_until' };
+    const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+    function isUnlimited(){ const until = parseInt(localStorage.getItem(LS_KEYS.unlimitedUntil)||'0',10); return Date.now() < until; }
+    (function updateHeader(){
+      const today = todayStr();
+      const last = localStorage.getItem(LS_KEYS.lastDate);
+      if (last !== today){ localStorage.setItem(LS_KEYS.lastDate, today); localStorage.setItem(LS_KEYS.dailyUsed, '0'); }
+      const freeUsed = parseInt(localStorage.getItem(LS_KEYS.dailyUsed)||'0',10);
+      const credits  = parseInt(localStorage.getItem(LS_KEYS.credits)||'0',10);
+      const freeLeft = Math.max(0, 1 - freeUsed);
+      document.getElementById('creditBadge').textContent = `Paid credits: ${credits}`;
+      document.getElementById('freeBadge').textContent = isUnlimited() ? 'Free credits left today: ∞ (temp)' : `Free credits left today: ${freeLeft}`;
+    })();
+  </script>
+  <script src="script.js" defer></script>
+</body>
+</html>
