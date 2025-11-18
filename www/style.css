@@ -2985,7 +2985,14 @@ main.layout.page-main.privacy-page {
   color: #dde9ff;
   background: rgba(15,23,42,.92);
   border: 1px solid rgba(148,163,184,.75);
+
+  /* 🔥 overrides that cause the vertical letters */
+  width: auto;              /* kill the 4px bar width */
+  white-space: nowrap;      /* keep it on one line */
+  word-break: normal;       /* override global rule */
+  overflow-wrap: normal;    /* override global rule */
 }
+
 
 /* Keep your original left accent bar but soften it so it doesn’t fight the chip */
 .privacy-page h2::before {
