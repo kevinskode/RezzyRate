@@ -2969,28 +2969,7 @@ main.layout.page-main.privacy-page {
 }
 
 .privacy-page .privacy-body .card.soft.prose h2::before {
-  content: attr(data-label);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 9px;
-  margin-right: 8px;
-  border-radius: 999px;
-
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-
-  color: #dde9ff;
-  background: rgba(15,23,42,.92);
-  border: 1px solid rgba(148,163,184,.75);
-
-  /* 🔥 overrides that cause the vertical letters */
-  width: auto;              /* kill the 4px bar width */
-  white-space: nowrap;      /* keep it on one line */
-  word-break: normal;       /* override global rule */
-  overflow-wrap: normal;    /* override global rule */
+ display: none;
 }
 
 
@@ -3057,4 +3036,10 @@ main.layout.page-main.privacy-page {
     font-size: 10.5px;
     padding: 2px 7px;
   }
+}
+
+
+a {
+  color: rgb(209, 209, 209);
+  font-style: italic;
 }
