@@ -1,110 +1,160 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Privacy – Rezzy</title>
+<main class="layout page-main privacy-page">
+  <section class="page-hero">
+    <h1>Privacy & Data Use</h1>
+    <p class="hero-subtitle">
+      Rezzy is built for job seekers, not data brokers. We keep what we collect
+      to the minimum needed to score your resume and run the product.
+    </p>
 
-  <!-- Fonts & shared CSS -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+    <div class="hero-meta">
+      <span class="pill">No selling of personal data</span>
+      <span class="pill">No surprise subscriptions</span>
+      <span class="pill">Built for job hunters</span>
+    </div>
+  </section>
 
-  <!-- Optional: favicons to match index -->
-  <link rel="icon" href="favicon.ico">
-  <link rel="manifest" href="/site.webmanifest">
-  <meta name="theme-color" content="#0a0f18">
-</head>
-<body>
-  <div class="container">
-    <!-- Same pinned logo + topbar as index -->
-    <header class="topbar">
-      <div class="brand pinned-logo">
-        <img class="logo" src="logo.png" alt="Rezzy Rate logo" />
-      </div>
-      <div class="badges">
-        <span class="badge" id="freeBadge">Free credits left today: 1</span>
-        <span class="badge" id="creditBadge">Paid credits: 0</span>
-      </div>
-
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7940734884065019"
-     crossorigin="anonymous"></script>
-
-    </header>
-
-    <main class="layout page-main">
-      <section class="page-hero">
-        <h1>Privacy Policy</h1>
-        <p><span class="pill">Simple promise:</span> We don’t sell your data. We keep things minimal and transparent.</p>
-      </section>
-    
-      <section class="page-grid">
-        <div class="card soft prose">
-          <h3>What we collect</h3>
-          <ul>
-            <li><b>Resume text you paste</b> — used only to analyze and produce your results.</li>
-            <li><b>Basic usage data</b> — anonymous metrics to improve reliability and features.</li>
-          </ul>
-        </div>
-    
-        <div class="card soft prose">
-          <h3>What we don’t collect</h3>
-          <ul>
-            <li>No account profile data unless you explicitly create one.</li>
-            <li>No advertising identifiers.</li>
-            <li>No sale of personal information. Ever.</li>
-          </ul>
-        </div>
-    
-        <div class="card soft prose">
-          <h3>How your data is handled</h3>
-          <ul>
-            <li>Your pasted text is processed to generate a report and improvements.</li>
-            <li>Temporary processing may occur in memory; we avoid storing raw resumes whenever possible.</li>
-            <li>Any optional saved results are encrypted at rest.</li>
-          </ul>
-        </div>
-    
-        <div class="card soft prose">
-          <h3>Your choices</h3>
-          <ul>
-            <li>You can request deletion of any saved results at any time.</li>
-            <li>You can use Rezzy without creating an account.</li>
-          </ul>
-          <p>Questions? <a href="mailto:support@rezzyrate.com">support@rezzyrate.com</a></p>
-          <div class="page-actions">
-            <a class="brand" href="index.html">Back to the Resume Checker →</a>
-          </div>
-        </div>
-      </section>
-    </main>
-    
-
-    <!-- Footer (IDENTICAL to index) -->
-    <footer style="margin-top:40px;padding:20px 0;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--muted)">
-      <p style="margin:6px 0">
-        <a href="about.html" style="color:var(--accent);text-decoration:none;margin:0 10px">About</a> •
-        <a href="privacy.html" style="color:var(--accent);text-decoration:none;margin:0 10px">Privacy Policy</a>
+  <section class="page-grid">
+    <!-- Quick summary card -->
+    <article class="card soft prose">
+      <h2>At a glance</h2>
+      <ul class="steps-list">
+        <li>Your resume text is used only to analyze and generate your report.</li>
+        <li>We don’t sell or rent your personal data to third parties.</li>
+        <li>Payments are handled by a trusted provider; we never see full card details.</li>
+        <li>You can use Rezzy without creating an account.</li>
+      </ul>
+      <p style="font-size:var(--step--1);color:var(--muted);margin-top:6px;">
+        This page is a human-readable summary. If you have questions about something specific,
+        reach out anytime at <a href="mailto:support@rezzyrate.com">support@rezzyrate.com</a>.
       </p>
-      <p style="margin:6px 0">&copy; <script>document.write(new Date().getFullYear())</script> Rezzy Rate. All rights reserved.</p>
-    </footer>
-  </div>
+    </article>
 
-  <!-- Shared badges mini-script (safe to keep) -->
-  <script>
-    const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_credits', unlimitedUntil:'rc_unlimited_until' };
-    const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
-    function isUnlimited(){ const until = parseInt(localStorage.getItem(LS_KEYS.unlimitedUntil)||'0',10); return Date.now() < until; }
-    (function updateHeader(){
-      const today = todayStr();
-      const last = localStorage.getItem(LS_KEYS.lastDate);
-      if (last !== today){ localStorage.setItem(LS_KEYS.lastDate, today); localStorage.setItem(LS_KEYS.dailyUsed, '0'); }
-      const freeUsed = parseInt(localStorage.getItem(LS_KEYS.dailyUsed)||'0',10);
-      const credits  = parseInt(localStorage.getItem(LS_KEYS.credits)||'0',10);
-      const freeLeft = Math.max(0, 1 - freeUsed);
-      document.getElementById('creditBadge').textContent = `Paid credits: ${credits}`;
-      document.getElementById('freeBadge').textContent = isUnlimited() ? 'Free credits left today: ∞ (temp)' : `Free credits left today: ${freeLeft}`;
-    })();
-  </script>
-  <script src="script.js" defer></script>
-</body>
-</html>
+    <!-- Data you provide -->
+    <article class="card soft prose">
+      <h2>Information you provide</h2>
+      <p>When you use Rezzy, you may give us:</p>
+      <ul>
+        <li>
+          <strong>Resume content</strong> – text you paste or upload so we can score it,
+          extract keywords, and suggest improvements.
+        </li>
+        <li>
+          <strong>Job descriptions or links</strong> – used to compare your resume against
+          specific roles and calculate match scores.
+        </li>
+        <li>
+          <strong>Payment details (indirectly)</strong> – when you buy credits, payment
+          information is processed by our payment provider (for example, Stripe). Rezzy
+          never stores your full card number.
+        </li>
+        <li>
+          <strong>Support messages</strong> – if you email or contact us, we keep that
+          message so we can respond and improve the product.
+        </li>
+      </ul>
+    </article>
+
+    <!-- Data we automatically collect -->
+    <article class="card soft prose">
+      <h2>Information we automatically collect</h2>
+      <p>To keep Rezzy running reliably and securely, we may log:</p>
+      <ul>
+        <li>
+          <strong>Basic usage and device data</strong> – such as browser type, approximate
+          region, and pages viewed, mainly for performance and abuse prevention.
+        </li>
+        <li>
+          <strong>Aggregate metrics</strong> – how often features are used, error rates,
+          and anonymized stats that help us decide what to improve.
+        </li>
+        <li>
+          <strong>Cookies or similar technologies</strong> – used for things like
+          remembering limits, handling payments, and, where enabled, measuring traffic
+          and ads.
+        </li>
+      </ul>
+    </article>
+
+    <!-- How we use your data -->
+    <article class="card soft prose">
+      <h2>How we use your data</h2>
+      <ul>
+        <li>To analyze your resume and generate scores, breakdowns, and suggestions.</li>
+        <li>To show you job-match insights when you provide a job post or link.</li>
+        <li>To run payments, enforce credit limits, and prevent fraud or abuse.</li>
+        <li>To troubleshoot issues, improve features, and keep Rezzy secure.</li>
+      </ul>
+      <p>
+        We don’t use your resume text to train public models or build unrelated products.
+      </p>
+    </article>
+
+    <!-- Third-party services -->
+    <article class="card soft prose">
+      <h2>Third-party services</h2>
+      <p>Rezzy relies on reputable third-party providers to function, for example:</p>
+      <ul>
+        <li><strong>Payment processing</strong> (e.g., Stripe) to handle card payments safely.</li>
+        <li><strong>Cloud hosting & infrastructure</strong> to run the app and store limited data.</li>
+        <li>
+          <strong>Analytics & ads</strong> (such as Google services) to understand traffic,
+          detect issues, and display ads where applicable.
+        </li>
+      </ul>
+      <p>
+        These providers only receive the data necessary to perform their role and are
+        not allowed to use it to market their own services to you.
+      </p>
+    </article>
+
+    <!-- Retention -->
+    <article class="card soft prose">
+      <h2>How long we keep things</h2>
+      <ul>
+        <li>
+          <strong>Raw resume text</strong> – kept only as long as needed to generate your
+          report and operate related features. In many cases it is processed
+          temporarily and not stored long-term.
+        </li>
+        <li>
+          <strong>Saved results / history</strong> – if we offer an option to save scans,
+          those may be stored longer so you can revisit them.
+        </li>
+        <li>
+          <strong>Payment & billing records</strong> – kept as required for accounting,
+          tax, and fraud-prevention purposes.
+        </li>
+        <li>
+          <strong>Analytics logs</strong> – stored in aggregate form to understand usage
+          and performance trends.
+        </li>
+      </ul>
+    </article>
+
+    <!-- Your choices / contact -->
+    <article class="card soft prose">
+      <h2>Your choices & rights</h2>
+      <ul>
+        <li>You can use Rezzy without creating a long-term account.</li>
+        <li>
+          You can ask us to delete saved results or other identifiable data we control,
+          where we’re not required to keep it for legal or security reasons.
+        </li>
+        <li>
+          You can opt out of marketing emails (if we ever send them) using the unsubscribe
+          link or by contacting us directly.
+        </li>
+      </ul>
+
+      <p>
+        To request data deletion, ask a question, or report a concern, email
+        <a href="mailto:support@rezzyrate.com">support@rezzyrate.com</a> and include the
+        email address you used with Rezzy.
+      </p>
+
+      <div class="page-actions">
+        <a class="brand" href="index.html">Back to the Resume Checker →</a>
+      </div>
+    </article>
+  </section>
+</main>
