@@ -2932,17 +2932,15 @@ main.layout.page-main.privacy-page {
 
 /* Timeline dots */
 .privacy-page .privacy-body .card.soft.prose::after {
-  content: "";
-  position: absolute;
-  left: -9px;
-  top: 18px;
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: radial-gradient(circle, #ffffff 0, #ffd34d 55%, #0b1020 60%);
-  box-shadow:
-    0 0 0 3px rgba(7,11,20,.96),
-    0 0 18px rgba(255,211,77,.5);
+    content: "";
+    position: absolute;
+    left: -9px;
+    top: 18px;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: radial-gradient(circle, #ffffff 0, #ffd34d 55%, #0b102000 60%);
+    box-shadow: 0 0 0 3px rgb(7 11 20 / 0%), 0 0 18px rgba(255, 211, 77, .5);
 }
 
 /* Alternating background treatments so sections don’t all feel the same */
