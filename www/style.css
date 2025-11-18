@@ -2903,7 +2903,7 @@ main.layout.page-main.privacy-page {
   flex-direction: column;
   gap: 14px;
   position: relative;
-  padding-left: 16px;
+  padding-left: 16px; /* room for the spine on desktop */
 }
 
 /* Vertical line behind the cards */
@@ -2926,7 +2926,7 @@ main.layout.page-main.privacy-page {
 /* Base card styling inside the privacy body */
 .privacy-page .privacy-body .card.soft.prose {
   position: relative;
-  padding-left: 18px; /* room for timeline dot */
+  padding-left: 18px; /* room for timeline dot on desktop */
   border-radius: 18px;
 }
 
@@ -3023,21 +3023,27 @@ main.layout.page-main.privacy-page {
   margin-top: 14px;
 }
 
-/* Mobile: tighten spacing so timeline doesn’t feel heavy */
+/* Mobile: remove left gap + timeline so it feels clean and centered */
 @media (max-width: 640px) {
   .privacy-page .privacy-body {
-    padding-left: 12px;
+    padding-left: 0;          /* 🔥 remove left indent */
+    margin-top: 8px;
     gap: 12px;
   }
 
-  .privacy-page .privacy-body .card.soft.prose {
-    padding-left: 16px;
+  /* hide the vertical spine on mobile */
+  .privacy-page .privacy-body::before {
+    display: none;
   }
 
+  /* normal card padding, no extra left offset */
+  .privacy-page .privacy-body .card.soft.prose {
+    padding-left: 14px;
+  }
+
+  /* hide the dots on mobile too */
   .privacy-page .privacy-body .card.soft.prose::after {
-    top: 16px;
-    width: 12px;
-    height: 12px;
+    display: none;
   }
 
   .privacy-page .privacy-body .card.soft.prose h2::before {
