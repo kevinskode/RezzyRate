@@ -42,12 +42,27 @@ Resources:
         AllowMethods: "'GET,POST,OPTIONS'"
         AllowHeaders: "'content-type'"
         AllowOrigin: "'https://rezzyrate.com'"
+      # Add CORS headers to API Gateway's own error replies (403/404/5xx) so the
+      # browser console shows the real error instead of a misleading CORS message.
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
 
   CreatePaymentIntentFn:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
       Handler: app.create_payment_intent
+      Environment:
+        Variables:
+          # Rezzy Rate Stripe account (acct_1UJfqSDWfERCS4K5): price -> scans granted
+          PRICE_CREDITS: "price_1UKqV5DWfERCS4K5cMKcYy1g:1,price_1UKqYDDWfERCS4K5X9qrw9dn:10,price_1UKqZmDWfERCS4K5PZddsK97:20"
       Policies:
         - AWSLambdaBasicExecutionRole
         - Statement:

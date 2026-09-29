@@ -1,17 +1,39 @@
-// === Stripe config ===
-// TEST KEY
-// const STRIPE_PUBLISHABLE_KEY = "pk_test_51RzkyvChKVWsJZcWlClLjJ1xACdszPyCjKmX1HTudOaqq5VKOM2rAdc2a9qusAWjskbaGba2IEzLhDGaBJb2NAYM00yaemtAQf";  // <-- your TEST publishable key
+// === Payments: Stripe Payment Links (no backend needed) ===
+// Rezzy Rate Stripe account acct_1UJfqSDWfERCS4K5. Each link sends the buyer back to
+// https://rezzyrate.com/?paid=N&session_id=cs_... and the site adds N scans once per session.
+const PAYMENT_LINKS = {
+  1:  "https://buy.stripe.com/eVqeVd4qd7mgbHEg4xdnW00",   // 1 Scan   $2.99
+  10: "https://buy.stripe.com/00w7sL6yl0XSaDAaKddnW01",   // 10 Scans $9.99
+  20: "https://buy.stripe.com/9B68wPbSF5e8bHE7y1dnW02"    // 20 Scans $14.99
+};
+const CANONICAL_HOST = "rezzyrate.com";
+// Only used for the job-search backend now
+const API_BASE_URL = "https://gyw1n7b24m.execute-api.us-east-2.amazonaws.com/Prod";
 
-// LIVE KEY
-const STRIPE_PUBLISHABLE_KEY = "pk_live_51RzkynCoSH0U9UtKSQSfYVQH6NAm4UG2xzSKeiH7JqQM8g1EnzRtQTR7F5gh9rXHpurl9zLfDjdWiCkvuetrn6m900Ij2YCcfT";
-const API_BASE_URL = "https://gyw1n7b24m.execute-api.us-east-2.amazonaws.com/Prod"; // <-- your API
+console.log("Version: 3");
 
-console.log("Version: 1");
+/* ==================== One site address ====================
+   Credits live in browser storage, which is separate for www.rezzyrate.com and
+   rezzyrate.com. Payment Links return to rezzyrate.com, so send www visitors
+   there too (and bring any credits they already have). */
+(function canonicalHost(){
+  if (location.hostname !== 'www.' + CANONICAL_HOST) return;
+  let carry = 0;
+  try {
+    carry = parseInt(localStorage.getItem('rc_credits') || '0', 10) || 0;
+    if (carry > 0) localStorage.setItem('rc_credits', '0');
+  } catch {}
+  const url = new URL(location.href);
+  url.hostname = CANONICAL_HOST;
+  if (carry > 0) url.searchParams.set('carry', String(carry));
+  location.replace(url.toString());
+})();
 
 /* ==================== UTIL: persistent credit token ==================== */
 function getOrCreateToken(){
   const k = 'credit_token_v1';
-  let t = localStorage.getItem(k);
+  let t = null;
+  try { t = localStorage.getItem(k); } catch {}
   if (!t){
     t = (globalThis.crypto && crypto.randomUUID)
       ? crypto.randomUUID()
@@ -22,35 +44,10 @@ function getOrCreateToken(){
 }
 const CREDIT_TOKEN = getOrCreateToken();
 
-/* ==================== STRIPE PRICE IDS ==================== */
-// TEST IDS
-// const PRICE_IDS = {
-//   1:  "price_1S5dgPChKVWsJZcWk9kacziD",
-//   10: "price_1S5dhfChKVWsJZcWJdjIkpfx",
-//   20: "price_1S5di8ChKVWsJZcWTxpXycQ0"
-// };
-
-// LIVE IDS
-const PRICE_IDS = {
-  1:  "price_1SMcGTCoSH0U9UtKFpwoWFBI",   // $2.99
-  10: "price_1SMcH5CoSH0U9UtKnxQ3onfb",   // $9.99
-  20: "price_1SMcHxCoSH0U9UtKePKIwwb1"    // $14.99
-};
-
 let stripe, elements, paymentElement, clientSecret;
 
-/* ==================== STRIPE INIT ==================== */
 document.addEventListener('DOMContentLoaded', () => {
-  if (!window.Stripe) {
-    console.error('Stripe.js failed to load (CSP or network)');
-    return;
-  }
-  stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
-
-  // make sure your price labels render on load too
-  if (typeof updatePricingUI === 'function') {
-    updatePricingUI();
-  }
+  if (typeof updatePricingUI === 'function') updatePricingUI();
 });
 
 /* ==================== iPHONE MODAL HELPERS (NEW) ==================== */
@@ -1069,125 +1066,16 @@ function closePaywall(){
 }
 
 /* ==================== Checkout flow ==================== */
-async function startCheckout(n = 1){
-  if (!stripe) {
-    toast('Secure checkout is still loading. Please try again in a moment.');
-    return;
-  }
-  const priceId = PRICE_IDS[n];
-  if (!priceId){
-    toast('Something went wrong. Please refresh and try again.');
-    return;
-  }
-
-  // Close paywall, open checkout in "loading" state
-  closePaywall();
-  openCheckout();
-
-  // NEW: show transaction cost / total for this selection
-  updateCheckoutSummary(n);
-
-  const payBtn = document.getElementById('pay-now');
-  const msg    = document.getElementById('checkout-msg');
-
-  if (payBtn) payBtn.disabled = true;
-  if (msg) msg.textContent = 'Preparing secure checkout…';
-
-  let data;
-  try {
-    const res = await fetch(`${API_BASE_URL}/create-payment-intent`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        priceId,
-        quantity: 1,
-        token: CREDIT_TOKEN,
-        credits: n
-      })
-    });
-
-    // Try to parse JSON but don't crash if it fails
-    data = await res.json().catch(() => ({}));
-
-    if (!res.ok || !data.client_secret){
-      const errText = data && data.error ? data.error : 'Error creating payment intent.';
-      console.error('Create payment intent failed', res.status, errText);
-      if (msg) {
-        msg.textContent = 'We couldn’t start checkout. Please try again, or email support@rezzyrate.com.';
-      }
-      if (payBtn) payBtn.disabled = false;
-      return;
-    }
-  } catch (err) {
-    console.error('Network/CORS error creating payment intent', err);
-    if (msg) {
-      msg.textContent = 'We couldn’t reach the payment server. Check your connection and try again.';
-    }
-    if (payBtn) payBtn.disabled = false;
-    return;
-  }
-
-  clientSecret = data.client_secret;
-
-  // Reset any previous Stripe Element
-  try { if (paymentElement) paymentElement.unmount(); } catch (_) {}
-  paymentElement = null;
-  elements = null;
-
-  elements = stripe.elements({
-    clientSecret,
-    appearance: {
-      theme: 'stripe',
-      variables: {
-        colorPrimary: '#5B47E0',
-        colorText: '#0F172A',
-        colorTextSecondary: '#5B6475',
-        colorDanger: '#DC2626',
-        fontFamily: "'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-        borderRadius: '10px'
-      }
-    }
-  });
-
-  paymentElement = elements.create('payment');
-  paymentElement.mount('#payment-element');
-
-  // Ready for user to pay
-  if (msg) msg.textContent = '';
-  if (payBtn) payBtn.disabled = false;
-  if (!payBtn || !msg) return;
-
-  let paying = false;
-  payBtn.onclick = async () => {
-    if (paying) return;
-    paying = true;
-    payBtn.disabled = true;
-    msg.textContent = 'Processing…';
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: window.location.origin + window.location.pathname + '?payment=done' },
-      redirect: 'if_required'
-    });
-
-    if (error){
-      msg.textContent = error.message || 'Payment failed.';
-      payBtn.disabled = false;
-      paying = false;
-      return;
-    }
-
-    msg.textContent = 'Payment successful. Adding your scans…';
-    const granted = await claimCredits();
-    if (!granted) setTimeout(() => claimCredits(), 1500);
-
-    setTimeout(() => {
-      paying = false;
-      closeCheckout();
-    }, 1200);
-  };
+function startCheckout(n = 1){
+  const link = PAYMENT_LINKS[n];
+  if (!link){ toast('Something went wrong. Please refresh and try again.'); return; }
+  try { gtag('event', 'begin_checkout', { value: n }); } catch {}
+  // client_reference_id ties the Stripe payment to this browser (handy for support)
+  const url = new URL(link);
+  url.searchParams.set('client_reference_id', CREDIT_TOKEN);
+  toast('Opening secure checkout…');
+  location.href = url.toString();
 }
-
 
 /* ==================== Credit claim ==================== */
 async function claimCredits({ retries = 6, delay = 400 } = {}) {
@@ -1522,13 +1410,34 @@ function renderSkillChips(skills = []) {
 updateMeterUI();
 updatePricingUI();
 setScanStatus('Ready', false);
-document.addEventListener('DOMContentLoaded', async () => {
-  const returning = new URLSearchParams(location.search).get('payment') === 'done';
-  if (returning) { try { history.replaceState(null, '', location.pathname); } catch {} }
-  const n = await claimCredits(returning ? {} : { retries: 1 });
-  if (n > 0) toast(`Payment received. ${n} scan${n === 1 ? '' : 's'} added.`);
-  else if (returning) toast('Payment received. Your scans will appear in a moment.');
-});
+/* ==================== Returning from Stripe checkout ==================== */
+(function handlePaymentReturn(){
+  const params = new URLSearchParams(location.search);
+  const paid = parseInt(params.get('paid') || '0', 10);
+  const session = params.get('session_id') || '';
+  const carry = parseInt(params.get('carry') || '0', 10);
+  if (!paid && !carry) return;
+
+  // tidy the address bar so a refresh or shared link doesn't re-trigger anything
+  try { history.replaceState(null, '', location.pathname + location.hash); } catch {}
+
+  if (carry > 0 && carry <= 1000) {
+    addCredits(carry);
+  }
+
+  if (!PAYMENT_LINKS[paid] || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(session)) return;
+
+  let claimed = [];
+  try { claimed = JSON.parse(localStorage.getItem('rz_claimed_sessions') || '[]'); } catch {}
+  if (claimed.includes(session)) return;           // already added for this purchase
+  claimed.push(session);
+  try { localStorage.setItem('rz_claimed_sessions', JSON.stringify(claimed.slice(-50))); } catch {}
+
+  addCredits(paid);
+  try { gtag('event', 'purchase', { transaction_id: session, value: paid }); } catch {}
+  document.addEventListener('DOMContentLoaded', () =>
+    toast(`Payment received. ${paid} scan${paid === 1 ? '' : 's'} added. Thank you!`));
+})();
 
 /* ==================== Mobile "Use desktop" hint (8s delay) ==================== */
 (function mobileHint(){

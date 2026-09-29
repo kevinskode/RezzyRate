@@ -93,7 +93,6 @@ def create_payment_intent(event, _context):
         quantity = int(body.get("quantity", 1))
         
         token = (body.get("token") or "").strip()
-        credits = int(body.get("credits", quantity))  # how many credits this purchase represents
 
         if not price_id:
             return _response(400, {"error": "priceId required"}, event)
@@ -102,10 +101,17 @@ def create_payment_intent(event, _context):
 
         stripe.api_key = _get_stripe_key()
 
-        # Optional allowlist, e.g. ALLOWED_PRICE_IDS="price_xxx_single,price_xxx_pack10,price_xxx_pack20"
-        allowed = {p.strip() for p in os.environ.get("ALLOWED_PRICE_IDS", "").split(",") if p.strip()}
-        if allowed and price_id not in allowed:
+        # Credits are decided HERE from the price, never from the browser.
+        # (Previously the client sent "credits", so anyone could pay $2.99 and claim 1,000 scans.)
+        # PRICE_CREDITS="price_single:1,price_pack10:10,price_pack20:20"
+        price_credits = {}
+        for pair in os.environ.get("PRICE_CREDITS", "").split(","):
+            if ":" in pair:
+                pid, n = pair.split(":", 1)
+                price_credits[pid.strip()] = int(n)
+        if price_id not in price_credits:
             return _response(400, {"error": "priceId not allowed"}, event)
+        credits = price_credits[price_id] * quantity
 
         price = stripe.Price.retrieve(price_id)
         if not price.get("active"):
