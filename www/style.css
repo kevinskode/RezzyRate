@@ -600,3 +600,8 @@ body.modal-open{ overflow:hidden; }
 @media (prefers-reduced-motion: reduce){
   *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
 }
+
+/* Adzuna attribution: their terms require "Jobs by Adzuna" at least 116x23px, linked */
+.adzuna-badge{ display:inline-flex; align-items:center; justify-content:center; min-width:130px; min-height:28px; padding:4px 12px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--text-2) !important; font-size:13px; font-weight:500; }
+.adzuna-badge b{ margin-left:4px; color:#2E7D32; font-weight:800; }
+.adzuna-badge:hover{ text-decoration:none; border-color:var(--line-2); }

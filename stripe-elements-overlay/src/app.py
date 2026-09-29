@@ -188,7 +188,8 @@ import urllib.parse
 
 _adzuna_creds = None
 _jobs_cache = {}            # key -> (expires_at, payload)
-_JOBS_TTL = 15 * 60         # 15 min; warm Lambdas reuse this
+_JOBS_TTL = 60 * 60         # 1 hour; saves Adzuna quota (trial = 250 calls/day)
+_MAX_CALLS = 2              # at most 2 Adzuna calls per search
 
 
 def _get_adzuna_creds():
@@ -290,12 +291,13 @@ def jobs(event, _context):
         dict(what_or=skill_or, where=loc),
     ]
 
-    seen, results, errors = set(), [], 0
+    seen, results, errors, calls = set(), [], 0, 0
     for a in attempts:
-        if len(results) >= limit:
+        if len(results) >= limit or calls >= _MAX_CALLS:
             break
         if not (a.get("what") or a.get("what_or")):
             continue
+        calls += 1
         try:
             raw = _adzuna_search(limit=20, **a)
         except Exception as e:  # network / quota — keep trying the next shape
