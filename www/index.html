@@ -2,26 +2,39 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  
-  <title>Rezzy HI Rate - Check to see if your resume is industry ready</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+  <title>Rezzy Rate – Free Resume Checker &amp; ATS Score</title>
+  <meta name="description" content="Check your resume against any job description in seconds. Get an ATS-style score, missing keywords, clear fixes, and live jobs that match your experience. 1 free scan every day." />
+  <link rel="canonical" href="https://rezzyrate.com/" />
+
+  <!-- Social sharing -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Rezzy Rate" />
+  <meta property="og:title" content="Rezzy Rate – Is your resume industry ready?" />
+  <meta property="og:description" content="Instant ATS-style resume score, missing keywords, and live jobs that fit your experience." />
+  <meta property="og:url" content="https://rezzyrate.com/" />
+  <meta property="og:image" content="https://rezzyrate.com/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 
   <!-- Favicons -->
-  <link rel="icon" href="favicon.ico">
+  <link rel="icon" href="logo-mark.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <!-- Optional: Safari pinned tab (provide a monochrome SVG) -->
-  <!-- <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0a0f18"> -->
   <link rel="manifest" href="/site.webmanifest">
-  <meta name="theme-color" content="#0a0f18">
+  <meta name="theme-color" content="#ffffff">
 
-  <link rel="stylesheet" href="style.css"> 
+  <link rel="stylesheet" href="style.css">
 
-  <!-- PDF.js + Mammoth -->
+  <!-- PDF.js + Mammoth (file text extraction happens in the browser) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
-  <script>window.pdfjsLib && (pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js");</script>
+  <script>window.addEventListener('DOMContentLoaded',()=>{ window.pdfjsLib && (pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"); });</script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js" defer></script>
 
   <!-- Google tag (gtag.js) -->
@@ -31,254 +44,361 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date()); gtag('config', 'G-HC1DSZ3RED');
   </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7940734884065019" crossorigin="anonymous"></script>
 
   <script src="https://js.stripe.com/v3" defer></script>
-  <script src="script.js" defer></script> 
+  <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="container">
-<header class="topbar">
-  <div class="brand pinned-logo">
-    <a href="index.html" aria-label="Rezzy Rate home"><img class="logo" src="logo.png" alt="Rezzy Rate logo" /></a>
-  </div>
-  <div class="badges">
-    <span class="badge" id="freeBadge">Free credits left today: 1</span>
-    <span class="badge" id="creditBadge">Paid credits: 0</span>
-  </div>
+  <a class="skip-link" href="#tool">Skip to resume checker</a>
 
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7940734884065019"
-     crossorigin="anonymous"></script>
-</header>
+  <!-- ============ HEADER ============ -->
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html" aria-label="Rezzy Rate home">
+        <img src="logo-mark.svg" width="36" height="36" alt="" />
+        <span class="wordmark">Rezzy<b>Rate</b></span>
+      </a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="#how">How it works</a>
+        <a href="#jobs">Find jobs</a>
+        <a href="#pricing">Pricing</a>
+        <a href="about.html">About</a>
+      </nav>
+      <div class="nav-right">
+        <span class="credit-pill" title="Scans available in this browser">
+          <span class="credit-dot" aria-hidden="true"></span>
+          <span id="freeBadge">1 free scan today</span>
+          <span class="credit-sep" aria-hidden="true"></span>
+          <span id="creditBadge">0 credits</span>
+        </span>
+        <a class="btn btn-primary btn-sm" href="#pricing">Buy scans</a>
+      </div>
+    </div>
+  </header>
 
-
+  <main>
+    <!-- ============ HERO ============ -->
     <section class="hero">
-      <h1 class="hero-title">Is your resume <span class="grad-text">industry ready?</span></h1>
-      <p class="hero-sub">Get an instant ATS-style score, see the keywords you’re missing, and discover live jobs that match your experience.</p>
-      <ul class="hero-points">
-        <li><span class="dot d1"></span>ATS keyword check</li>
-        <li><span class="dot d2"></span>Readability &amp; tone</li>
-        <li><span class="dot d3"></span>Similar live jobs</li>
-      </ul>
+      <div class="container hero-inner">
+        <span class="eyebrow">Free resume checker</span>
+        <h1>Is your resume <span class="hl">industry ready?</span></h1>
+        <p class="lead">Compare your resume to any job post in seconds. See your ATS-style score, the keywords you’re missing, and live jobs that fit your experience.</p>
+        <ul class="trust-row">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>Scored privately in your browser</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>No account needed</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>1 free scan every day</li>
+        </ul>
+      </div>
     </section>
 
-    <main class="layout">
-      <section class="card">
-        <h2 class="card-title">Score your resume</h2>
-        <p class="card-sub">Paste your resume and the job description. Or upload a file — we’ll extract the text and score it.</p>
+    <!-- ============ TOOL ============ -->
+    <section id="tool" class="tool">
+      <div class="container tool-grid">
 
-        <div class="upload-row">
-          <label class="file-pill" style="cursor:pointer">
-            <input id="resumeFile" type="file" accept=".pdf,.docx,.txt,.rtf" />
-            <span id="fileLabel">Choose PDF, DOCX, or TXT</span>
-          </label>
-          <button id="btnPick" class="file-btn" type="button" aria-label="Upload file">
-            <svg xmlns="http://www.w3.org/2000/svg" 
-                 width="18" height="18" viewBox="0 0 24 24" 
-                 fill="none" stroke="currentColor" stroke-width="2" 
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-          </button>
-          
-          <div id="dropzone" class="dropzone">drag & drop</div>
-
-          <span class="helper" id="scanStatus" style="display:flex;align-items:center;gap:8px">
-            <span class="statusled ready" id="statusLed" aria-hidden="true"></span>
-            <span class="spinner" id="scanSpinner" aria-hidden="true"></span>
-            <span id="scanText" class="sr-only">Ready</span>
-          </span>
-        </div>
-
-        <label>Paste Resume Text</label>
-        <textarea id="resume" rows="12">JOHN DOE
-Detroit, MI • john.doe@email.com • (313) 555-1212
-
-SUMMARY
-Data-driven analyst with 5+ years improving KPI visibility and reducing cycle time across finance and operations.
-
-EXPERIENCE
-Acme Corp — Senior Analyst (2021–Present)
-• Led dashboard rebuild, improving reporting speed by 35%.
-• Automated monthly close with Python, saving 12 hours per cycle.
-• Partnered with sales to forecast pipeline; reduced variance by 18%.
-
-EDUCATION
-B.S. in Information Systems, Michigan State University
-
-SKILLS
-SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
-
-        <label>Paste Job Description (optional)</label>
-        <textarea id="jd" rows="4">We seek a Business Data Analyst to build SQL pipelines, automate reporting in Python, and create Tableau dashboards. Experience with forecasting, ETL, and stakeholder communication required.</textarea>
-
-        <label>Add more keywords to compare (comma separated)</label>
-        <input id="keywords" placeholder="SQL, Python, Tableau, ETL, forecasting" value="SQL, Python, Tableau, ETL, forecasting"/>
-
-        <div class="actions" style="margin-top:6px">
-          <button class="btn-primary btn-cta" onclick="analyze()">Analyze resume</button>
-          <button id="btnClear" class="btn-secondary" onclick="clearAll()">Clear</button>
-        </div>
-        <div class="buy-row">
-          <span class="buy-label">Need more scans?</span>
-          <div class="pricing-buttons">
-            <button id="btnBuy1Top"  class="btn-secondary btn-compact buy-btn" onclick="openPaywall(1)"></button>
-            <button id="btnBuy10Top" class="btn-secondary btn-compact buy-btn" onclick="openPaywall(10)"></button>
-            <button id="btnBuy20Top" class="btn-secondary btn-compact buy-btn" onclick="openPaywall(20)"></button>
+        <!-- Input -->
+        <section class="card input-card" aria-labelledby="inputTitle">
+          <div class="card-head">
+            <h2 id="inputTitle">Check your resume</h2>
+            <button type="button" class="link-btn" onclick="fillSample()">Try a sample</button>
           </div>
-        </div>
-      </section>
 
-      <section id="results" class="card">
-        <div style="text-align:center;color:var(--muted)">
-          <div style="width:44px;height:44px;border-radius:9999px;margin:8px auto;background:linear-gradient(135deg,#ffd34d,#f26e8c)"></div>
-          <h3 style="margin:6px 0 4px;color:var(--text)">Ready to score your resume</h3>
-          <div class="helper">Paste your resume or upload a file, then click <b>Analyze</b>.</div>
-        </div>
-      </section>
+          <!-- Step 1 -->
+          <div class="step">
+            <div class="step-label"><span class="step-num">1</span>Your resume</div>
 
-      <section id="similar-jobs" class="card jobs-wrap">
-        <div class="jobs-header">
-          <div>
-            <h3 class="card-title">Jobs that match your resume</h3>
-            <p class="card-sub" style="margin:0">Live postings ranked by how well they fit your title and skills. Free with every scan.</p>
+            <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload resume file">
+              <input id="resumeFile" type="file" accept=".pdf,.docx,.txt,.rtf" hidden />
+              <svg class="dz-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="M9.5 13.5L12 11l2.5 2.5"/></svg>
+              <div class="dz-text">
+                <b id="fileLabel">Drop your resume here</b>
+                <span>PDF, DOCX or TXT · or <button id="btnPick" type="button" class="link-btn">browse files</button></span>
+              </div>
+              <span class="scan-status" id="scanStatus" aria-live="polite">
+                <span class="statusled ready" id="statusLed" aria-hidden="true"></span>
+                <span class="spinner" id="scanSpinner" aria-hidden="true"></span>
+                <span id="scanText" class="sr-only">Ready</span>
+              </span>
+            </div>
+
+            <div class="or-divider"><span>or paste text</span></div>
+            <label for="resume" class="sr-only">Resume text</label>
+            <textarea id="resume" rows="9" placeholder="Paste your full resume here…"></textarea>
           </div>
-          <span class="badge-free">Free</span>
+
+          <!-- Step 2 -->
+          <div class="step">
+            <div class="step-label">
+              <span class="step-num">2</span>The job you want
+              <span class="tag-rec">Recommended</span>
+            </div>
+            <label for="jd" class="sr-only">Job description</label>
+            <textarea id="jd" rows="5" placeholder="Paste the job description you’re applying to. We’ll match your resume against its keywords."></textarea>
+
+            <details class="more">
+              <summary>Add your own keywords <span>(optional)</span></summary>
+              <label for="keywords" class="field-label">Keywords to check, separated by commas</label>
+              <input id="keywords" placeholder="e.g. SQL, Tableau, stakeholder management" />
+            </details>
+          </div>
+
+          <div class="action-bar">
+            <button class="btn btn-primary btn-lg btn-block" type="button" onclick="analyze()">
+              Analyze my resume
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <div class="action-sub">
+              <span id="scanNote">Uses your free scan for today</span>
+              <button id="btnClear" type="button" class="link-btn muted" onclick="clearAll()">Clear all</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Results -->
+        <section id="results" class="card results-card" aria-live="polite" aria-label="Your results">
+          <div class="empty-results">
+            <div class="er-score" aria-hidden="true">
+              <svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="28" fill="none" stroke="var(--line)" stroke-width="8"/><circle cx="36" cy="36" r="28" fill="none" stroke="var(--brand)" stroke-width="8" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="60" transform="rotate(-90 36 36)" opacity=".35"/></svg>
+              <span>?</span>
+            </div>
+            <h3>Your report will appear here</h3>
+            <p>Add your resume and click <b>Analyze</b>. Here’s what you’ll get:</p>
+            <ul class="check-list">
+              <li>Overall score out of 100</li>
+              <li>ATS keyword match for the job</li>
+              <li>Structure &amp; readability checks</li>
+              <li>Prioritized fixes to raise your score</li>
+              <li>Job ad “reality check”</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ============ JOBS ============ -->
+    <section id="jobs" class="section">
+      <div class="container">
+        <section id="similar-jobs" class="card jobs-card" aria-labelledby="jobsTitle">
+          <div class="jobs-header">
+            <div>
+              <h2 id="jobsTitle">Jobs that match your resume</h2>
+              <p class="muted">Live postings ranked by how well they fit your title and skills.</p>
+            </div>
+            <span class="badge badge-free">Free</span>
+          </div>
+
+          <form id="jobsForm" class="jobs-form" autocomplete="off">
+            <div class="jf-field">
+              <label for="jobTitle" class="field-label">Role</label>
+              <input id="jobTitle" placeholder="Auto-filled from your resume" />
+            </div>
+            <div class="jf-field">
+              <label for="jobWhere" class="field-label">Location</label>
+              <input id="jobWhere" placeholder="City, ST" />
+            </div>
+            <label class="jf-toggle" for="jobRemote">
+              <input id="jobRemote" type="checkbox" />
+              <span class="jf-switch" aria-hidden="true"></span>
+              Remote only
+            </label>
+            <button id="btnFindJobs" class="btn btn-dark jf-btn" type="submit">Find jobs</button>
+          </form>
+          <div id="jobSkills" class="job-skills-line"></div>
+          <div id="jobsMeta" class="jobs-meta muted" aria-live="polite"></div>
+
+          <div id="jobsGrid" class="jobs">
+            <div class="jobs-empty"><b>Find roles that fit your resume.</b><span>We’ll read your title, skills and location, then pull live postings.</span></div>
+          </div>
+          <p class="jobs-attrib"><a href="https://www.adzuna.com" target="_blank" rel="noopener">Jobs by Adzuna</a></p>
+        </section>
+      </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section id="how" class="section">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">How it works</span>
+          <h2>Three steps to a sharper resume</h2>
+        </div>
+        <ol class="steps-grid">
+          <li class="card step-card">
+            <span class="step-num lg">1</span>
+            <h3>Add your resume</h3>
+            <p>Upload a PDF or Word file, or paste the text. It’s read right in your browser.</p>
+          </li>
+          <li class="card step-card">
+            <span class="step-num lg">2</span>
+            <h3>Paste the job post</h3>
+            <p>We pull out the skills and keywords the employer is scanning for.</p>
+          </li>
+          <li class="card step-card">
+            <span class="step-num lg">3</span>
+            <h3>Fix what matters</h3>
+            <p>Get your score, missing keywords, and a prioritized list of fixes, plus matching live jobs.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ PRICING ============ -->
+    <section id="pricing" class="section section-alt">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Pricing</span>
+          <h2>Pay per scan. No subscription.</h2>
+          <p class="muted">Your first scan each day is free. Buy credits when you want the full report.</p>
         </div>
 
-        <form id="jobsForm" class="jobs-form" autocomplete="off">
-          <div class="jf-field">
-            <label for="jobTitle">Role</label>
-            <input id="jobTitle" placeholder="Auto-filled from your resume" />
-          </div>
-          <div class="jf-field">
-            <label for="jobWhere">Location</label>
-            <input id="jobWhere" placeholder="City, ST" />
-          </div>
-          <label class="jf-toggle" for="jobRemote">
-            <input id="jobRemote" type="checkbox" />
-            <span class="jf-switch" aria-hidden="true"></span>
-            Remote only
-          </label>
-          <button id="btnFindJobs" class="btn-primary jf-btn" type="submit">Find jobs</button>
-        </form>
-        <div id="jobSkills" class="job-skills-line"></div>
-        <div id="jobsMeta" class="helper jobs-meta" aria-live="polite"></div>
+        <div class="price-grid">
+          <article class="card price-card">
+            <h3>Single scan</h3>
+            <div class="price"><span class="amt">$2.99</span></div>
+            <p class="per">$2.99 per scan</p>
+            <button class="btn btn-outline btn-block" type="button" onclick="startCheckout(1)">Buy 1 scan</button>
+          </article>
 
-        <div id="jobsGrid" class="jobs">
-          <div class="jobs-empty"><b>Find roles that fit your resume.</b><span>We’ll read your title, skills and location, then pull live postings.</span></div>
+          <article class="card price-card featured">
+            <span class="ribbon">Most popular</span>
+            <h3>10 scans</h3>
+            <div class="price"><span class="amt">$9.99</span><span class="save">Save 67%</span></div>
+            <p class="per">$1.00 per scan</p>
+            <button class="btn btn-primary btn-block" type="button" onclick="startCheckout(10)">Buy 10 scans</button>
+          </article>
+
+          <article class="card price-card">
+            <h3>20 scans</h3>
+            <div class="price"><span class="amt">$14.99</span><span class="save">Save 75%</span></div>
+            <p class="per">$0.75 per scan</p>
+            <button class="btn btn-outline btn-block" type="button" onclick="startCheckout(20)">Buy 20 scans</button>
+          </article>
         </div>
-        <p class="jobs-attrib"><a href="https://www.adzuna.com" target="_blank" rel="noopener">Jobs by Adzuna</a></p>
-      </section>
-      
-    </main>
 
-    <footer class="site-footer rz-footer">
-      <nav>
-        <a href="index.html">Home</a>
+        <div class="included">
+          <h3>Every paid scan unlocks the full report</h3>
+          <ul class="check-list cols">
+            <li>Full keyword breakdown: matched &amp; missing</li>
+            <li>Structure checklist</li>
+            <li>Prioritized, specific fixes</li>
+            <li>Job ad reality check</li>
+            <li>Written summary &amp; next steps</li>
+            <li>Similar jobs (always free)</li>
+          </ul>
+          <p class="secure-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            One-time payment · Secure checkout by Stripe · We never see your card number
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section id="faq" class="section">
+      <div class="container narrow">
+        <div class="section-head">
+          <span class="eyebrow">FAQ</span>
+          <h2>Questions, answered</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Is my resume uploaded or stored?</summary>
+            <p>No. Your resume is read and scored right in your browser. If you use job matching, only the role, a short list of skills and the location are sent so we can look up listings.</p>
+          </details>
+          <details>
+            <summary>What’s the difference between a free and a paid scan?</summary>
+            <p>A free scan shows your overall score and the four sub-scores, plus a preview of your top fix. A paid scan unlocks everything: the full keyword breakdown, structure checklist, all fixes, the job ad reality check and a written summary.</p>
+          </details>
+          <details>
+            <summary>How do credits work?</summary>
+            <p>Each analysis uses one credit. Credits are saved in the browser you bought them in, so use the same browser and device to spend them. Your free scan resets every day.</p>
+          </details>
+          <details>
+            <summary>Is this a subscription?</summary>
+            <p>No. Every purchase is a one-time payment, and you’ll never be charged again automatically.</p>
+          </details>
+          <details>
+            <summary>Will a high score guarantee interviews?</summary>
+            <p>No tool can promise that. Rezzy Rate helps you present your experience clearly and match the language employers are scanning for, which improves your odds.</p>
+          </details>
+          <details>
+            <summary>I need help with a purchase.</summary>
+            <p>Email <a href="mailto:support@rezzyrate.com">support@rezzyrate.com</a> with the email on your receipt and we’ll sort it out.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="index.html"><img src="logo-mark.svg" width="30" height="30" alt="" /><span class="wordmark">Rezzy<b>Rate</b></span></a>
+        <p class="muted">Resume scoring and job matching for real-world job searches.</p>
+      </div>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="index.html#tool">Resume checker</a>
+        <a href="index.html#pricing">Pricing</a>
         <a href="about.html">About</a>
         <a href="privacy.html">Privacy Policy</a>
+        <a href="mailto:support@rezzyrate.com">Contact</a>
       </nav>
-      <p>&copy; <span id="yr">2026</span> Rezzy Rate. All rights reserved.</p>
-      <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
-    </footer>
-  </div>
-
-<div id="paywall" class="overlay" aria-modal="true" role="dialog">
-  <div class="card modal">
-    <h2 class="card-title" style="margin-top:0">Get more scans</h2>
-
-    <p id="paywallLeadText" class="card-sub" style="margin-bottom:12px">
-      You used your free daily scan. Buy additional scans for <strong>$2.99</strong> or save with a pack.
-    </p>
-
-    <div class="actions">
-
-      <!-- NEW unified pricing buttons -->
-     <div class="pricing-options">
-
-  <!-- 1 scan -->
-  <button class="pricing-btn" data-buy="1" onclick="startCheckout(1)">
-    <div class="pricing-main">
-      <span class="left">1 Scan</span>
-      <span class="right">$2.99</span>
     </div>
-    <div class="pricing-sub">
-      <span class="per-scan">$2.99 per scan</span>
-      <span class="deal-pill neutral">Single scan</span>
+    <div class="container footer-bottom">
+      <span>&copy; <span id="yr">2026</span> Rezzy Rate. All rights reserved.</span>
     </div>
-  </button>
+    <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+  </footer>
 
-  <!-- 10 scans -->
-  <button class="pricing-btn" data-buy="10" onclick="startCheckout(10)">
-    <div class="pricing-main">
-      <span class="left">10 Scans</span>
-      <span class="right">$9.99</span>
-    </div>
-    <div class="pricing-sub">
-      <span class="per-scan">$1.00 per scan</span>
-      <span class="deal-pill popular">Save ~67%</span>
-    </div>
-  </button>
+  <!-- ============ PAYWALL ============ -->
+  <div id="paywall" class="overlay" aria-modal="true" role="dialog" aria-labelledby="paywallTitle">
+    <div class="modal">
+      <button class="icon-btn modal-close" type="button" onclick="closePaywall()" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <h2 id="paywallTitle">Unlock your full report</h2>
+      <p id="paywallLeadText" class="muted">You used your free daily scan. Buy additional scans for <strong>$2.99</strong> or save with a pack.</p>
 
-  <!-- 20 scans -->
-  <button class="pricing-btn" data-buy="20" onclick="startCheckout(20)">
-    <div class="pricing-main">
-      <span class="left">20 Scans</span>
-      <span class="right">$14.99</span>
-    </div>
-    <div class="pricing-sub">
-      <span class="per-scan">$0.75 per scan</span>
-      <span class="deal-pill best">Save ~75%</span>
-    </div>
-  </button>
+      <div class="pricing-options">
+        <button class="pricing-btn" data-buy="1" type="button">
+          <span class="pb-main"><span>1 scan</span><b>$2.99</b></span>
+          <span class="pb-sub"><span>$2.99 per scan</span></span>
+        </button>
+        <button class="pricing-btn popular" data-buy="10" type="button">
+          <span class="pb-main"><span>10 scans</span><b>$9.99</b></span>
+          <span class="pb-sub"><span>$1.00 per scan</span><span class="deal-pill popular">Most popular · Save 67%</span></span>
+        </button>
+        <button class="pricing-btn" data-buy="20" type="button">
+          <span class="pb-main"><span>20 scans</span><b>$14.99</b></span>
+          <span class="pb-sub"><span>$0.75 per scan</span><span class="deal-pill best">Best value · Save 75%</span></span>
+        </button>
+      </div>
 
-</div>
-
-
-      <span class="spacer"></span>
-
-      <button class="btn-secondary btn-compact" onclick="closePaywall()">Close</button>
+      <p class="secure-note small">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        One-time payment · Secure checkout by Stripe
+      </p>
     </div>
   </div>
-</div>
 
-
-
- <div id="checkout-modal" class="overlay">
-  <div class="card modal">
-    <button id="closeCheckoutBtn" class="icon-btn" type="button">✕</button>
-    <h2>Complete your purchase</h2>
-
-    <div id="payment-element"></div>
-
-    <!-- NEW: transaction total line -->
-    <p id="checkout-summary" class="helper" style="margin-top:8px;"></p>
-
-    <!-- Existing status message from JS -->
-    <p id="checkout-msg" class="helper"></p>
-
-    <button id="pay-now" class="btn brand">Pay now</button>
-  </div>
-</div>
-
-<!-- Mobile experience hint -->
-<div id="mobile-hint" class="mf-overlay" aria-hidden="true" role="dialog">
-  <div class="mf-card" role="document" aria-labelledby="mf-title">
-    <div class="mf-icon" aria-hidden="true"></div>
-    <h3 id="mf-title" class="mf-title">For the best Rezzy Rate experience</h3>
-    <p class="mf-text">
-      You can use Rezzy Rate on your phone, but a laptop or desktop makes scoring,
-      editing, and comparing results a lot smoother.
-    </p>
-    <div class="mf-actions">
-
-      <button id="mf-dismiss" class="btn-secondary mf-btn-full">Don’t show again</button>
+  <!-- ============ CHECKOUT ============ -->
+  <div id="checkout-modal" class="overlay" aria-modal="true" role="dialog" aria-labelledby="checkoutTitle">
+    <div class="modal">
+      <button id="closeCheckoutBtn" class="icon-btn modal-close" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <h2 id="checkoutTitle">Complete your purchase</h2>
+      <p id="checkout-summary" class="muted"></p>
+      <div id="payment-element"></div>
+      <p id="checkout-msg" class="checkout-msg" aria-live="polite"></p>
+      <button id="pay-now" class="btn btn-primary btn-lg btn-block" type="button">Pay now</button>
+      <p class="secure-note small">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        Payments processed securely by Stripe
+      </p>
     </div>
-    
   </div>
-</div>
 
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

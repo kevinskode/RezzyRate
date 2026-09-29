@@ -202,6 +202,8 @@ const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_
 (function handleUnlimitedFlag(){
   const params = new URLSearchParams(location.search);
   const hours = 48;
+  const isDev = /^(localhost|127\.0\.0\.1|)$/.test(location.hostname);
+  if (!isDev) return;   // ?unlimited=1 used to work on the live site, so anyone could skip paying
   if (params.get('unlimited') === '1'){
     try {
       localStorage.setItem(LS_KEYS.unlimitedUntil, String(Date.now() + hours*60*60*1000));
@@ -237,8 +239,13 @@ function updateMeterUI(){
   const {freeLeft, credits} = readMeter();
   const creditBadge = document.getElementById('creditBadge');
   const freeBadge = document.getElementById('freeBadge');
-  if (creditBadge) creditBadge.textContent = `Paid credits: ${credits}`;
-  if (freeBadge) freeBadge.textContent = isUnlimited() ? 'Free scans left today: ∞ (temp)' : `Free scans left today: ${freeLeft}`;
+  if (creditBadge) creditBadge.textContent = `${credits} credit${credits === 1 ? '' : 's'}`;
+  if (freeBadge) freeBadge.textContent = isUnlimited() ? 'Test mode: unlimited' : (freeLeft ? `${freeLeft} free scan today` : 'Free scan used');
+  const note = document.getElementById('scanNote');
+  if (note) note.textContent = isUnlimited() ? 'Test mode: scans are unlimited'
+    : freeLeft ? 'Uses your free scan for today'
+    : credits ? `Uses 1 of your ${credits} credit${credits === 1 ? '' : 's'}`
+    : 'Free scan used today. Buy scans to continue';
 }
 function canConsumeScan(){
   if (isUnlimited()) return { ok:true, mode:'unlimited' };
@@ -255,7 +262,9 @@ const SECTION_HINTS = ["experience","education","skills","projects","certificati
 const normalize = t => (t||"").replace(/\u2022/g,"-").replace(/[\t\r]/g," ").trim();
 const tokenize = t => normalize(t).toLowerCase().replace(/[^a-z0-9%$+\-\s]/g," ").split(/\s+/).filter(Boolean);
 const wordFreq = t => { const f=new Map(); for(const w of tokenize(t)){ if(STOPWORDS.has(w)||w.length<3) continue; f.set(w,(f.get(w)||0)+1);} return f; };
-const extractKeywords = (t,n=15)=> [...wordFreq(t).entries()].sort((a,b)=>b[1]-a[1]).slice(0,n).map(([w])=>w);
+// Generic words that show up in every job post and aren't real skills
+const JD_FILLER = new Set(["seek","seeking","looking","build","building","create","creating","experience","experienced","required","requirements","require","preferred","ability","able","strong","excellent","work","working","team","teams","role","position","candidate","candidates","job","company","including","include","responsible","responsibilities","must","will","who","our","plus","years","year","skills","skill","knowledge","using","use","other","such","well","within","across","help","support","ensure","new","make","based","etc","about","have","has","not","can","all","any","into","more","also","what","when","where","which","while","join","opportunity","apply","please","day","days","per","level","high"]);
+const extractKeywords = (t,n=15)=> [...wordFreq(t).entries()].filter(([w])=>!JD_FILLER.has(w)).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([w])=>w);
 const unique = a => [...new Set(a.filter(Boolean))];
 const countNumbers = t => (t.match(/(^|\s)(\$?\d+[\d,]*(\.?\d+)?%?)/g)||[]).length;
 function bulletStats(t){ const lines=normalize(t).split(/\n+/); return { bullets:lines.filter(l=>/^\s*[-•*]/.test(l)).length, exclam:(t.match(/!/g)||[]).length, capsWords:(t.match(/\b[A-Z]{4,}\b/g)||[]).length, longLines:lines.filter(l=>l.length>160).length }; }
@@ -371,7 +380,7 @@ function friendlyFixes(result, fre){
 
 /* ==================== Render helpers (visuals) ==================== */
 function scoreBand(pct){           // overall 0–100
-  return pct >= 85 ? 'good' : pct >= 55 ? 'warn' : 'bad';
+  return pct >= 70 ? 'good' : pct >= 55 ? 'warn' : 'bad';   // matches classifyScore (70+ = Strong)
 }
 function kpiBand(value, max){      // individual KPI 0–max
   const pct = Math.round((value / max) * 100);
@@ -389,7 +398,7 @@ function donutSVG(percent, label, opts = {}){
   return `
     <div class="donut" role="img" aria-label="Score ${percent}%">
       <svg viewBox="0 0 72 72">
-        <circle cx="36" cy="36" r="${r}" fill="none" stroke="rgba(148,163,184,.25)" stroke-width="8"></circle>
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="var(--line)" stroke-width="8"></circle>
         <circle cx="36" cy="36" r="${r}" fill="none" stroke="${stroke}" stroke-width="8"
                 stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
                 transform="rotate(-90 36 36)"></circle>
@@ -817,155 +826,120 @@ function analyze(){
   }).join('');
 
   const sectionPills = Object.entries(result.sectionPresence)
-    .map(([name,isOn])=>`<span class="pill ${isOn?'good':'bad'}">${name}</span>`).join('');
+    .map(([name,isOn])=>`<span class="pill ${isOn?'good':'bad'}">${isOn?'✓':'✕'} ${name}</span>`).join('');
 
-  const fixes = friendlyFixes(result, fre).join('') 
+  const fixList = friendlyFixes(result, fre);
+  const fixes = fixList.join('')
     || '<li><div class="fix-row"><span class="pill p-low">Nice!</span><span class="fix-title">You’re in solid shape</span></div><p class="fix-body">Tailor a couple bullets to the job post.</p></li>';
 
   const ghost = analyzeGhostJob(jd, resume);
   const ghostHTML = jobRealitySectionHTML(ghost);
   const summaryHTML = generateOverallSummary(result, fre, ghost, resume, jd);
 
+  const band = scoreBand(result.total);
+  const verdict = {
+    'Excellent':  'Ready to send. Tailor a few bullets to each job and you’re set.',
+    'Strong':     'Solid resume. A few targeted fixes will push it into the top tier.',
+    'Fair':       'Decent foundation, but gaps could cost you interviews. Start with the fixes below.',
+    'Needs work': 'Needs work before you apply. Start with the top fixes below.'
+  }[classifyScore(result.total)];
+
+  // Free scans get a teaser. Paid content is NOT rendered into the page at all
+  // (previously it was only blurred, so anyone could read it in dev tools).
+  const lockedSection = (key, title, teaser, skeletonKind = 'lines') => `
+    <section class="rsec locked" data-section="${key}">
+      <header class="rsec-head">
+        <h3>${title}</h3>
+        <span class="lock-tag"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Full report</span>
+      </header>
+      <div class="rsec-body">
+        <div class="locked-preview ${skeletonKind}" aria-hidden="true">${skeletonKind === 'pills' ? '<i></i>'.repeat(9) : '<i></i><i></i><i></i>'}</div>
+        <div class="locked-cta">
+          <p>${teaser}</p>
+          <button type="button" class="btn btn-primary btn-sm" data-buy="1">Unlock full report</button>
+        </div>
+      </div>
+    </section>`;
+
+  const section = (key, title, meta, body) => `
+    <section class="rsec" data-section="${key}">
+      <header class="rsec-head"><h3>${title}</h3>${meta ? `<span class="rsec-meta">${meta}</span>` : ''}</header>
+      <div class="rsec-body">${body}</div>
+    </section>`;
+
+  const ACRO = new Set(['sql','etl','aws','gcp','api','apis','bi','crm','erp','kpi','kpis','seo','sem','ui','ux','qa','hr','it','ai','ml','sap','css','html','php','saas','b2b','b2c','cpa','pmp','gaap','vba','sas']);
+  const kw = k => escapeHTML(ACRO.has(String(k).toLowerCase()) ? String(k).toUpperCase() : String(k).charAt(0).toUpperCase() + String(k).slice(1));
+  const kwTotal = present.length + missing.length;
+  const keywordsBody = `
+    <div class="kw-summary">
+      <div class="metric"><b>${present.length}</b><span>matched</span></div>
+      <div class="metric"><b>${missing.length}</b><span>missing</span></div>
+      <div class="metric"><b>${covPct}%</b><span>coverage</span></div>
+    </div>
+    <h4 class="sub-h">Missing, so add these if they apply to you</h4>
+    <div class="pill-wrap">${missing.map(k=>`<span class="pill bad">${kw(k)}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
+    <h4 class="sub-h">Already on your resume</h4>
+    <div class="pill-wrap">${present.map(k=>`<span class="pill good">${kw(k)}</span>`).join('') || '<span class="muted">No matches yet</span>'}</div>
+    ${result.extractedKeywords.length ? `<details class="more"><summary>All keywords we pulled from the job post</summary><div class="pill-wrap">${result.extractedKeywords.map(k=>`<span class="pill">${kw(k)}</span>`).join('')}</div></details>` : ''}`;
+
+  const readLine = `<p class="muted small" style="margin:0 0 10px">${gradeReadability(result.breakdown.readability)} · ${bullets} bullets · ${numbersUsed} metrics · ${passiveHits} passive phrases</p>`;
+
+  let sectionsHTML = '';
+  if (lockAdvanced) {
+    const hiddenFixes = Math.max(0, fixList.length - 1);
+    sectionsHTML += `
+      <div class="upsell">
+        <div>
+          <b>You’re viewing the free preview.</b>
+          <span>Unlock ${kwTotal ? `your ${missing.length} missing keyword${missing.length===1?'':'s'}, ` : ''}${hiddenFixes ? `${hiddenFixes} more fix${hiddenFixes===1?'':'es'}, ` : ''}the structure checklist${ghost ? ', the job ad reality check' : ''} and a written summary.</span>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" data-buy="10">See pricing</button>
+      </div>`;
+    // Top fix #1 is free, which shows the value of the rest
+    sectionsHTML += section('fixes', 'Top fixes', `${fixList.length} found`,
+      readLine + `<ul class="list-tight">${fixList.find(f => !f.includes('missing keywords')) || fixList[0] || fixes}</ul>` +
+      (hiddenFixes ? `<div class="more-locked"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>${hiddenFixes} more fix${hiddenFixes===1?'':'es'} in the full report <button type="button" class="link-btn" data-buy="1">Unlock</button></div>` : ''));
+    sectionsHTML += lockedSection('keywords', 'Keyword match',
+      kwTotal ? `We found <b>${missing.length} keyword${missing.length===1?'':'s'}</b> from this job that your resume is missing, and ${present.length} you already cover.` : 'See which job keywords you match, which you’re missing, and your coverage.', 'pills');
+    sectionsHTML += lockedSection('structure', 'Structure checklist', 'See which core sections (experience, skills, summary and more) are present or missing.', 'pills');
+    if (ghost) sectionsHTML += lockedSection('ghost', 'Job ad reality check', 'See how “real” this job post looks, with hiring signals and red flags called out.');
+    sectionsHTML += lockedSection('summary', 'Summary & next steps', 'A plain-English write-up of your strengths, gaps and exactly what to do next.');
+  } else {
+    sectionsHTML += section('keywords', 'Keyword match', kwTotal ? `${present.length}/${kwTotal} matched` : '', keywordsBody);
+    sectionsHTML += section('fixes', 'Top fixes', `${fixList.length} found`, readLine + `<ul class="list-tight">${fixes}</ul>`);
+    sectionsHTML += section('structure', 'Structure checklist', '', `<div class="pill-wrap">${sectionPills}</div>`);
+    if (ghostHTML) sectionsHTML += section('ghost', 'Job ad reality check', '', ghostHTML);
+    sectionsHTML += section('summary', 'Summary & next steps', '', summaryHTML);
+  }
+
   if (out) {
     out.innerHTML = `
-      <div class="results-root ${lockAdvanced ? 'mode-free' : 'mode-paid'}">
-        <div class="results-head">
-          <div class="score-block">
-            ${donutSVG(result.total, `${result.total}`)}
-            <div>
-              <h2 class="card-title" style="margin:0;display:flex;align-items:center;gap:6px">
-                Overall Score ${tipOverall}
-              </h2>
-              <div class="rating">${classifyScore(result.total)}</div>
-            </div>
+      <div class="results-root report ${lockAdvanced ? 'mode-free' : 'mode-paid'}">
+        <div class="results-head report-head">
+          ${donutSVG(result.total, `${result.total}`)}
+          <div class="rh-text">
+            <div class="rh-label">Overall score ${tipOverall}</div>
+            <div class="rh-line"><span class="rating ${band}">${classifyScore(result.total)}</span>
+              <span class="scan-tag">${gate.mode==='free' ? 'Free scan' : gate.mode==='credit' ? '1 credit used' : 'Test mode'}</span></div>
+            <p class="rh-sub">${verdict}</p>
           </div>
-          <span class="pill">${
-            gate.mode==='free' ? 'Free scan used'
-            : gate.mode==='credit' ? '1 paid credit used'
-            : 'Unlimited (temp)'
-          }</span>
         </div>
 
         <div class="kpi-grid">${bhtml}</div>
 
+        ${sectionsHTML}
 
-<section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="structure">
-  <div class="results-section-header">
-    <h3 class="card-title" style="margin:14px 0 6px">Structure Checklist</h3>
-    ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
-  </div>
-  <div class="results-section-body">
-    <div class="results-section-inner">
-      <div class="section-pills">${sectionPills}</div>
-    </div>
-
-    ${lockAdvanced ? `
-      <div class="lock-overlay">
-        <div class="lock-overlay-inner"
-             style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0.85rem 1.1rem;">
-          <p style="max-width:25rem;margin:0;font-size:.86rem;line-height:1.55;
-                    color:rgba(235,240,255,.92);font-weight:400;">
-            See which core sections (experience, projects, skills, etc.) are missing or present.
-            This detailed checklist unlocks with any paid scan.
-          </p>
+        <div class="report-foot">
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('jobs').scrollIntoView({behavior:'smooth'})">See matching jobs ↓</button>
         </div>
-      </div>
-    ` : ''}
-  </div>
-</section>
-
-
-        <!-- KEYWORDS (EXTRACTED, MATCHED, MISSING) -->
-        <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="keywords">
-          <div class="results-section-header">
-            <h3 class="card-title" style="margin:14px 0 6px">Extracted from Job Description</h3>
-            ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
-          </div>
-          <div class="results-section-body">
-            <div class="results-section-inner">
-              <div>${result.extractedKeywords.map(k=>`<span class='pill good'>${k}</span>`).join('')}</div>
-
-              <h3 class="card-title" style="margin:14px 0 6px">Matched Keywords</h3>
-              <div>${present.map(k=>`<span class='pill good'>${k}</span>`).join('') || '<span class="pill bad">No matches yet</span>'}</div>
-
-              <h3 class="card-title" style="margin:14px 0 6px">Missing Keywords</h3>
-              <div>${missing.map(k=>`<span class='pill bad'>${k}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
-
-              <div class="metrics">
-                <div class="metric"><b>${present.length}</b> matched</div>
-                <div class="metric"><b>${missing.length}</b> missing</div>
-                <div class="metric"><b>${covPct}%</b> coverage</div>
-              </div>
-            </div>
-            ${lockAdvanced ? premiumOverlayHTML(
-              'See exactly which job keywords you match, which you are missing, and your overall coverage. Full keyword breakdown is available with a paid scan.'
-            ) : ''}
-          </div>
-        </section>
-
-        <!-- READABILITY & TOP FIXES -->
-        <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="readability">
-          <div class="results-section-header">
-            <h3 class="card-title" style="margin:14px 0 6px">Readability & Tone</h3>
-            ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
-          </div>
-          <div class="results-section-body">
-            <div class="results-section-inner">
-              <p class="helper" style="margin:0 0 8px">
-                ${gradeReadability(result.breakdown.readability)}. Bullets: <b>${bullets}</b>,
-                metrics used: <b>${numbersUsed}</b>, passive uses: <b>${passiveHits}</b>.
-              </p>
-
-              <h3 class="card-title" style="margin:14px 0 6px">Top Fixes</h3>
-              <ul class="list-tight">${fixes}</ul>
-            </div>
-            ${lockAdvanced ? premiumOverlayHTML(
-              'Get personalized rewrite suggestions: where to add metrics, how to fix passive voice, and the top changes that move your score the most. Available with a paid scan.'
-            ) : ''}
-          </div>
-        </section>
-
-        <!-- JOB AD REALITY CHECK -->
-        ${ghostHTML ? `
-          <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="ghost">
-            <div class="results-section-header">
-              <h3 class="card-title" style="margin:14px 0 6px">Job Ad Reality Check</h3>
-              ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
-            </div>
-            <div class="results-section-body">
-              <div class="results-section-inner">
-                ${ghostHTML}
-              </div>
-              ${lockAdvanced ? premiumOverlayHTML(
-                'Check how “real” the job ad looks, with hiring signals and red flags called out. This Job Ad Reality Check is part of paid scans.'
-              ) : ''}
-            </div>
-          </section>
-        ` : ''}
-
-        <!-- OVERALL SUMMARY -->
-        <section class="results-section${lockAdvanced ? ' locked' : ''}" data-section="summary">
-          <div class="results-section-header">
-            <h3 class="card-title" style="margin:16px 0 8px">Overall Summary</h3>
-            ${lockAdvanced ? '<span class="lock-tag">PAID FEATURE</span>' : ''}
-          </div>
-          <div class="results-section-body">
-            <div class="results-section-inner">
-              ${summaryHTML}
-            </div>
-            ${lockAdvanced ? premiumOverlayHTML(
-              'Read a tailored summary of your strengths, gaps, and what to do next. The full write-up unlocks with a paid scan.'
-            ) : ''}
-          </div>
-        </section>
       </div>`;
   }
 
-  const ratingEl = out?.querySelector('.results-head .rating');
-  if (ratingEl){
-    ratingEl.classList.remove('good','warn','bad');
-    ratingEl.classList.add(scoreBand(result.total));
+  // On phones the report sits below the form, so bring it into view
+  if (out && window.matchMedia('(max-width: 979px)').matches) {
+    setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
   }
+  try { gtag('event', 'analyze', { mode: gate.mode, score: result.total }); } catch {}
 
   // re-bind any "Unlock with a paid scan" buttons we just injected
   if (typeof window.__rezzyBindBuyButtons === 'function') {
@@ -986,7 +960,7 @@ const scanText = document.getElementById('scanText');
 
 (()=>{
   const btnPick = document.getElementById('btnPick');
-  if (btnPick) btnPick.addEventListener('click', ()=> fileInput && fileInput.click());
+  if (btnPick) btnPick.addEventListener('click', e=>{ e.stopPropagation(); fileInput && fileInput.click(); });
 
   if (fileInput) {
     fileInput.addEventListener('change', e => { if (e.target.files?.[0]) handleResumeFile(e.target.files[0]); });
@@ -995,6 +969,8 @@ const scanText = document.getElementById('scanText');
     ['dragenter','dragover'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add('drag'); }));
     ['dragleave','drop'].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove('drag'); }));
     dropzone.addEventListener('drop', e=>{ const f = e.dataTransfer?.files?.[0]; if (f) handleResumeFile(f); });
+    dropzone.addEventListener('click', e=>{ if (e.target.closest('#btnPick')) return; fileInput && fileInput.click(); });
+    dropzone.addEventListener('keydown', e=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput && fileInput.click(); } });
   }
 })();
 
@@ -1036,7 +1012,9 @@ async function handleResumeFile(file){
     }
     if (resumeEl) resumeEl.value = text;
     setScanStatus('Text extracted ✓', false);
-    analyze();
+    if (fileLabel) fileLabel.textContent = `${file.name} ✓`;
+    toast('Resume loaded. Add the job description, then click Analyze.');
+    document.getElementById('jd')?.focus({ preventScroll: true });
   } catch(err){
     console.error(err);
     setScanStatus('Error reading file. Try another format.', false);
@@ -1069,6 +1047,10 @@ async function extractTextFromDOCX(file){
 function openPaywall(n=1){
   hideMobileHintIfOpen();
   window.__desiredCredits = n;
+  const lead = document.getElementById('paywallLeadText');
+  if (lead) lead.innerHTML = readMeter().freeLeft > 0 || isUnlimited()
+    ? 'Get the full report: every missing keyword, all fixes, the structure checklist, the job ad reality check and a written summary.'
+    : 'You’ve used today’s free scan. Pick a pack to keep going. Bigger packs cost less per scan.';
   const modal = document.getElementById('paywall');
   if (!modal) return;
   modal.classList.add('open');
@@ -1089,12 +1071,12 @@ function closePaywall(){
 /* ==================== Checkout flow ==================== */
 async function startCheckout(n = 1){
   if (!stripe) {
-    alert('Payment library not loaded yet. Please retry.');
+    toast('Secure checkout is still loading. Please try again in a moment.');
     return;
   }
   const priceId = PRICE_IDS[n];
   if (!priceId){
-    alert('Unknown product');
+    toast('Something went wrong. Please refresh and try again.');
     return;
   }
 
@@ -1131,10 +1113,7 @@ async function startCheckout(n = 1){
       const errText = data && data.error ? data.error : 'Error creating payment intent.';
       console.error('Create payment intent failed', res.status, errText);
       if (msg) {
-        msg.textContent =
-          'Checkout error: ' +
-          errText +
-          ' (If you are testing locally, this may be a CORS issue on the server.)';
+        msg.textContent = 'We couldn’t start checkout. Please try again, or email support@rezzyrate.com.';
       }
       if (payBtn) payBtn.disabled = false;
       return;
@@ -1142,8 +1121,7 @@ async function startCheckout(n = 1){
   } catch (err) {
     console.error('Network/CORS error creating payment intent', err);
     if (msg) {
-      msg.textContent =
-        'Could not reach the payment server. If you are on 127.0.0.1 / localhost, update the API CORS to allow this origin.';
+      msg.textContent = 'We couldn’t reach the payment server. Check your connection and try again.';
     }
     if (payBtn) payBtn.disabled = false;
     return;
@@ -1159,27 +1137,14 @@ async function startCheckout(n = 1){
   elements = stripe.elements({
     clientSecret,
     appearance: {
-      theme: 'night',
+      theme: 'stripe',
       variables: {
-        colorPrimary: '#bbf5a2ff',
-        colorPrimaryText: '#0b1020',
-        colorBackground: '#0d1422',
-        colorText: '#f7f9ff',
-        colorTextSecondary: '#aeb7c6',
-        colorDanger: '#ef4444',
+        colorPrimary: '#5B47E0',
+        colorText: '#0F172A',
+        colorTextSecondary: '#5B6475',
+        colorDanger: '#DC2626',
         fontFamily: "'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-        borderRadius: '16px'
-      },
-      rules: {
-        '.Input': {
-          backgroundColor: '#0b1220',
-          border: '1px solid rgba(168,179,197,.18)',
-          color: '#f7f9ff'
-        },
-        '.Input:focus': {
-          borderColor: '#21c7b7',
-          boxShadow: '0 0 0 3px rgba(33,199,183,.22)'
-        }
+        borderRadius: '10px'
       }
     }
   });
@@ -1201,7 +1166,7 @@ async function startCheckout(n = 1){
 
     const { error } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: window.location.origin + '/success.html' },
+      confirmParams: { return_url: window.location.origin + window.location.pathname + '?payment=done' },
       redirect: 'if_required'
     });
 
@@ -1212,7 +1177,7 @@ async function startCheckout(n = 1){
       return;
     }
 
-    msg.textContent = 'Payment succeeded!';
+    msg.textContent = 'Payment successful. Adding your scans…';
     const granted = await claimCredits();
     if (!granted) setTimeout(() => claimCredits(), 1500);
 
@@ -1248,6 +1213,44 @@ async function claimCredits({ retries = 6, delay = 400 } = {}) {
 }
 
 function addCredits(n){ writeMeter({creditAdd:n}); }
+
+/* ==================== Small UI helpers ==================== */
+let __toastTimer;
+function toast(message){
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(__toastTimer);
+  __toastTimer = setTimeout(() => el.classList.remove('show'), 4200);
+}
+
+const SAMPLE_RESUME = `JOHN DOE
+Detroit, MI • john.doe@email.com • (313) 555-1212
+
+SUMMARY
+Data-driven analyst with 5+ years improving KPI visibility and reducing cycle time across finance and operations.
+
+EXPERIENCE
+Acme Corp — Senior Analyst (2021–Present)
+• Led dashboard rebuild, improving reporting speed by 35%.
+• Automated monthly close with Python, saving 12 hours per cycle.
+• Partnered with sales to forecast pipeline; reduced variance by 18%.
+
+EDUCATION
+B.S. in Information Systems, Michigan State University
+
+SKILLS
+SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL`;
+const SAMPLE_JD = `We seek a Business Data Analyst to build SQL pipelines, automate reporting in Python, and create Tableau dashboards. Experience with forecasting, ETL, and stakeholder communication required.`;
+function fillSample(){
+  const r = document.getElementById('resume'), j = document.getElementById('jd');
+  if (r) r.value = SAMPLE_RESUME;
+  if (j) j.value = SAMPLE_JD;
+  toast('Sample loaded. Click Analyze to see a report.');
+}
+
+const RESULTS_EMPTY_HTML = document.getElementById('results')?.innerHTML || '';
 function clearAll(){
   const resume = document.getElementById('resume');
   const jd = document.getElementById('jd');
@@ -1257,16 +1260,9 @@ function clearAll(){
   if (resume) resume.value='';
   if (jd) jd.value='';
   if (keywords) keywords.value='';
-  if (out) {
-    out.innerHTML = `
-    <div style="text-align:center;color:var(--muted)">
-      <div style="width:44px;height:44px;border-radius:9999px;margin:8px auto;background:linear-gradient(135deg,#ffd34d,#f26e8c)"></div>
-      <h3 style="margin:6px 0 4px;color:var(--text)">Ready to score your resume</h3>
-      <div class="helper">Paste your resume and click <b>Analyze</b>.</div>
-    </div>`;
-  }
+  if (out && RESULTS_EMPTY_HTML) out.innerHTML = RESULTS_EMPTY_HTML;
   if (fileInput) fileInput.value = '';
-  if (fileLabel) fileLabel.textContent = 'Choose PDF, DOCX, or TXT';
+  if (fileLabel) fileLabel.textContent = 'Drop your resume here';
   ['jobTitle','jobWhere'].forEach(id => { const el = document.getElementById(id); if (el){ el.value = ''; delete el.dataset.touched; } });
   const jr = document.getElementById('jobRemote'); if (jr){ jr.checked = false; delete jr.dataset.touched; }
   renderSkillChips([]);
@@ -1526,7 +1522,13 @@ function renderSkillChips(skills = []) {
 updateMeterUI();
 updatePricingUI();
 setScanStatus('Ready', false);
-document.addEventListener('DOMContentLoaded', () => { claimCredits(); });
+document.addEventListener('DOMContentLoaded', async () => {
+  const returning = new URLSearchParams(location.search).get('payment') === 'done';
+  if (returning) { try { history.replaceState(null, '', location.pathname); } catch {} }
+  const n = await claimCredits(returning ? {} : { retries: 1 });
+  if (n > 0) toast(`Payment received. ${n} scan${n === 1 ? '' : 's'} added.`);
+  else if (returning) toast('Payment received. Your scans will appear in a moment.');
+});
 
 /* ==================== Mobile "Use desktop" hint (8s delay) ==================== */
 (function mobileHint(){
