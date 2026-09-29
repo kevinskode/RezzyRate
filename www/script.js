@@ -972,15 +972,8 @@ function analyze(){
     window.__rezzyBindBuyButtons();
   }
 
-  // Similar jobs (best-effort; safe if JOBS_API not set)
-  (async () => {
-    const jdText = jd || "";
-    const kw = keywords || [];
-    const q = buildJobsQuery({ jd: jdText, keywords: kw });
-    const whereGuess = guessLocationFromText(jdText);
-    const jobs = await fetchSimilarJobs({ q, where: whereGuess, limit: 12 });
-    renderSimilarJobs(jobs);
-  })();
+  // Similar live jobs based on the resume (free, best-effort)
+  findSimilarJobs({ fromAnalyze: true });
 }
 
 
@@ -1274,90 +1267,260 @@ function clearAll(){
   }
   if (fileInput) fileInput.value = '';
   if (fileLabel) fileLabel.textContent = 'Choose PDF, DOCX, or TXT';
+  ['jobTitle','jobWhere'].forEach(id => { const el = document.getElementById(id); if (el){ el.value = ''; delete el.dataset.touched; } });
+  const jr = document.getElementById('jobRemote'); if (jr){ jr.checked = false; delete jr.dataset.touched; }
+  renderSkillChips([]);
+  const jm = document.getElementById('jobsMeta'); if (jm) jm.textContent = '';
+  setJobsState(JOBS_EMPTY_HTML);
   setScanStatus('Ready', false);
 }
 
 /* =================== SIMILAR LIVE JOBS FEATURE =================== */
-const JOBS_API = "https://YOUR_API_GATEWAY_DOMAIN/jobs"; // <- TODO: set this
+// Free for everyone. Reads the resume, figures out the role / skills / location,
+// then asks our /jobs Lambda (an Adzuna proxy) for live postings and ranks them.
+const JOBS_API = `${API_BASE_URL}/jobs`;
+
+const ROLE_NOUNS = "Analyst|Engineer|Developer|Designer|Scientist|Manager|Specialist|Coordinator|Consultant|Administrator|Architect|Director|Accountant|Technician|Nurse|Representative|Associate|Assistant|Officer|Supervisor|Teacher|Recruiter|Strategist|Writer|Editor|Producer|Planner|Buyer|Auditor|Therapist|Pharmacist|Programmer|Controller|Advisor|Agent|Operator|Mechanic|Electrician|Paralegal|Attorney|Marketer|Tester|Lead";
+const SENIORITY = "Senior|Sr\\.?|Junior|Jr\\.?|Lead|Principal|Staff|Chief|Head of";
+const TITLE_RX = new RegExp(`\\b(?:(?:${SENIORITY})\\s+)?(?:[A-Z][A-Za-z&/+.-]*\\s+){0,3}(?:${ROLE_NOUNS})s?\\b`, "g");
+const SENIORITY_RX = new RegExp(`^(?:${SENIORITY})\\s+`, "i");
+
+// Common skills we can spot anywhere in a resume (in addition to a SKILLS section)
+const KNOWN_SKILLS = ["SQL","Python","R","Java","JavaScript","TypeScript","C#","C++","Go","Ruby","PHP","Swift","Kotlin",
+  "React","Angular","Vue","Node.js","Django","Flask",".NET","AWS","Azure","GCP","Docker","Kubernetes","Terraform","Linux",
+  "Git","Tableau","Power BI","Looker","Excel","VBA","SAS","SPSS","Snowflake","Databricks","Spark","Hadoop","ETL","Airflow",
+  "Salesforce","HubSpot","SAP","Oracle","NetSuite","QuickBooks","Figma","Sketch","Adobe XD","Photoshop","Illustrator",
+  "InDesign","HTML","CSS","SEO","Google Analytics","Jira","Agile","Scrum","Machine Learning","Forecasting","Budgeting",
+  "Project Management","Six Sigma","Lean","AutoCAD","SolidWorks","Microsoft 365","Active Directory","ServiceNow",
+  "Customer Service","Sales","Recruiting","Payroll","GAAP","CPA","PMP","Copywriting","Social Media"];
+
+function _escRx(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+// Short skills like "R" or "Go" must match case exactly, or "go" / "r" in normal text would count
+function _skillRx(k, exactCase = false){ return new RegExp(`(^|[^A-Za-z0-9+#])${_escRx(k)}(?=$|[^A-Za-z0-9+#])`, (exactCase || k.length <= 2) ? "" : "i"); }
 
 function guessJobTitleFromText(t) {
-  const clean = (t||"").split(/\n+/).slice(0, 20).join(" ");
-  const titleRx = /\b(?:(?:Data|Business|Product|Software|Marketing|Operations|Financial)\s+)?(?:Analyst|Engineer|Manager|Scientist|Developer|Specialist|Associate)\b/gi;
-  const m = clean.match(titleRx);
-  return m ? m[0].replace(/\s+/g, " ").trim() : "";
+  const text = String(t || "");
+  // Prefer the first title inside EXPERIENCE (most recent role); fall back to the whole doc
+  const expIdx = text.search(/^\s*(professional\s+)?experience\b/im);
+  const zones = expIdx >= 0 ? [text.slice(expIdx), text] : [text];
+  for (const z of zones) {
+    const m = z.match(TITLE_RX);
+    if (m && m.length) return m[0].replace(/\s+/g, " ").trim();
+  }
+  return "";
 }
+
 function guessLocationFromText(t) {
   if (!t) return "";
-  const remote = t.match(/\b(remote|hybrid|on[-\s]?site)\b/i);
-  const citySt = t.match(/\b([A-Z][a-zA-Z .'-]+,\s*[A-Z]{2})\b/);
-  return (citySt && citySt[1]) || (remote && remote[1]) || "";
+  const head = String(t).split(/\n/).slice(0, 8).join("\n");
+  const citySt = head.match(/\b([A-Z][a-zA-Z.' -]{1,30},\s*[A-Z]{2})\b/);
+  if (citySt) return citySt[1].trim();
+  return /\bremote\b/i.test(head) ? "Remote" : "";
 }
-function buildJobsQuery({ jd, keywords }) {
-  const title = guessJobTitleFromText(jd) || "Data Analyst";
-  const key   = (keywords || []).slice(0, 4).join(" ");
-  return [title, key].filter(Boolean).join(" ").trim();
+
+function extractResumeSkills(t) {
+  const text = String(t || "");
+  const out = [];
+  // 1) A SKILLS / TOOLS / COMPETENCIES section
+  const lines = text.split(/\n/);
+  const i = lines.findIndex(l => /^\s*(technical\s+)?(skills|tools|technologies|core competencies|competencies)\b\s*:?/i.test(l));
+  if (i >= 0) {
+    const chunk = [lines[i].replace(/^[^:]*:?/, "")];
+    for (let k = i + 1; k < lines.length && k < i + 8; k++) {
+      const l = lines[k];
+      if (/^\s*[A-Z][A-Z &/]{3,}\s*$/.test(l)) break;   // next ALL-CAPS header
+      chunk.push(l);
+    }
+    chunk.join(",").split(/[,•|;·\n]+/).map(s => s.replace(/^[-*\s]+/, "").trim())
+      .filter(s => s && s.length <= 30 && s.split(/\s+/).length <= 3)
+      .forEach(s => out.push(s));
+  }
+  // 2) Known skills mentioned anywhere
+  // (exact case, so everyday words like "partnered with sales" don't count as the skill "Sales")
+  for (const k of KNOWN_SKILLS) if (_skillRx(k, true).test(text)) out.push(k);
+  const seen = new Set();
+  return out.filter(s => { const key = s.toLowerCase(); if (seen.has(key)) return false; seen.add(key); return true; });
 }
+
+function profileFromResume(resume, jd) {
+  let title = guessJobTitleFromText(resume);
+  const jdTitle = guessJobTitleFromText(jd);
+  // "Senior Analyst" is vague — if the job post names the same role more specifically, use that
+  const bare = title.replace(SENIORITY_RX, "");
+  if (jdTitle && (!title || (bare.split(/\s+/).length < 2 && jdTitle.toLowerCase().endsWith(bare.toLowerCase())))) {
+    title = jdTitle;
+  }
+  return {
+    title: title.replace(/s$/, "") || "",
+    skills: extractResumeSkills(resume).slice(0, 12),
+    location: guessLocationFromText(resume),
+  };
+}
+
 function escapeHTML(s){ return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+function safeUrl(u){ try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : "#"; } catch { return "#"; } }
 
-async function fetchSimilarJobs({ q, where, limit = 12 }) {
-  if (!JOBS_API || JOBS_API.includes("YOUR_API_GATEWAY_DOMAIN")) {
-    console.warn("Set JOBS_API to your deployed jobs proxy URL.");
-    return [];
-  }
+async function fetchSimilarJobs({ q, skills = [], where = "", remote = false, limit = 12 }) {
   const url = new URL(JOBS_API);
-  url.searchParams.set("q", q || "");
-  if (where) url.searchParams.set("where", where);
+  if (q) url.searchParams.set("q", q);
+  if (skills.length) url.searchParams.set("skills", skills.slice(0, 8).join(","));
+  if (where && !remote) url.searchParams.set("where", where);
+  if (remote) url.searchParams.set("remote", "1");
   url.searchParams.set("limit", String(limit));
-
-  try {
-    const r = await fetch(url.toString(), { cache: "no-store" });
-    if (!r.ok) throw new Error(`Jobs API ${r.status}`);
-    const data = await r.json();
-    return Array.isArray(data.jobs) ? data.jobs : [];
-  } catch (e) {
-    console.warn("Jobs fetch failed:", e);
-    return [];
-  }
+  const r = await fetch(url.toString(), { cache: "no-store" });
+  if (!r.ok) throw new Error(`Jobs API ${r.status}`);
+  const data = await r.json();
+  return Array.isArray(data.jobs) ? data.jobs : [];
 }
 
-function renderSimilarJobs(jobs = []) {
-  const sec = document.getElementById("similar-jobs");
+// 0–100 fit: skill overlap (60%) + title similarity (40%)
+function scoreJobMatch(job, profile) {
+  const hay = `${job.title} ${job.desc}`;
+  const skills = profile.skills.slice(0, 10);
+  const hits = skills.filter(s => _skillRx(s).test(hay));
+  const skillPart = skills.length ? hits.length / Math.min(skills.length, 5) : 0.5;
+  const tWords = (profile.title || "").toLowerCase().replace(SENIORITY_RX, "").split(/\s+/).filter(w => w.length > 2);
+  const jt = (job.title || "").toLowerCase();
+  const titlePart = tWords.length ? tWords.filter(w => jt.includes(w)).length / tWords.length : 0.5;
+  const score = Math.round(100 * (0.6 * Math.min(1, skillPart) + 0.4 * titlePart));
+  return { score: Math.max(5, Math.min(99, score)), hits };
+}
+
+function _money(n){ return n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${Math.round(n)}`; }
+function _salary(j){
+  const lo = Number(j.salary_min) || 0, hi = Number(j.salary_max) || 0;
+  if (!lo && !hi) return "";
+  const txt = lo && hi && Math.abs(hi - lo) > 500 ? `${_money(lo)}–${_money(hi)}` : _money(hi || lo);
+  return j.salary_predicted ? `~${txt} est.` : txt;
+}
+function _ago(iso){
+  const d = Date.parse(iso); if (!d) return "";
+  const days = Math.floor((Date.now() - d) / 86400000);
+  if (days <= 0) return "Today"; if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`; if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return new Date(d).toLocaleDateString();
+}
+
+const JOBS_EMPTY_HTML = `<div class="jobs-empty"><b>Find roles that fit your resume.</b><span>We’ll read your title, skills and location, then pull live postings.</span></div>`;
+function setJobsState(html){
   const grid = document.getElementById("jobsGrid");
-  if (!sec || !grid) return;
+  if (grid) grid.innerHTML = html;
+}
+
+function renderSimilarJobs(jobs = [], profile = { skills: [] }) {
+  const grid = document.getElementById("jobsGrid");
+  const meta = document.getElementById("jobsMeta");
+  if (!grid) return;
 
   if (!jobs.length) {
-    grid.innerHTML = `<div class="helper">No matching live jobs found right now. Try refining the job description or keywords.</div>`;
-    sec.hidden = false;
+    if (meta) meta.textContent = "";
+    setJobsState(`<div class="jobs-empty"><b>No live matches right now.</b><span>Try a broader title (e.g. “Analyst”), a nearby city, or switch on Remote.</span></div>`);
     return;
   }
 
-  const html = jobs.map(j => {
-    const d = (j.desc || "").replace(/\s+/g," ").trim();
-    const snippet = d.length > 220 ? d.slice(0, 220) + "…" : d;
-    const when = j.created ? new Date(j.created).toLocaleDateString() : "";
+  const ranked = jobs.map(j => ({ ...j, _m: scoreJobMatch(j, profile) }))
+    .sort((a, b) => b._m.score - a._m.score || (Date.parse(b.created) || 0) - (Date.parse(a.created) || 0))
+    .slice(0, 12);
+
+  if (meta) meta.textContent = `${ranked.length} live posting${ranked.length === 1 ? "" : "s"}, ranked by fit`;
+
+  grid.innerHTML = ranked.map(j => {
+    const d = (j.desc || "").replace(/\s+/g, " ").trim();
+    const snippet = d.length > 200 ? d.slice(0, 200).replace(/\s+\S*$/, "") + "…" : d;
+    const m = j._m;
+    const band = m.score >= 70 ? "good" : m.score >= 45 ? "warn" : "low";
+    const sal = _salary(j);
+    const when = _ago(j.created);
     return `
       <article class="job-card">
-        <div class="job-head">
-          <h4 class="job-title">${escapeHTML(j.title || "Untitled role")}</h4>
-          <div class="job-meta">
-            ${j.company ? `<span class="badge-mini">${escapeHTML(j.company)}</span>` : ""}
-            ${j.location ? `<span class="badge-mini">${escapeHTML(j.location)}</span>` : ""}
-            ${when ? `<span class="badge-mini">Posted ${when}</span>` : ""}
+        <div class="job-top">
+          <div class="job-head">
+            <h4 class="job-title">${escapeHTML(j.title || "Untitled role")}</h4>
+            <div class="job-company">${escapeHTML(j.company || "Company not listed")}</div>
+          </div>
+          <div class="job-match ${band}" title="How closely this posting matches your resume">
+            <b>${m.score}%</b><span>match</span>
           </div>
         </div>
-        <p class="job-line">${escapeHTML(snippet)}</p>
-        <div class="job-footer"> 
-          <a class="job-btn brand" href="${j.url}" target="_blank" rel="noopener">View posting</a>
-          <div class="job-aux">
-            <span class="chip mini ok">Live</span>
-          </div>
+        <div class="job-meta">
+          ${j.location ? `<span class="badge-mini">📍 ${escapeHTML(j.location)}</span>` : ""}
+          ${sal ? `<span class="badge-mini">${escapeHTML(sal)}</span>` : ""}
+          ${j.contract_time ? `<span class="badge-mini">${escapeHTML(j.contract_time.replace("_", "-"))}</span>` : ""}
+          ${when ? `<span class="badge-mini">${escapeHTML(when)}</span>` : ""}
+        </div>
+        ${snippet ? `<p class="job-line">${escapeHTML(snippet)}</p>` : ""}
+        ${m.hits.length ? `<div class="job-skills">${m.hits.slice(0, 5).map(s => `<span class="chip mini ok">${escapeHTML(s)}</span>`).join("")}</div>` : ""}
+        <div class="job-footer">
+          <a class="job-btn brand" href="${escapeHTML(safeUrl(j.url))}" target="_blank" rel="noopener nofollow">View posting ↗</a>
         </div>
       </article>`;
   }).join("");
-
-  grid.innerHTML = html;
-  sec.hidden = false;
 }
+
+let __jobsReq = 0;
+async function findSimilarJobs({ fromAnalyze = false } = {}) {
+  const resume = document.getElementById("resume")?.value || "";
+  const jd = document.getElementById("jd")?.value || "";
+  const titleEl = document.getElementById("jobTitle");
+  const whereEl = document.getElementById("jobWhere");
+  const remoteEl = document.getElementById("jobRemote");
+  const btn = document.getElementById("btnFindJobs");
+
+  const auto = profileFromResume(resume, jd);
+  // Fill the inputs from the resume unless the user has typed their own
+  if (titleEl && (!titleEl.dataset.touched || !titleEl.value)) titleEl.value = auto.title;
+  if (whereEl && (!whereEl.dataset.touched || !whereEl.value)) whereEl.value = auto.location === "Remote" ? "" : auto.location;
+  if (remoteEl && !remoteEl.dataset.touched && auto.location === "Remote") remoteEl.checked = true;
+
+  const profile = {
+    title: (titleEl?.value || auto.title).trim(),
+    skills: auto.skills,
+    location: (whereEl?.value || "").trim(),
+    remote: !!remoteEl?.checked,
+  };
+  renderSkillChips(profile.skills);
+
+  if (!profile.title && !profile.skills.length) {
+    if (!fromAnalyze) setJobsState(`<div class="jobs-empty"><b>Add your resume first.</b><span>Paste or upload it above and we’ll find roles that fit.</span></div>`);
+    return;
+  }
+
+  const req = ++__jobsReq;
+  if (btn) { btn.disabled = true; btn.classList.add("loading"); }
+  setJobsState(Array.from({ length: 6 }, () => `<div class="job-card skeleton"><i></i><i></i><i></i></div>`).join(""));
+  document.getElementById("jobsMeta") && (document.getElementById("jobsMeta").textContent = "Searching live postings…");
+
+  try {
+    const jobs = await fetchSimilarJobs({ q: profile.title, skills: profile.skills, where: profile.location, remote: profile.remote, limit: 12 });
+    if (req !== __jobsReq) return;       // a newer search started
+    renderSimilarJobs(jobs, profile);
+    try { gtag && gtag("event", "similar_jobs", { results: jobs.length }); } catch {}
+  } catch (e) {
+    if (req !== __jobsReq) return;
+    console.warn("Jobs fetch failed:", e);
+    document.getElementById("jobsMeta") && (document.getElementById("jobsMeta").textContent = "");
+    setJobsState(`<div class="jobs-empty"><b>Couldn’t load jobs right now.</b><span>Please try again in a minute.</span></div>`);
+  } finally {
+    if (req === __jobsReq && btn) { btn.disabled = false; btn.classList.remove("loading"); }
+  }
+}
+
+function renderSkillChips(skills = []) {
+  const el = document.getElementById("jobSkills");
+  if (!el) return;
+  el.innerHTML = skills.length
+    ? `<span class="helper">Matching on:</span> ` + skills.slice(0, 8).map(s => `<span class="chip mini">${escapeHTML(s)}</span>`).join("")
+    : "";
+}
+
+(() => {
+  ["jobTitle", "jobWhere", "jobRemote"].forEach(id => {
+    const el = document.getElementById(id);
+    el && el.addEventListener("input", () => { el.dataset.touched = "1"; });
+    el && el.addEventListener("change", () => { el.dataset.touched = "1"; });
+  });
+  document.getElementById("jobsForm")?.addEventListener("submit", e => { e.preventDefault(); findSimilarJobs(); });
+})();
 /* ================= END SIMILAR LIVE JOBS FEATURE ================= */
 
 updateMeterUI();

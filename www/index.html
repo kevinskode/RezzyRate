@@ -1,4 +1,3 @@
-<!--TEST 1-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,7 +39,7 @@
   <div class="container">
 <header class="topbar">
   <div class="brand pinned-logo">
-    <img class="logo" src="logo.png" alt="Rezzy Rate logo" />
+    <a href="index.html" aria-label="Rezzy Rate home"><img class="logo" src="logo.png" alt="Rezzy Rate logo" /></a>
   </div>
   <div class="badges">
     <span class="badge" id="freeBadge">Free credits left today: 1</span>
@@ -52,9 +51,19 @@
 </header>
 
 
+    <section class="hero">
+      <h1 class="hero-title">Is your resume <span class="grad-text">industry ready?</span></h1>
+      <p class="hero-sub">Get an instant ATS-style score, see the keywords you’re missing, and discover live jobs that match your experience.</p>
+      <ul class="hero-points">
+        <li><span class="dot d1"></span>ATS keyword check</li>
+        <li><span class="dot d2"></span>Readability &amp; tone</li>
+        <li><span class="dot d3"></span>Similar live jobs</li>
+      </ul>
+    </section>
+
     <main class="layout">
       <section class="card">
-        <h2 class="card-title">Check to see if your resume is industry ready</h2>
+        <h2 class="card-title">Score your resume</h2>
         <p class="card-sub">Paste your resume and the job description. Or upload a file — we’ll extract the text and score it.</p>
 
         <div class="upload-row">
@@ -108,10 +117,11 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         <input id="keywords" placeholder="SQL, Python, Tableau, ETL, forecasting" value="SQL, Python, Tableau, ETL, forecasting"/>
 
         <div class="actions" style="margin-top:6px">
-     <button class="btn-primary btn-cta" onclick="analyze()">Analyze</button>
-
+          <button class="btn-primary btn-cta" onclick="analyze()">Analyze resume</button>
           <button id="btnClear" class="btn-secondary" onclick="clearAll()">Clear</button>
-          <span class="spacer"></span>
+        </div>
+        <div class="buy-row">
+          <span class="buy-label">Need more scans?</span>
           <div class="pricing-buttons">
             <button id="btnBuy1Top"  class="btn-secondary btn-compact buy-btn" onclick="openPaywall(1)"></button>
             <button id="btnBuy10Top" class="btn-secondary btn-compact buy-btn" onclick="openPaywall(10)"></button>
@@ -128,20 +138,50 @@ SQL, Python, Tableau, Excel, Power BI, Forecasting, ETL</textarea>
         </div>
       </section>
 
-      <section id="similar-jobs" class="card jobs-wrap" hidden>
-        <h3 class="card-title" style="margin:10px 0 6px">Similar Live Jobs</h3>
-        <div id="jobsGrid" class="jobs"></div>
+      <section id="similar-jobs" class="card jobs-wrap">
+        <div class="jobs-header">
+          <div>
+            <h3 class="card-title">Jobs that match your resume</h3>
+            <p class="card-sub" style="margin:0">Live postings ranked by how well they fit your title and skills. Free with every scan.</p>
+          </div>
+          <span class="badge-free">Free</span>
+        </div>
+
+        <form id="jobsForm" class="jobs-form" autocomplete="off">
+          <div class="jf-field">
+            <label for="jobTitle">Role</label>
+            <input id="jobTitle" placeholder="Auto-filled from your resume" />
+          </div>
+          <div class="jf-field">
+            <label for="jobWhere">Location</label>
+            <input id="jobWhere" placeholder="City, ST" />
+          </div>
+          <label class="jf-toggle" for="jobRemote">
+            <input id="jobRemote" type="checkbox" />
+            <span class="jf-switch" aria-hidden="true"></span>
+            Remote only
+          </label>
+          <button id="btnFindJobs" class="btn-primary jf-btn" type="submit">Find jobs</button>
+        </form>
+        <div id="jobSkills" class="job-skills-line"></div>
+        <div id="jobsMeta" class="helper jobs-meta" aria-live="polite"></div>
+
+        <div id="jobsGrid" class="jobs">
+          <div class="jobs-empty"><b>Find roles that fit your resume.</b><span>We’ll read your title, skills and location, then pull live postings.</span></div>
+        </div>
+        <p class="jobs-attrib"><a href="https://www.adzuna.com" target="_blank" rel="noopener">Jobs by Adzuna</a></p>
       </section>
       
     </main>
 
-    <footer style="margin-top:40px;padding:20px 0;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--muted)">
-      <p style="margin:6px 0">
-    <a href="index.html" style="text-decoration:none;margin:0 10px">Home</a> •
-        <a href="about.html" style="text-decoration:none;margin:0 10px">About</a> •
-        <a href="privacy.html" style="text-decoration:none;margin:0 10px">Privacy Policy</a>
-      </p>
-      <p style="margin:6px 0">&copy; 2025 Rezzy Rate. All rights reserved.</p>
+    <footer class="site-footer rz-footer">
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </nav>
+      <p>&copy; <span id="yr">2026</span> Rezzy Rate. All rights reserved.</p>
+      <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
     </footer>
   </div>
 

@@ -12,6 +12,14 @@ Parameters:
   StripeWebhookSecretParam:
     Type: String
     Description: "SSM SecureString name that stores your Stripe webhook signing secret (whsec_...)"
+  AdzunaAppIdParam:
+    Type: String
+    Default: /rezzy/adzuna/app_id
+    Description: "SSM parameter name holding your Adzuna app_id"
+  AdzunaAppKeyParam:
+    Type: String
+    Default: /rezzy/adzuna/app_key
+    Description: "SSM SecureString parameter name holding your Adzuna app_key"
 
 Globals:
   Function:
@@ -126,6 +134,35 @@ Resources:
             Method: get
       ProvisionedConcurrencyConfig:
         ProvisionedConcurrentExecutions: 1
+
+  JobsFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.jobs
+      Timeout: 20
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            Effect: Allow
+            Action:
+              - ssm:GetParameter
+              - ssm:GetParameters
+            Resource:
+              - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${AdzunaAppIdParam}"
+              - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${AdzunaAppKeyParam}"
+      Environment:
+        Variables:
+          ADZUNA_APP_ID_PARAM: !Ref AdzunaAppIdParam
+          ADZUNA_APP_KEY_PARAM: !Ref AdzunaAppKeyParam
+          ADZUNA_COUNTRY: us
+      Events:
+        GetJobs:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PublicApi
+            Path: /jobs
+            Method: get
 
 Outputs:
   ApiBaseUrl:
