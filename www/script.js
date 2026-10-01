@@ -246,7 +246,56 @@ function updateMeterUI(){
     : freeLeft ? 'Uses your free scan for today'
     : credits ? `Uses 1 of your ${credits} credit${credits === 1 ? '' : 's'}`
     : 'Free scan used today. Buy scans to continue';
+  try { renderJobsAccess(); } catch {}
 }
+
+/* ==================== Jobs access (paid feature) ====================
+   Matching jobs are part of the paid report. Access is open when the visitor has
+   credits, is in test mode, or ran a paid scan in the last 24 hours (so spending
+   their last credit doesn't immediately lock the jobs for that report). */
+const JOBS_PASS_KEY = 'rz_jobs_pass_until';
+const JOBS_PASS_MS  = 24 * 60 * 60 * 1000;
+function grantJobsPass(){
+  try { localStorage.setItem(JOBS_PASS_KEY, String(Date.now() + JOBS_PASS_MS)); } catch {}
+}
+function hasJobsAccess(){
+  if (isUnlimited()) return true;
+  try { if (Date.now() < parseInt(localStorage.getItem(JOBS_PASS_KEY) || '0', 10)) return true; } catch {}
+  return readMeter().credits > 0;
+}
+function renderJobsAccess(){
+  const card = document.getElementById('similar-jobs');
+  const grid = document.getElementById('jobsGrid');
+  if (!card || !grid) return;
+  const open = hasJobsAccess();
+  card.classList.toggle('is-locked', !open);
+
+  const badge = document.getElementById('jobsBadge');
+  if (badge){
+    badge.className = open ? 'badge badge-free' : 'lock-tag';
+    badge.innerHTML = open ? 'Included' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Full report';
+  }
+  const btn = document.getElementById('btnFindJobs');
+  if (btn) btn.textContent = open ? 'Find jobs' : 'Unlock jobs';
+
+  if (!open){
+    if (grid.querySelector('.jobs-locked')) return;
+    const skills = document.getElementById('jobSkills'); if (skills) skills.innerHTML = '';
+    const meta = document.getElementById('jobsMeta'); if (meta) meta.textContent = '';
+    grid.innerHTML = `
+      <div class="jobs-locked">
+        <div class="jobs-locked-preview" aria-hidden="true">${'<div class="job-card skeleton"><i></i><i></i><i></i></div>'.repeat(3)}</div>
+        <div class="locked-cta">
+          <p><b>See live jobs that fit your resume.</b><br>Included with every paid scan. Search as much as you like for 24 hours after your scan.</p>
+          <button type="button" class="btn btn-primary btn-sm" data-buy="3">Unlock matching jobs</button>
+        </div>
+      </div>`;
+    if (typeof window.__rezzyBindBuyButtons === 'function') window.__rezzyBindBuyButtons();
+  } else if (grid.querySelector('.jobs-locked')) {
+    grid.innerHTML = '<div class="jobs-empty"><b>Find roles that fit your resume.</b><span>We’ll read your title, skills and location, then pull live postings.</span></div>';
+  }
+}
+
 function canConsumeScan(){
   if (isUnlimited()) return { ok:true, mode:'unlimited' };
   const {freeLeft, credits} = readMeter();
@@ -715,6 +764,7 @@ function analyze(){
 
   // mark whether we just used the free scan or a paid/ unlimited one
   consumeScan(gate.mode);
+  if (gate.mode !== 'free') grantJobsPass();   // paid scans include matching jobs
   const lockAdvanced = (gate.mode === 'free' && !isUnlimited());
   window.__rezzyLastScanWasFree = lockAdvanced;
 
@@ -856,7 +906,7 @@ function analyze(){
         <div class="locked-preview ${skeletonKind}" aria-hidden="true">${skeletonKind === 'pills' ? '<i></i>'.repeat(9) : '<i></i><i></i><i></i>'}</div>
         <div class="locked-cta">
           <p>${teaser}</p>
-          <button type="button" class="btn btn-primary btn-sm" data-buy="1">Unlock full report</button>
+          <button type="button" class="btn btn-primary btn-sm" data-buy="3">Unlock full report</button>
         </div>
       </div>
     </section>`;
@@ -946,8 +996,9 @@ function analyze(){
     window.__rezzyBindBuyButtons();
   }
 
-  // Similar live jobs based on the resume (free, best-effort)
-  findSimilarJobs({ fromAnalyze: true });
+  // Similar live jobs based on the resume (paid feature, best-effort)
+  renderJobsAccess();
+  if (hasJobsAccess()) findSimilarJobs({ fromAnalyze: true });
 }
 
 
@@ -1159,6 +1210,7 @@ function clearAll(){
   renderSkillChips([]);
   const jm = document.getElementById('jobsMeta'); if (jm) jm.textContent = '';
   setJobsState(JOBS_EMPTY_HTML);
+  renderJobsAccess();
   setScanStatus('Ready', false);
 }
 
@@ -1352,6 +1404,13 @@ async function findSimilarJobs({ fromAnalyze = false } = {}) {
   const whereEl = document.getElementById("jobWhere");
   const remoteEl = document.getElementById("jobRemote");
   const btn = document.getElementById("btnFindJobs");
+
+  // Matching jobs are part of the paid report
+  if (!hasJobsAccess()) {
+    renderJobsAccess();
+    if (!fromAnalyze) openPaywall(3);
+    return;
+  }
 
   const auto = profileFromResume(resume, jd);
   // Fill the inputs from the resume unless the user has typed their own
