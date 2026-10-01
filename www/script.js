@@ -747,7 +747,29 @@ function premiumOverlayHTML(message){
 
 
 /* ==================== Analyze ==================== */
+/* Don't score (or spend a scan on) an empty or near-empty resume */
+const MIN_RESUME_WORDS = 40;
+function showResumeError(msg){
+  const el = document.getElementById('resume');
+  const err = document.getElementById('resumeError');
+  if (el){ el.classList.toggle('is-invalid', !!msg); el.setAttribute('aria-invalid', msg ? 'true' : 'false'); }
+  if (err){ err.textContent = msg || ''; err.hidden = !msg; }
+}
+document.getElementById('resume')?.addEventListener('input', () => showResumeError(''));
+
 function analyze(){
+  const resumeText = (document.getElementById('resume')?.value || '').trim();
+  const words = resumeText ? resumeText.split(/\s+/).length : 0;
+  if (words < MIN_RESUME_WORDS){
+    showResumeError(words === 0
+      ? 'Add your resume first. Upload a file or paste the text above.'
+      : `That looks too short to score (${words} word${words === 1 ? '' : 's'}). Paste your full resume.`);
+    const el = document.getElementById('resume');
+    if (el){ el.scrollIntoView({ behavior:'smooth', block:'center' }); el.focus({ preventScroll:true }); }
+    return;   // no scan used
+  }
+  showResumeError('');
+
   const gate = canConsumeScan(); 
   if (!gate.ok){ openPaywall(); return; }
 
