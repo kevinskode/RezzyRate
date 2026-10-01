@@ -1181,13 +1181,13 @@ function addCredits(n){ writeMeter({creditAdd:n}); }
 
 /* ==================== Small UI helpers ==================== */
 let __toastTimer;
-function toast(message){
+function toast(message, ms = 4200){
   const el = document.getElementById('toast');
   if (!el) return;
   el.textContent = message;
   el.classList.add('show');
   clearTimeout(__toastTimer);
-  __toastTimer = setTimeout(() => el.classList.remove('show'), 4200);
+  __toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }
 
 const SAMPLE_RESUME = `JOHN DOE
