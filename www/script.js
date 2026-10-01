@@ -286,6 +286,7 @@ function renderJobsAccess(){
       <div class="jobs-locked">
         <div class="jobs-locked-preview" aria-hidden="true">${'<div class="job-card skeleton"><i></i><i></i><i></i></div>'.repeat(3)}</div>
         <div class="locked-cta">
+          <img src="panda-face.svg?v=2" alt="" aria-hidden="true" width="56" height="31">
           <p><b>See live jobs that fit your resume.</b><br>Included with every paid scan. Search as much as you like for 24 hours after your scan.</p>
           <button type="button" class="btn btn-primary btn-sm" data-buy="3">Unlock matching jobs</button>
         </div>

@@ -177,6 +177,10 @@ input:focus, textarea:focus{ outline:none; border-color:var(--brand); box-shadow
   margin:0 0 16px; text-wrap:balance;
 }
 .hl{ color:var(--brand); }
+/* Rezzy the panda (mascot) */
+.er-panda{ display:block; width:84px; height:auto; margin:0 auto 10px; }
+.modal-panda{ display:block; width:40px; height:auto; margin:0 0 10px; }
+.jobs-locked .locked-cta img{ width:38px; height:auto; }
 .lead{ font-size:clamp(16px, 1.6vw, 19px); color:var(--muted); max-width:640px; margin:0 auto 22px; text-wrap:pretty; }
 .trust-row{ list-style:none; padding:0; margin:0; display:flex; justify-content:center; flex-wrap:wrap; gap:10px 24px; }
 .trust-row li{ display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:500; color:var(--text-2); }

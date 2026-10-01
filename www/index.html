@@ -30,7 +30,7 @@
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#ffffff">
 
-  <link rel="stylesheet" href="style.css?v=20260930a">
+  <link rel="stylesheet" href="style.css?v=20260930c">
 
   <!-- PDF.js + Mammoth (file text extraction happens in the browser) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
@@ -46,7 +46,7 @@
   </script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7940734884065019" crossorigin="anonymous"></script>
 
-  <script src="script.js?v=20260930a" defer></script>
+  <script src="script.js?v=20260930c" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#tool">Skip to resume checker</a>
@@ -156,10 +156,7 @@
         <!-- Results -->
         <section id="results" class="card results-card" aria-live="polite" aria-label="Your results">
           <div class="empty-results">
-            <div class="er-score" aria-hidden="true">
-              <svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="28" fill="none" stroke="var(--line)" stroke-width="8"/><circle cx="36" cy="36" r="28" fill="none" stroke="var(--brand)" stroke-width="8" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="60" transform="rotate(-90 36 36)" opacity=".35"/></svg>
-              <span>?</span>
-            </div>
+            <img class="er-panda" src="panda.svg?v=2" alt="" aria-hidden="true" width="132" height="132">
             <h3>Your report will appear here</h3>
             <p>Add your resume and click <b>Analyze</b>. Here’s what you’ll get:</p>
             <ul class="check-list">
@@ -355,6 +352,7 @@
       <button class="icon-btn modal-close" type="button" onclick="closePaywall()" aria-label="Close">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
+      <img class="modal-panda" src="panda-face.svg?v=2" alt="" aria-hidden="true" width="64" height="35">
       <h2 id="paywallTitle">Unlock your full report</h2>
       <p id="paywallLeadText" class="muted">You used your free daily scan. Get 3 more scans for <strong>$4.99</strong> or save with a bigger pack.</p>
 
