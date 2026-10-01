@@ -2,10 +2,13 @@
 // Rezzy Rate Stripe account acct_1UJfqSDWfERCS4K5. Each link sends the buyer back to
 // https://rezzyrate.com/?paid=N&session_id=cs_... and the site adds N scans once per session.
 const PAYMENT_LINKS = {
-  1:  "https://buy.stripe.com/eVqeVd4qd7mgbHEg4xdnW00",   // 1 Scan   $2.99
-  10: "https://buy.stripe.com/00w7sL6yl0XSaDAaKddnW01",   // 10 Scans $9.99
-  20: "https://buy.stripe.com/9B68wPbSF5e8bHE7y1dnW02"    // 20 Scans $14.99
+  3:  "https://buy.stripe.com/cNi4gzg8VdKE6nkg4xdnW03",   // 3 Scans  $4.99
+  15: "https://buy.stripe.com/5kQ14n6yl8qk9zwbOhdnW04",   // 15 Scans $12.99
+  25: "https://buy.stripe.com/9B63cv2i57mg7ro7y1dnW05"    // 25 Scans $17.99
 };
+// Old packs (1/10/20). Still honored on return so anyone mid-checkout during the
+// switch gets their scans. Safe to remove once the old links are deactivated in Stripe.
+const LEGACY_PAID = [1, 10, 20];
 const CANONICAL_HOST = "rezzyrate.com";
 // Only used for the job-search backend now
 const API_BASE_URL = "https://gyw1n7b24m.execute-api.us-east-2.amazonaws.com/Prod";
@@ -143,14 +146,14 @@ function closeCheckout(){
 })();
 
 /* ==================== PRICING ==================== */
-const PRICES = { single: 2.99, pack10: 9.99, pack20: 14.99 };
+const PRICES = { pack3: 4.99, pack15: 12.99, pack25: 17.99 };
 const fmt = n => `$${n.toFixed(2)}`;
 
 /* --- NEW: transaction cost / total helpers --- */
 const PRICE_MAP = {
-  1: PRICES.single,
-  10: PRICES.pack10,
-  20: PRICES.pack20
+  3: PRICES.pack3,
+  15: PRICES.pack15,
+  25: PRICES.pack25
 };
 
 // Adjust these if you want different fee assumptions
@@ -182,16 +185,16 @@ function updateCheckoutSummary(n) {
 /* --- END NEW HELPERS --- */
 
 function updatePricingUI(){
-  const p1 = fmt(PRICES.single), p10 = fmt(PRICES.pack10), p20 = fmt(PRICES.pack20);
+  const p3 = fmt(PRICES.pack3), p15 = fmt(PRICES.pack15), p25 = fmt(PRICES.pack25);
   const lead = document.getElementById('paywallLeadText');
-  if (lead) lead.innerHTML = `You used your free daily scan. Buy additional scans for <strong>${p1}</strong> or save with a pack.`;
+  if (lead) lead.innerHTML = `You used your free daily scan. Get 3 more scans for <strong>${p3}</strong> or save with a bigger pack.`;
   const setBtn = (id, qty, price) => {
     const el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = `<span class="btn-label">${qty} ${qty===1?'Scan':'Scans'}</span><span class="btn-price">${price}</span>`;
   };
-  setBtn('btnBuy1Top', 1,  p1); setBtn('btnBuy10Top',10, p10); setBtn('btnBuy20Top',20, p20);
-  setBtn('btnBuy1Modal', 1,  p1); setBtn('btnBuy10Modal',10, p10); setBtn('btnBuy20Modal',20, p20);
+  setBtn('btnBuy3Top', 3,  p3); setBtn('btnBuy15Top',15, p15); setBtn('btnBuy25Top',25, p25);
+  setBtn('btnBuy3Modal', 3,  p3); setBtn('btnBuy15Modal',15, p15); setBtn('btnBuy25Modal',25, p25);
 }
 
 /* ==================== METERING & PAYWALL ==================== */
@@ -1041,7 +1044,7 @@ async function extractTextFromDOCX(file){
 }
 
 /* ==================== Paywall & misc (with iPhone focus trap) ==================== */
-function openPaywall(n=1){
+function openPaywall(n=3){
   hideMobileHintIfOpen();
   window.__desiredCredits = n;
   const lead = document.getElementById('paywallLeadText');
@@ -1066,7 +1069,7 @@ function closePaywall(){
 }
 
 /* ==================== Checkout flow ==================== */
-function startCheckout(n = 1){
+function startCheckout(n = 3){
   const link = PAYMENT_LINKS[n];
   if (!link){ toast('Something went wrong. Please refresh and try again.'); return; }
   try { gtag('event', 'begin_checkout', { value: n }); } catch {}
@@ -1425,7 +1428,7 @@ setScanStatus('Ready', false);
     addCredits(carry);
   }
 
-  if (!PAYMENT_LINKS[paid] || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(session)) return;
+  if ((!PAYMENT_LINKS[paid] && !LEGACY_PAID.includes(paid)) || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(session)) return;
 
   let claimed = [];
   try { claimed = JSON.parse(localStorage.getItem('rz_claimed_sessions') || '[]'); } catch {}
@@ -1520,7 +1523,7 @@ setScanStatus('Ready', false);
       if (btn.__buyBound) return;
       btn.__buyBound = true;
 
-      const credits = parseInt(btn.getAttribute('data-buy'), 10) || 1;
+      const credits = parseInt(btn.getAttribute('data-buy'), 10) || 3;
 
       const handler = (e) => {
         // prevent anchor jumps or default submits
@@ -1595,7 +1598,7 @@ setScanStatus('Ready', false);
   const baseOpenCheckout  = window.openCheckout  || function(){};
   const baseCloseCheckout = window.closeCheckout || function(){};
 
-  window.openPaywall = function(n = 1){
+  window.openPaywall = function(n = 3){
     lockScroll();
     try { baseOpenPaywall(n); } catch (e) { console.error(e); }
   };
