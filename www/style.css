@@ -179,7 +179,7 @@ textarea.is-invalid, textarea.is-invalid:focus{ border-color:var(--bad); box-sha
   margin:0 0 16px; text-wrap:balance;
 }
 .hl{ color:var(--brand); }
-.hero-stat{ max-width:600px; margin:-8px auto 20px; font-size:14px; color:var(--muted); text-wrap:balance; }
+.hero-stat{ max-width:720px; margin:14px auto 0; font-size:14px; color:var(--muted); text-wrap:balance; }
 .hero-stat b{ color:var(--brand); font-weight:700; }
 .hero-stat .src{ font-size:12.5px; white-space:nowrap; }
 .hero-stat a{ color:var(--muted); text-decoration:underline; text-decoration-color:var(--line-2); text-underline-offset:2px; white-space:nowrap; }
