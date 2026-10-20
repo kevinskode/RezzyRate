@@ -917,7 +917,7 @@ function analyze(){
     </section>`;
 
   // Collapsible: the header's status chip gives the takeaway without opening it
-  const section = (key, title, status, body, open = false) => `
+  const section = (key, title, status, body, open = true) => `
     <details class="rsec" data-section="${key}"${open ? ' open' : ''}>
       <summary class="rsec-head"><h3>${title}</h3>${status}<span class="chev" aria-hidden="true"></span></summary>
       <div class="rsec-body">${body}</div>
