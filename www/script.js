@@ -482,47 +482,6 @@ const tipHTML = inner => `
     <span class="tip-bubble" role="tooltip">${inner}<span class="arrow" aria-hidden="true"></span></span>
   </span>`;
 
-/* ==================== getSnippet (clean sentence slicing) ==================== */
-function getSnippet(src, rx, { around = 140, max = 260 } = {}) {
-  if (!src || !rx) return "";
-  const text = String(src).replace(/\s+/g, " ").trim();
-
-  const m = rx.exec(text);
-  if (!m) return "";
-
-  let start = Math.max(0, m.index - around);
-  let end   = Math.min(text.length, m.index + m[0].length + around);
-
-  const lastPeriod = Math.max(
-    text.lastIndexOf(". ", start),
-    text.lastIndexOf("! ", start),
-    text.lastIndexOf("? ", start)
-  );
-  if (lastPeriod !== -1) start = lastPeriod + 2;
-  else {
-    const lastSpace = text.lastIndexOf(" ", start);
-    if (lastSpace !== -1) start = lastSpace + 1;
-  }
-
-  const after = text.slice(end);
-  const sentMatch = after.match(/^[^.!?]*[.!?](?:["’”])?\s/);
-  if (sentMatch) end += sentMatch[0].length;
-  else {
-    const nextSpace = text.indexOf(" ", end);
-    if (nextSpace !== -1) end = nextSpace;
-  }
-
-  let snippet = text.slice(start, end).trim();
-  if (snippet.length > max) {
-    const cut = snippet.search(/([.!?](?:["’”])?\s)[^.!?]*$/);
-    snippet = (cut > 0 ? snippet.slice(0, cut + 1) : snippet.slice(0, max)).trim();
-  }
-
-  const prefix = start > 0 ? "…" : "";
-  const suffix = end < text.length ? "…" : "";
-  return `${prefix}${snippet}${suffix}`;
-}
-
 /* ==================== Ghost Job analysis ==================== */
 function mapScoreToRank(realness){
   if (realness <= 30) return { label: "Likely Ghost", band: "bad", next:
@@ -561,29 +520,29 @@ function analyzeGhostJob(jdRaw = "", resumeRaw = "") {
   const hitsPos = [];
   const hitsNeg = [];
 
+  // Short excerpt around the match, plus the matched text so the UI can highlight it
+  const flat = jd.replace(/\s+/g, " ");
+  const evidence = (s) => {
+    const m = new RegExp(s.rx.source, s.rx.flags.replace('g','')).exec(flat);
+    if (!m) return {};
+    const PAD = 50;
+    let a = Math.max(0, m.index - PAD), z = Math.min(flat.length, m.index + m[0].length + PAD);
+    if (a > 0) a = Math.min(m.index, flat.indexOf(" ", a) + 1 || a);
+    if (z < flat.length) z = Math.max(m.index + m[0].length, flat.lastIndexOf(" ", z));
+    const snippet = (a > 0 ? "…" : "") + flat.slice(a, z).trim() + (z < flat.length ? "…" : "");
+    return { snippet, match: m[0].trim() };
+  };
   for (const s of pos){
-    let matched = false, snippet = "";
-    if (s.rx && s.rx.test(jd)){
-      matched = true;
-      snippet = getSnippet(
-        jd,
-        new RegExp(s.rx.source, s.rx.flags.replace('g',''))
-      );
-    }
+    let matched = false, ev = {};
+    if (s.rx && s.rx.test(jd)){ matched = true; ev = evidence(s); }
     if (s.eval && s.eval(jd)){ matched = true; }
-    if (matched){ ghostiness -= s.w; hitsPos.push({title:s.label, snippet}); }
+    if (matched){ ghostiness -= s.w; hitsPos.push({title:s.label, ...ev}); }
   }
   for (const s of neg){
-    let matched = false, snippet = "";
-    if (s.rx && s.rx.test(jd)){
-      matched = true;
-      snippet = getSnippet(
-        jd,
-        new RegExp(s.rx.source, s.rx.flags.replace('g',''))
-      );
-    }
+    let matched = false, ev = {};
+    if (s.rx && s.rx.test(jd)){ matched = true; ev = evidence(s); }
     if (s.eval && s.eval(jd)){ matched = true; }
-    if (matched){ ghostiness += s.w; hitsNeg.push({title:s.label, snippet}); }
+    if (matched){ ghostiness += s.w; hitsNeg.push({title:s.label, ...ev}); }
   }
 
   ghostiness = Math.max(0, Math.min(100, Math.round(ghostiness)));
@@ -624,34 +583,40 @@ function jobRealitySectionHTML(ghost) {
   const donut = donutSVG(realness, `${realness}`, { band });
   const labelClass = band === 'good' ? 'good' : band === 'warn' ? 'warn' : 'bad';
 
+  // Several signals often match the same sentence: quote it once
+  const seen = new Set();
+  const quote = (r) => {
+    if (!r.snippet || seen.has(r.snippet)) return '';
+    seen.add(r.snippet);
+    let html = escapeHTML(r.snippet);
+    const m = r.match && escapeHTML(r.match);
+    if (m && html.includes(m)) html = html.replace(m, `<mark>${m}</mark>`);
+    return `<q class="sig-quote">${html}</q>`;
+  };
   const li = (ok, r) => `<li class="sig ${ok ? 'ok' : 'flag'}">
       <span class="sig-ico" aria-hidden="true">${ok ? '✓' : '!'}</span>
-      <div><span class="sig-title">${r.title}</span>
-      ${r.snippet ? `<q class="sig-quote">${escapeHTML(r.snippet)}</q>` : ``}</div>
+      <div><span class="sig-title">${r.title}</span>${quote(r)}</div>
     </li>`;
 
-  const posList = reasonsPos.slice(0,5).map(r => li(true, r)).join('');
   const negList = reasonsNeg.slice(0,5).map(r => li(false, r)).join('');
+  const posList = reasonsPos.slice(0,5).map(r => li(true, r)).join('');
+  const tally = (n, cls, one, many) => `<span class="ghost-tally ${cls}"><b>${n}</b> ${n === 1 ? one : many}</span>`;
 
   return `
     <div class="ghost-wrap">
       <div class="ghost-head">
         ${donut}
-        <div>
+        <div class="ghost-meta">
           <span class="rating ${labelClass}">${label}</span>
-          <p class="ghost-sub">How “real” this job ad looks (higher is better). Confidence: <b>${confLabel}</b>.</p>
+          <div class="ghost-tallies">
+            ${tally(reasonsPos.length, 'ok', 'hiring signal', 'hiring signals')}
+            ${tally(reasonsNeg.length, reasonsNeg.length ? 'flag' : 'ok', 'red flag', 'red flags')}
+          </div>
+          <p class="ghost-sub">How “real” this ad looks. Higher is better · ${confLabel} confidence</p>
         </div>
       </div>
-      <div class="sig-cols">
-        <div>
-          <h4 class="sub-h">Hiring signals <span class="count ok">${reasonsPos.length}</span></h4>
-          <ul class="sig-list">${posList || `<li class="sig none">No clear hiring signals found</li>`}</ul>
-        </div>
-        <div>
-          <h4 class="sub-h">Red flags <span class="count flag">${reasonsNeg.length}</span></h4>
-          <ul class="sig-list">${negList || `<li class="sig none">No red flags found</li>`}</ul>
-        </div>
-      </div>
+      ${negList || posList ? `<ul class="sig-list ghost-list">${negList}${posList}</ul>`
+        : `<p class="sig none">No clear hiring signals or red flags in this ad.</p>`}
       <p class="callout"><b>What to do:</b> ${next}</p>
     </div>
   `;

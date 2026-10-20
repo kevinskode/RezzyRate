@@ -451,12 +451,28 @@ details.more > summary + *{ margin-top:10px; }
 .wq-read{ margin:10px 0 12px; font-size:13.5px; color:var(--text-2); }
 
 /* Job ad reality check (markup from jobRealitySectionHTML) */
-.ghost-head{ display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+.ghost-head{ display:flex; align-items:center; gap:16px; padding:14px; margin-bottom:14px; border-radius:12px; background:var(--surface-2); border:1px solid var(--line); }
 .ghost-head .donut{ width:72px; height:72px; }
-.ghost-head .donut .center{ font-size:19px; }
-.ghost-sub{ margin:6px 0 0; font-size:13.5px; color:var(--muted); }
-.sig-cols{ display:grid; gap:4px 18px; grid-template-columns:repeat(auto-fit, minmax(min(220px,100%),1fr)); }
-.sig-cols .sub-h{ margin-top:6px; }
+.ghost-head .donut .center{ font-size:20px; }
+.ghost-meta{ min-width:0; display:grid; gap:8px; justify-items:start; }
+.ghost-meta .rating{ font-size:14px; padding:3px 11px; }
+.ghost-tallies{ display:flex; flex-wrap:wrap; gap:6px; }
+.ghost-tally{ font-size:12.5px; font-weight:600; padding:3px 10px; border-radius:999px; }
+.ghost-tally b{ font-weight:800; }
+.ghost-tally.ok  { color:#047857; background:var(--ok-bg); }
+.ghost-tally.flag{ color:var(--warn); background:var(--warn-bg); }
+.ghost-sub{ margin:0; font-size:12.5px; color:var(--muted); }
+.ghost-list{ gap:0; }
+.ghost-list .sig{ padding:10px 0; border-top:1px solid var(--line); }
+.ghost-list .sig:first-child{ border-top:0; padding-top:0; }
+.ghost-list .sig-title{ font-size:14px; }
+.ghost-list .sig-quote{
+  margin-top:4px; padding-left:10px; border-left:2px solid var(--line-2); font-style:normal; line-height:1.5;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.ghost-list .sig-quote::before, .ghost-list .sig-quote::after{ content:none; }
+.sig-quote mark{ background:var(--warn-bg); color:var(--text); font-weight:600; padding:0 2px; border-radius:3px; }
+.sig.ok .sig-quote mark{ background:var(--ok-bg); }
 
 /* Game plan */
 .plan{
