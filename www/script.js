@@ -4,9 +4,9 @@
 // with {CHECKOUT_SESSION_ID} so the site can tell purchases apart.
 // A product with an empty link is hidden everywhere on the site (handy for switching the week pass on later).
 const PRODUCTS = {
-  report: { link: "",            // TODO paste Stripe link. Returns: https://rezzyrate.com/?paid=report&session_id={CHECKOUT_SESSION_ID}
+  report: { link: "https://buy.stripe.com/aFa28r4qdfSMfXUcSldnW06",   // Full Report $2.99. Returns: https://rezzyrate.com/?paid=report&session_id={CHECKOUT_SESSION_ID}
             price: 2.99, name: "This report", credits: 1 },
-  day:    { link: "",            // TODO paste Stripe link. Returns: https://rezzyrate.com/?paid=day&session_id={CHECKOUT_SESSION_ID}
+  day:    { link: "https://buy.stripe.com/14A14naOB9uo3b84lPdnW07",   // Day Pass $4.99. Returns: https://rezzyrate.com/?paid=day&session_id={CHECKOUT_SESSION_ID}
             price: 4.99, name: "Day pass", passHours: 24 },
   week:   { link: "",            // Optional. Returns: https://rezzyrate.com/?paid=week&session_id={CHECKOUT_SESSION_ID}
             price: 9.99, name: "Week pass", passHours: 24 * 7 }
