@@ -1571,7 +1571,7 @@ function renderSimilarJobs(jobs = [], profile = { skills: [] }) {
     const d = (j.desc || "").replace(/\s+/g, " ").trim();
     const snippet = d.length > 200 ? d.slice(0, 200).replace(/\s+\S*$/, "") + "…" : d;
     const m = j._m;
-    const band = m.score >= 70 ? "good" : m.score >= 45 ? "warn" : "low";
+    const band = m.score >= 50 ? "good" : m.score >= 30 ? "warn" : "low";
     const sal = _salary(j);
     const when = _ago(j.created);
     const isNew = Date.now() - (Date.parse(j.created) || 0) < 3 * 864e5;
