@@ -492,7 +492,8 @@ details.more[open] > :not(summary){ margin-top:10px; }
 .jobs-attrib a{ color:var(--muted); }
 
 /* ---------- Pricing ---------- */
-.price-grid{ display:grid; gap:16px; grid-template-columns:repeat(3, minmax(0,1fr)); max-width:980px; margin:0 auto; align-items:stretch; }
+.price-grid{ --cols:3; display:grid; gap:16px; grid-template-columns:repeat(var(--cols), minmax(0,1fr)); max-width:calc(var(--cols) * 320px); margin:0 auto; align-items:stretch; }
+.price-list{ margin:0 0 22px; font-size:14px; }
 .price-card{ position:relative; display:flex; flex-direction:column; text-align:center; padding:28px 24px; }
 .price-card h3{ font-size:16px; font-weight:650; color:var(--text-2); }
 .price{ display:flex; align-items:center; justify-content:center; gap:8px; margin:14px 0 4px; }
@@ -621,3 +622,22 @@ body.modal-open{ overflow:hidden; }
 .adzuna-badge{ display:inline-flex; align-items:center; justify-content:center; min-width:130px; min-height:28px; padding:4px 12px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--text-2) !important; font-size:13px; font-weight:500; }
 .adzuna-badge b{ margin-left:4px; color:#2E7D32; font-weight:800; }
 .adzuna-badge:hover{ text-decoration:none; border-color:var(--line-2); }
+
+/* ---------- Conversion additions (Oct 2026) ---------- */
+.upsell-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex:0 0 auto; }
+.upsell-actions .link-btn.small{ font-size:13px; font-weight:600; }
+@media (max-width:560px){ .upsell-actions{ align-items:stretch; text-align:center; } }
+
+.tease-kw{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px; margin-bottom:8px; font-weight:600; color:var(--text); }
+.tease-kw b{ color:var(--brand-700); }
+
+.sample-banner{
+  display:flex; align-items:center; justify-content:space-between; gap:14px; margin:0 0 16px;
+  padding:12px 14px; border-radius:12px; border:1px solid var(--ok-line); background:var(--ok-bg);
+}
+.sample-banner b{ display:block; font-size:14.5px; }
+.sample-banner span{ font-size:13.5px; color:var(--text-2); }
+.sample-banner .btn{ flex:0 0 auto; }
+@media (max-width:560px){ .sample-banner{ flex-direction:column; align-items:stretch; } }
+
+.er-sample{ margin-top:20px; }

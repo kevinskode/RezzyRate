@@ -1,14 +1,20 @@
 // === Payments: Stripe Payment Links (no backend needed) ===
-// Rezzy Rate Stripe account acct_1UJfqSDWfERCS4K5. Each link sends the buyer back to
-// https://rezzyrate.com/?paid=N&session_id=cs_... and the site adds N scans once per session.
-const PAYMENT_LINKS = {
-  3:  "https://buy.stripe.com/cNi4gzg8VdKE6nkg4xdnW03",   // 3 Scans  $4.99
-  15: "https://buy.stripe.com/5kQ14n6yl8qk9zwbOhdnW04",   // 15 Scans $12.99
-  25: "https://buy.stripe.com/9B63cv2i57mg7ro7y1dnW05"    // 25 Scans $17.99
+// Rezzy Rate Stripe account acct_1UJfqSDWfERCS4K5.
+// Each product's Payment Link must send the buyer back to the URL shown in its "returns" note,
+// with {CHECKOUT_SESSION_ID} so the site can tell purchases apart.
+// A product with an empty link is hidden everywhere on the site (handy for switching the week pass on later).
+const PRODUCTS = {
+  report: { link: "",            // TODO paste Stripe link. Returns: https://rezzyrate.com/?paid=report&session_id={CHECKOUT_SESSION_ID}
+            price: 2.99, name: "This report", credits: 1 },
+  day:    { link: "",            // TODO paste Stripe link. Returns: https://rezzyrate.com/?paid=day&session_id={CHECKOUT_SESSION_ID}
+            price: 4.99, name: "Day pass", passHours: 24 },
+  week:   { link: "",            // Optional. Returns: https://rezzyrate.com/?paid=week&session_id={CHECKOUT_SESSION_ID}
+            price: 9.99, name: "Week pass", passHours: 24 * 7 }
 };
-// Old packs (1/10/20). Still honored on return so anyone mid-checkout during the
-// switch gets their scans. Safe to remove once the old links are deactivated in Stripe.
-const LEGACY_PAID = [1, 10, 20];
+const productOn = key => !!(PRODUCTS[key] && PRODUCTS[key].link);
+// Old scan packs. No longer sold on the site, but still honored on return so anyone who
+// buys from an old link (or is mid-checkout during the switch) gets their scans.
+const LEGACY_PACKS = { 1: 2.99, 3: 4.99, 10: 9.99, 15: 12.99, 20: 14.99, 25: 17.99 };
 const CANONICAL_HOST = "rezzyrate.com";
 // Only used for the job-search backend now
 const API_BASE_URL = "https://gyw1n7b24m.execute-api.us-east-2.amazonaws.com/Prod";
@@ -146,59 +152,49 @@ function closeCheckout(){
 })();
 
 /* ==================== PRICING ==================== */
-const PRICES = { pack3: 4.99, pack15: 12.99, pack25: 17.99 };
 const fmt = n => `$${n.toFixed(2)}`;
-
-/* --- NEW: transaction cost / total helpers --- */
-const PRICE_MAP = {
-  3: PRICES.pack3,
-  15: PRICES.pack15,
-  25: PRICES.pack25
+const PRODUCT_COPY = {
+  report: { sub: 'Full report for the resume you just scanned', bullets: ['Every missing keyword', 'All fixes, ranked', 'Structure checklist, job ad check & summary', 'Matching live jobs for 24 hours'], cta: 'Unlock this report' },
+  day:    { sub: 'Unlimited full reports for 24 hours', bullets: ['Tailor your resume to every job you apply to today', 'Everything in the full report, every scan', 'Matching live jobs included'], cta: 'Get the day pass' },
+  week:   { sub: 'Unlimited full reports for 7 days', bullets: ['For a week of applications', 'Everything in the full report, every scan', 'Matching live jobs included'], cta: 'Get the week pass' }
 };
+const FEATURED = 'day';
 
-// Adjust these if you want different fee assumptions
-const FEE_RATE  = 0.029; // 2.9%
-const FEE_FIXED = 0.30;  // $0.30 per transaction
-
-function calcTotalsForCredits(n) {
-  const base = PRICE_MAP[n] || 0;
-  const fee  = base * FEE_RATE + FEE_FIXED;
-  const total = base + fee;
-  return { base, fee, total };
-}
-
-function updateCheckoutSummary(n) {
-  const el = document.getElementById('checkout-summary');
-  if (!el) return;
-
-  const { base, fee, total } = calcTotalsForCredits(n);
-  if (!base) {
-    el.textContent = '';
-    return;
-  }
-
-  el.innerHTML = `
-    You’re buying <b>${n}</b> ${n === 1 ? 'scan' : 'scans'} for <b>${fmt(base)}</b>.<br>
-    
-  `;
-}
-/* --- END NEW HELPERS --- */
-
+// Builds the pricing cards and the paywall options from PRODUCTS, so prices live in one place.
 function updatePricingUI(){
-  const p3 = fmt(PRICES.pack3), p15 = fmt(PRICES.pack15), p25 = fmt(PRICES.pack25);
-  const lead = document.getElementById('paywallLeadText');
-  if (lead) lead.innerHTML = `You used your free daily scan. Get 3 more scans for <strong>${p3}</strong> or save with a bigger pack.`;
-  const setBtn = (id, qty, price) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = `<span class="btn-label">${qty} ${qty===1?'Scan':'Scans'}</span><span class="btn-price">${price}</span>`;
-  };
-  setBtn('btnBuy3Top', 3,  p3); setBtn('btnBuy15Top',15, p15); setBtn('btnBuy25Top',25, p25);
-  setBtn('btnBuy3Modal', 3,  p3); setBtn('btnBuy15Modal',15, p15); setBtn('btnBuy25Modal',25, p25);
+  const keys = Object.keys(PRODUCTS).filter(productOn);
+  const grid = document.getElementById('priceGrid');
+  if (grid){
+    grid.style.setProperty('--cols', Math.max(1, keys.length));
+    grid.innerHTML = keys.map(k => {
+      const p = PRODUCTS[k], c = PRODUCT_COPY[k], feat = k === FEATURED;
+      return `
+        <article class="card price-card${feat ? ' featured' : ''}">
+          ${feat ? '<span class="ribbon">Most popular</span>' : ''}
+          <h3>${p.name}</h3>
+          <div class="price"><span class="amt">${fmt(p.price)}</span></div>
+          <p class="per">${c.sub}</p>
+          <ul class="check-list price-list">${c.bullets.map(x => `<li>${x}</li>`).join('')}</ul>
+          <button class="btn ${feat ? 'btn-primary' : 'btn-outline'} btn-block" type="button" data-buy="${k}" data-direct="1">${c.cta}</button>
+        </article>`;
+    }).join('') || '<p class="muted" style="text-align:center">Checkout is being set up. Please check back soon.</p>';
+  }
+  const opts = document.getElementById('paywallOptions');
+  if (opts){
+    opts.innerHTML = keys.map(k => {
+      const p = PRODUCTS[k], c = PRODUCT_COPY[k], feat = k === FEATURED;
+      return `
+        <button class="pricing-btn${feat ? ' popular' : ''}" data-buy="${k}" type="button">
+          <span class="pb-main"><span>${p.name}</span><b>${fmt(p.price)}</b></span>
+          <span class="pb-sub"><span>${c.sub}</span>${feat ? '<span class="deal-pill popular">Most popular</span>' : ''}</span>
+        </button>`;
+    }).join('');
+  }
+  if (typeof window.__rezzyBindBuyButtons === 'function') window.__rezzyBindBuyButtons();
 }
 
 /* ==================== METERING & PAYWALL ==================== */
-const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_credits', unlimitedUntil:'rc_unlimited_until' };
+const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_credits', unlimitedUntil:'rc_unlimited_until', passUntil:'rz_pass_until' };
 (function handleUnlimitedFlag(){
   const params = new URLSearchParams(location.search);
   const hours = 48;
@@ -216,7 +212,21 @@ const LS_KEYS = { lastDate:'rc_lastDate', dailyUsed:'rc_dailyUsed', credits:'rc_
     } catch {}
   }
 })();
-function isUnlimited(){ const until = parseInt(localStorage.getItem(LS_KEYS.unlimitedUntil)||'0',10); return Date.now() < until; }
+function isUnlimited(){ try { return Date.now() < parseInt(localStorage.getItem(LS_KEYS.unlimitedUntil)||'0',10); } catch { return false; } }   // dev test mode only
+/* Day / week pass: unlimited full reports until a set time (saved in this browser) */
+function passUntil(){ try { return parseInt(localStorage.getItem(LS_KEYS.passUntil)||'0',10) || 0; } catch { return 0; } }
+function hasPass(){ return Date.now() < passUntil(); }
+function grantPass(hours){
+  const until = Math.max(Date.now(), passUntil()) + hours*60*60*1000;   // buying again extends it
+  try { localStorage.setItem(LS_KEYS.passUntil, String(until)); } catch {}
+  grantJobsPass(until);
+}
+function passLeftText(){
+  const ms = passUntil() - Date.now();
+  if (ms <= 0) return '';
+  const h = Math.ceil(ms / 3600000);
+  return h > 48 ? `${Math.ceil(h/24)} days left` : `${h}h left`;
+}
 const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function readMeter(){
   const today = todayStr();
@@ -240,9 +250,12 @@ function updateMeterUI(){
   const creditBadge = document.getElementById('creditBadge');
   const freeBadge = document.getElementById('freeBadge');
   if (creditBadge) creditBadge.textContent = `${credits} credit${credits === 1 ? '' : 's'}`;
-  if (freeBadge) freeBadge.textContent = isUnlimited() ? 'Test mode: unlimited' : (freeLeft ? `${freeLeft} free scan today` : 'Free scan used');
+  if (freeBadge) freeBadge.textContent = isUnlimited() ? 'Test mode: unlimited'
+    : hasPass() ? `Pass active · ${passLeftText()}`
+    : (freeLeft ? `${freeLeft} free scan today` : 'Free scan used');
   const note = document.getElementById('scanNote');
   if (note) note.textContent = isUnlimited() ? 'Test mode: scans are unlimited'
+    : hasPass() ? `Unlimited full reports · ${passLeftText()}`
     : freeLeft ? 'Uses your free scan for today'
     : credits ? `Uses 1 of your ${credits} credit${credits === 1 ? '' : 's'}`
     : 'Free scan used today. Buy scans to continue';
@@ -255,11 +268,13 @@ function updateMeterUI(){
    their last credit doesn't immediately lock the jobs for that report). */
 const JOBS_PASS_KEY = 'rz_jobs_pass_until';
 const JOBS_PASS_MS  = 24 * 60 * 60 * 1000;
-function grantJobsPass(){
-  try { localStorage.setItem(JOBS_PASS_KEY, String(Date.now() + JOBS_PASS_MS)); } catch {}
+function grantJobsPass(until){
+  let cur = 0; try { cur = parseInt(localStorage.getItem(JOBS_PASS_KEY) || '0', 10) || 0; } catch {}
+  const next = Math.max(cur, until || (Date.now() + JOBS_PASS_MS));
+  try { localStorage.setItem(JOBS_PASS_KEY, String(next)); } catch {}
 }
 function hasJobsAccess(){
-  if (isUnlimited()) return true;
+  if (isUnlimited() || hasPass()) return true;
   try { if (Date.now() < parseInt(localStorage.getItem(JOBS_PASS_KEY) || '0', 10)) return true; } catch {}
   return readMeter().credits > 0;
 }
@@ -288,7 +303,7 @@ function renderJobsAccess(){
         <div class="locked-cta">
           <img src="panda-face.svg?v=2" alt="" aria-hidden="true" width="56" height="31">
           <p><b>See live jobs that fit your resume.</b><br>Included with every paid scan. Search as much as you like for 24 hours after your scan.</p>
-          <button type="button" class="btn btn-primary btn-sm" data-buy="3">Unlock matching jobs</button>
+          <button type="button" class="btn btn-primary btn-sm" data-buy="day">Unlock matching jobs</button>
         </div>
       </div>`;
     if (typeof window.__rezzyBindBuyButtons === 'function') window.__rezzyBindBuyButtons();
@@ -299,7 +314,10 @@ function renderJobsAccess(){
 
 function canConsumeScan(){
   if (isUnlimited()) return { ok:true, mode:'unlimited' };
+  if (hasPass()) return { ok:true, mode:'pass' };
   const {freeLeft, credits} = readMeter();
+  // Right after buying a report, spend the credit so they see the full report (not a free preview)
+  if (window.__rezzyPreferPaid && credits > 0){ window.__rezzyPreferPaid = false; return { ok:true, mode:'credit' }; }
   if (freeLeft > 0) return { ok:true, mode:'free' };
   if (credits > 0) return { ok:true, mode:'credit' };
   return { ok:false, mode:'pay' };
@@ -770,7 +788,10 @@ function analyze(){
   }
   showResumeError('');
 
-  const gate = canConsumeScan(); 
+  // The built-in sample is free and unlimited, and shows the FULL report so people see what they'd pay for
+  const isSample = resumeText === SAMPLE_RESUME.trim()
+    && (document.getElementById('jd')?.value || '').trim() === SAMPLE_JD.trim();
+  const gate = isSample ? { ok:true, mode:'sample' } : canConsumeScan();
   if (!gate.ok){ openPaywall(); return; }
 
   const resumeEl  = document.getElementById('resume');
@@ -787,7 +808,7 @@ function analyze(){
 
   // mark whether we just used the free scan or a paid/ unlimited one
   consumeScan(gate.mode);
-  if (gate.mode !== 'free') grantJobsPass();   // paid scans include matching jobs
+  if (gate.mode === 'credit') grantJobsPass();   // paid scans include matching jobs (passes already include them)
   const lockAdvanced = (gate.mode === 'free' && !isUnlimited());
   window.__rezzyLastScanWasFree = lockAdvanced;
 
@@ -929,7 +950,7 @@ function analyze(){
         <div class="locked-preview ${skeletonKind}" aria-hidden="true">${skeletonKind === 'pills' ? '<i></i>'.repeat(9) : '<i></i><i></i><i></i>'}</div>
         <div class="locked-cta">
           <p>${teaser}</p>
-          <button type="button" class="btn btn-primary btn-sm" data-buy="3">Unlock full report</button>
+          <button type="button" class="btn btn-primary btn-sm" data-buy="report">Unlock full report</button>
         </div>
       </div>
     </section>`;
@@ -960,20 +981,34 @@ function analyze(){
   let sectionsHTML = '';
   if (lockAdvanced) {
     const hiddenFixes = Math.max(0, fixList.length - 1);
+    const quickKey = productOn('report') ? 'report' : (Object.keys(PRODUCTS).find(productOn) || 'report');
+    const quick = PRODUCTS[quickKey];
+    const passKey = ['day','week'].find(k => k !== quickKey && productOn(k));
     sectionsHTML += `
       <div class="upsell">
         <div>
           <b>You’re viewing the free preview.</b>
           <span>Unlock ${kwTotal ? `your ${missing.length} missing keyword${missing.length===1?'':'s'}, ` : ''}${hiddenFixes ? `${hiddenFixes} more fix${hiddenFixes===1?'':'es'}, ` : ''}the structure checklist${ghost ? ', the job ad reality check' : ''} and a written summary.</span>
         </div>
-        <button type="button" class="btn btn-primary btn-sm" data-buy="10">See pricing</button>
+        <div class="upsell-actions">
+          <button type="button" class="btn btn-primary btn-sm" data-buy="${quickKey}" data-direct="1">${quickKey === 'report' ? 'Unlock this report' : 'Get ' + quick.name.toLowerCase()} · ${fmt(quick.price)}</button>
+          ${passKey ? `<button type="button" class="link-btn small" data-buy="${passKey}">or ${fmt(PRODUCTS[passKey].price)} for unlimited ${passKey === 'day' ? 'today' : 'this week'}</button>` : ''}
+        </div>
       </div>`;
     // Top fix #1 is free, which shows the value of the rest
     sectionsHTML += section('fixes', 'Top fixes', `${fixList.length} found`,
       readLine + `<ul class="list-tight">${fixList.find(f => !f.includes('missing keywords')) || fixList[0] || fixes}</ul>` +
-      (hiddenFixes ? `<div class="more-locked"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>${hiddenFixes} more fix${hiddenFixes===1?'':'es'} in the full report <button type="button" class="link-btn" data-buy="1">Unlock</button></div>` : ''));
+      (hiddenFixes ? `<div class="more-locked"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>${hiddenFixes} more fix${hiddenFixes===1?'':'es'} in the full report <button type="button" class="link-btn" data-buy="report">Unlock</button></div>` : ''));
+    // Show the first two missing keywords for real: a specific teaser converts better than a count
+    // Lead with recognizable skills (HubSpot, SQL…) over generic words, using their proper spelling
+    const known = new Map(KNOWN_SKILLS.map(k => [k.toLowerCase(), k]));
+    const teaseKw = [...missing].sort((x, y) => known.has(String(y).toLowerCase()) - known.has(String(x).toLowerCase())).slice(0, 2)
+      .map(k => known.get(String(k).toLowerCase()) || k);
+    const moreKw = missing.length - teaseKw.length;
     sectionsHTML += lockedSection('keywords', 'Keyword match',
-      kwTotal ? `We found <b>${missing.length} keyword${missing.length===1?'':'s'}</b> from this job that your resume is missing, and ${present.length} you already cover.` : 'See which job keywords you match, which you’re missing, and your coverage.', 'pills');
+      !kwTotal ? 'See which job keywords you match, which you’re missing, and your coverage.'
+      : !missing.length ? `You cover all <b>${present.length}</b> keywords we found. Unlock to see the full breakdown.`
+      : `<span class="tease-kw">Missing: ${teaseKw.map(k => `<span class="pill bad">${known.has(String(k).toLowerCase()) ? escapeHTML(k) : kw(k)}</span>`).join(' ')}${moreKw > 0 ? ` <b>+ ${moreKw} more</b>` : ''}</span>Your resume covers ${present.length} of ${kwTotal} keywords from this job.`, 'pills');
     sectionsHTML += lockedSection('structure', 'Structure checklist', 'See which core sections (experience, skills, summary and more) are present or missing.', 'pills');
     if (ghost) sectionsHTML += lockedSection('ghost', 'Job ad reality check', 'See how “real” this job post looks, with hiring signals and red flags called out.');
     sectionsHTML += lockedSection('summary', 'Summary & next steps', 'A plain-English write-up of your strengths, gaps and exactly what to do next.');
@@ -985,15 +1020,23 @@ function analyze(){
     sectionsHTML += section('summary', 'Summary & next steps', '', summaryHTML);
   }
 
+  const sampleBanner = isSample ? `
+        <div class="sample-banner">
+          <div><b>This is a sample full report.</b><span>${readMeter().freeLeft > 0 ? 'Now try your own resume. Today’s free scan is still unused.' : 'Now try it with your own resume.'}</span></div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="startOwnResume()">Check my resume</button>
+        </div>` : '';
+  const scanTag = { free:'Free scan', credit:'1 credit used', pass:'Pass', sample:'Sample', unlimited:'Test mode' }[gate.mode] || '';
+
   if (out) {
     out.innerHTML = `
       <div class="results-root report ${lockAdvanced ? 'mode-free' : 'mode-paid'}">
+        ${sampleBanner}
         <div class="results-head report-head">
           ${donutSVG(result.total, `${result.total}`)}
           <div class="rh-text">
             <div class="rh-label">Overall score ${tipOverall}</div>
             <div class="rh-line"><span class="rating ${band}">${classifyScore(result.total)}</span>
-              <span class="scan-tag">${gate.mode==='free' ? 'Free scan' : gate.mode==='credit' ? '1 credit used' : 'Test mode'}</span></div>
+              <span class="scan-tag">${scanTag}</span></div>
             <p class="rh-sub">${verdict}</p>
           </div>
         </div>
@@ -1013,6 +1056,7 @@ function analyze(){
     setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
   }
   try { gtag('event', 'analyze', { mode: gate.mode, score: result.total }); } catch {}
+  if (gate.mode === 'free') { try { gtag('event', 'view_free_preview', { score: result.total }); } catch {} }
 
   // re-bind any "Unlock with a paid scan" buttons we just injected
   if (typeof window.__rezzyBindBuyButtons === 'function') {
@@ -1122,9 +1166,10 @@ function openPaywall(n=3){
   hideMobileHintIfOpen();
   window.__desiredCredits = n;
   const lead = document.getElementById('paywallLeadText');
-  if (lead) lead.innerHTML = readMeter().freeLeft > 0 || isUnlimited()
+  if (lead) lead.innerHTML = readMeter().freeLeft > 0 || window.__rezzyLastScanWasFree
     ? 'Get the full report: every missing keyword, all fixes, the structure checklist, the job ad reality check and a written summary.'
-    : 'You’ve used today’s free scan. Pick a pack to keep going. Bigger packs cost less per scan.';
+    : 'You’ve used today’s free scan. Unlock this report, or get unlimited reports with a pass.';
+  if (typeof updatePricingUI === 'function') updatePricingUI();
   const modal = document.getElementById('paywall');
   if (!modal) return;
   modal.classList.add('open');
@@ -1143,12 +1188,30 @@ function closePaywall(){
 }
 
 /* ==================== Checkout flow ==================== */
-function startCheckout(n = 3){
-  const link = PAYMENT_LINKS[n];
-  if (!link){ toast('Something went wrong. Please refresh and try again.'); return; }
-  try { gtag('event', 'begin_checkout', { value: n }); } catch {}
+// Remember what's in the form (this tab only) so the report comes right back after Stripe.
+const PENDING_KEY = 'rz_pending_scan';
+function savePendingScan(){
+  try {
+    const v = id => (document.getElementById(id)?.value || '');
+    if (v('resume').trim()) sessionStorage.setItem(PENDING_KEY, JSON.stringify({ resume: v('resume'), jd: v('jd'), keywords: v('keywords') }));
+  } catch {}
+}
+function restorePendingScan(){
+  let d = null;
+  try { d = JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null'); sessionStorage.removeItem(PENDING_KEY); } catch {}
+  if (!d || !d.resume) return false;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('resume', d.resume); set('jd', d.jd); set('keywords', d.keywords);
+  return true;
+}
+
+function startCheckout(key = 'report'){
+  const p = PRODUCTS[key];
+  if (!p || !p.link){ toast('Something went wrong. Please refresh and try again.'); return; }
+  try { gtag('event', 'begin_checkout', { currency: 'USD', value: p.price, items: [{ item_id: key, item_name: p.name, price: p.price }] }); } catch {}
+  savePendingScan();
   // client_reference_id ties the Stripe payment to this browser (handy for support)
-  const url = new URL(link);
+  const url = new URL(p.link);
   url.searchParams.set('client_reference_id', CREDIT_TOKEN);
   toast('Opening secure checkout…');
   location.href = url.toString();
@@ -1212,7 +1275,16 @@ function fillSample(){
   const r = document.getElementById('resume'), j = document.getElementById('jd');
   if (r) r.value = SAMPLE_RESUME;
   if (j) j.value = SAMPLE_JD;
-  toast('Sample loaded. Click Analyze to see a report.');
+  showResumeError('');
+  try { gtag('event', 'try_sample'); } catch {}
+  analyze();   // samples are free, so show the report right away
+}
+// From the sample report: clear the sample and get the visitor started on their own resume
+function startOwnResume(){
+  clearAll();
+  const card = document.querySelector('.input-card');
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => document.getElementById('resume')?.focus({ preventScroll: true }), 350);
 }
 
 const RESULTS_EMPTY_HTML = document.getElementById('results')?.innerHTML || '';
@@ -1498,19 +1570,21 @@ setScanStatus('Ready', false);
 /* ==================== Returning from Stripe checkout ==================== */
 (function handlePaymentReturn(){
   const params = new URLSearchParams(location.search);
-  const paid = parseInt(params.get('paid') || '0', 10);
+  const paidRaw = params.get('paid') || '';
   const session = params.get('session_id') || '';
   const carry = parseInt(params.get('carry') || '0', 10);
-  if (!paid && !carry) return;
+  if (!paidRaw && !carry) return;
 
   // tidy the address bar so a refresh or shared link doesn't re-trigger anything
   try { history.replaceState(null, '', location.pathname + location.hash); } catch {}
 
-  if (carry > 0 && carry <= 1000) {
-    addCredits(carry);
-  }
+  if (carry > 0 && carry <= 1000) addCredits(carry);
+  if (!paidRaw || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(session)) return;
 
-  if ((!PAYMENT_LINKS[paid] && !LEGACY_PAID.includes(paid)) || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(session)) return;
+  // What was bought: a product key (report/day/week) or an old scan pack number
+  const product = PRODUCTS[paidRaw] ? paidRaw : null;
+  const legacyN = !product && /^\d+$/.test(paidRaw) && LEGACY_PACKS[paidRaw] ? parseInt(paidRaw, 10) : 0;
+  if (!product && !legacyN) return;
 
   let claimed = [];
   try { claimed = JSON.parse(localStorage.getItem('rz_claimed_sessions') || '[]'); } catch {}
@@ -1518,10 +1592,32 @@ setScanStatus('Ready', false);
   claimed.push(session);
   try { localStorage.setItem('rz_claimed_sessions', JSON.stringify(claimed.slice(-50))); } catch {}
 
-  addCredits(paid);
-  try { gtag('event', 'purchase', { transaction_id: session, value: paid }); } catch {}
-  document.addEventListener('DOMContentLoaded', () =>
-    toast(`Payment received. ${paid} scan${paid === 1 ? '' : 's'} added. Thank you!`));
+  let msg, value, name;
+  if (product){
+    const p = PRODUCTS[product];
+    value = p.price; name = p.name;
+    if (p.passHours){
+      grantPass(p.passHours);
+      msg = `Payment received. Your ${p.name.toLowerCase()} is active: unlimited full reports${p.passHours === 24 ? ' for 24 hours' : ' for 7 days'}.`;
+    } else {
+      addCredits(p.credits || 1);
+      msg = 'Payment received. Your full report is unlocked.';
+    }
+  } else {
+    addCredits(legacyN);
+    value = LEGACY_PACKS[legacyN]; name = `${legacyN} scans`;
+    msg = `Payment received. ${legacyN} scan${legacyN === 1 ? '' : 's'} added. Thank you!`;
+  }
+  try { gtag('event', 'purchase', { transaction_id: session, currency: 'USD', value, items: [{ item_id: product || `pack_${legacyN}`, item_name: name, price: value }] }); } catch {}
+
+  const restored = restorePendingScan();
+  const done = () => {
+    updateMeterUI();
+    toast(msg, 6000);
+    window.__rezzyPreferPaid = true;
+    if (restored) setTimeout(() => analyze(), 150);   // bring their report straight back, now unlocked
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', done); else setTimeout(done, 0);
 })();
 
 /* ==================== Mobile "Use desktop" hint (8s delay) ==================== */
@@ -1605,7 +1701,9 @@ setScanStatus('Ready', false);
       if (btn.__buyBound) return;
       btn.__buyBound = true;
 
-      const credits = parseInt(btn.getAttribute('data-buy'), 10) || 3;
+      const raw = btn.getAttribute('data-buy') || '';
+      const key = productOn(raw) ? raw : (productOn('report') ? 'report' : Object.keys(PRODUCTS).find(productOn));
+      const direct = btn.hasAttribute('data-direct');
 
       const handler = (e) => {
         // prevent anchor jumps or default submits
@@ -1618,11 +1716,12 @@ setScanStatus('Ready', false);
         Promise.resolve()
           .then(() => {
             // Outside paywall: open the paywall sheet first
-            if (!insidePaywall) {
-              openPaywall(credits);
+            if (!key) { toast('Checkout is being set up. Please check back soon.'); return; }
+            if (!insidePaywall && !direct) {
+              openPaywall();
             } else {
-              // Inside paywall: go straight to Stripe checkout
-              return startCheckout(credits);
+              // Inside the paywall, or a button for one specific product: go straight to Stripe checkout
+              return startCheckout(key);
             }
           })
           .catch(console.error)

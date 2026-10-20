@@ -11,7 +11,7 @@
   <!-- Social sharing -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Rezzy Rate" />
-  <meta property="og:title" content="Rezzy Rate – Is your resume industry ready?" />
+  <meta property="og:title" content="Rezzy Rate – See your resume the way hiring software does" />
   <meta property="og:description" content="Instant ATS-style resume score, missing keywords, and live jobs that fit your experience." />
   <meta property="og:url" content="https://rezzyrate.com/" />
   <meta property="og:image" content="https://rezzyrate.com/og-image.png" />
@@ -30,7 +30,7 @@
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#ffffff">
 
-  <link rel="stylesheet" href="style.css?v=20260930i">
+  <link rel="stylesheet" href="style.css?v=20261019a">
 
   <!-- PDF.js + Mammoth (file text extraction happens in the browser) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
@@ -44,9 +44,12 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date()); gtag('config', 'G-HC1DSZ3RED');
   </script>
+  <!-- AdSense turned off on the checker page: ads here pull clicks away from the paid report.
+       To turn it back on, restore this line:
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7940734884065019" crossorigin="anonymous"></script>
+  -->
 
-  <script src="script.js?v=20260930f" defer></script>
+  <script src="script.js?v=20261019a" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#tool">Skip to resume checker</a>
@@ -71,7 +74,7 @@
           <span class="credit-sep" aria-hidden="true"></span>
           <span id="creditBadge">0 credits</span>
         </span>
-        <a class="btn btn-primary btn-sm" href="#pricing">Buy scans</a>
+        <a class="btn btn-primary btn-sm" href="#pricing">See pricing</a>
       </div>
     </div>
   </header>
@@ -80,15 +83,15 @@
     <!-- ============ HERO ============ -->
     <section class="hero">
       <div class="container hero-inner">
-        <span class="eyebrow">Free resume checker</span>
-        <h1>Is your resume <span class="hl">industry ready?</span></h1>
-        <p class="lead">Compare your resume to any job post in seconds. See your ATS-style score, the keywords you’re missing, and live jobs that fit your experience.</p>
+        <span class="eyebrow">Free ATS resume checker</span>
+        <h1>See your resume the way <span class="hl">hiring software does</span></h1>
+        <p class="lead">Paste a job post and get your ATS-style score in seconds, plus the exact keywords you’re missing and what to fix first.</p>
         <ul class="trust-row">
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>Scored privately in your browser</li>
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>No account needed</li>
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>1 free scan every day</li>
         </ul>
-        <p class="hero-stat"><b>88%</b> of employers say their hiring software filters out qualified candidates. <span class="src">— <a href="https://www.hbs.edu/managing-the-future-of-work/Documents/research/hiddenworkers09032021.pdf" target="_blank" rel="noopener">Harvard Business School</a></span></p>
+        <p class="hero-stat"><b>88%</b> of employers say qualified candidates get screened out because their resumes don’t match the job description’s exact criteria. <span class="src">— <a href="https://www.hbs.edu/managing-the-future-of-work/Documents/research/hiddenworkers09032021.pdf" target="_blank" rel="noopener">Harvard Business School</a></span></p>
       </div>
     </section>
 
@@ -100,7 +103,7 @@
         <section class="card input-card" aria-labelledby="inputTitle">
           <div class="card-head">
             <h2 id="inputTitle">Check your resume</h2>
-            <button type="button" class="link-btn" onclick="fillSample()">Try a sample</button>
+            <button type="button" class="link-btn" onclick="fillSample()">See a sample report</button>
           </div>
 
           <!-- Step 1 -->
@@ -168,6 +171,7 @@
               <li>Prioritized fixes to raise your score</li>
               <li>Job ad “reality check”</li>
             </ul>
+            <button type="button" class="btn btn-outline btn-sm er-sample" onclick="fillSample()">See a sample report (free)</button>
           </div>
         </section>
       </div>
@@ -244,36 +248,15 @@
       <div class="container">
         <div class="section-head">
           <span class="eyebrow">Pricing</span>
-          <h2>Pay per scan. No subscription.</h2>
-          <p class="muted">Your first scan each day is free. Buy credits when you want the full report.</p>
+          <h2>Your first scan each day is free</h2>
+          <p class="muted">Pay only when you want the full report. One-time payments, no subscription.</p>
         </div>
 
-        <div class="price-grid">
-          <article class="card price-card">
-            <h3>3 scans</h3>
-            <div class="price"><span class="amt">$4.99</span></div>
-            <p class="per">$1.66 per scan</p>
-            <button class="btn btn-outline btn-block" type="button" onclick="startCheckout(3)">Buy 3 scans</button>
-          </article>
-
-          <article class="card price-card featured">
-            <span class="ribbon">Most popular</span>
-            <h3>15 scans</h3>
-            <div class="price"><span class="amt">$12.99</span><span class="save">Save 48%</span></div>
-            <p class="per">$0.87 per scan</p>
-            <button class="btn btn-primary btn-block" type="button" onclick="startCheckout(15)">Buy 15 scans</button>
-          </article>
-
-          <article class="card price-card">
-            <h3>25 scans</h3>
-            <div class="price"><span class="amt">$17.99</span><span class="save">Save 57%</span></div>
-            <p class="per">$0.72 per scan</p>
-            <button class="btn btn-outline btn-block" type="button" onclick="startCheckout(25)">Buy 25 scans</button>
-          </article>
-        </div>
+        <!-- Cards are built by updatePricingUI() in script.js from PRODUCTS (prices live there) -->
+        <div class="price-grid" id="priceGrid"></div>
 
         <div class="included">
-          <h3>Every paid scan unlocks the full report</h3>
+          <h3>Every full report includes</h3>
           <ul class="check-list cols">
             <li>Full keyword breakdown: matched &amp; missing</li>
             <li>Structure checklist</li>
@@ -304,12 +287,12 @@
           </details>
           <details>
             <summary>What’s the difference between a free and a paid scan?</summary>
-            <p>A free scan shows your overall score and the four sub-scores, plus a preview of your top fix. A paid scan unlocks everything: the full keyword breakdown, structure checklist, all fixes, the job ad reality check, a written summary and live jobs matched to your resume.</p>
+            <p>A free scan shows your overall score and the four sub-scores, a couple of your missing keywords and your top fix. The full report unlocks everything: every missing keyword, the structure checklist, all fixes, the job ad reality check, a written summary and live jobs matched to your resume. Click “See a sample report” to see one for free.</p>
           </details>
           <details>
-            <summary>How do credits work?</summary>
-            <p>Each analysis uses one credit. Credits are saved in the browser you bought them in, so use the same browser and device to spend them. Your free scan resets every day.</p>
-            <p><b>To keep your credits:</b> don’t clear your browser’s site data or cookies, and don’t buy in a private or incognito window. Safari may delete them if you don’t visit Rezzy Rate for 7 days, so on an iPhone or Mac it’s best to use them within a week.</p>
+            <summary>How do passes and reports work?</summary>
+            <p><b>This report</b> unlocks the full report for the resume and job you just checked. A <b>pass</b> gives you unlimited full reports until it runs out, so you can tailor your resume to every job you apply to. Your free scan resets every day.</p>
+            <p>Purchases are saved in the browser you bought them in, so use the same browser and device. Don’t clear your browser’s site data or buy in a private or incognito window. Lost a purchase? Email us your receipt and we’ll restore it.</p>
           </details>
           <details>
             <summary>Is this a subscription?</summary>
@@ -321,7 +304,7 @@
           </details>
           <details>
             <summary>I need help with a purchase.</summary>
-            <p>Email <a href="mailto:support@rezzyrate.com">support@rezzyrate.com</a> with the email on your receipt and we’ll sort it out.</p>
+            <p>If your scans or pass disappeared (for example, after clearing your browser), or anything else went wrong, email <a href="mailto:support@rezzyrate.com">support@rezzyrate.com</a> with the email on your receipt and we’ll sort it out.</p>
           </details>
         </div>
       </div>
@@ -357,25 +340,13 @@
       </button>
       <img class="modal-panda" src="panda-face.svg?v=6" alt="" aria-hidden="true" width="64" height="35">
       <h2 id="paywallTitle">Unlock your full report</h2>
-      <p id="paywallLeadText" class="muted">You used your free daily scan. Get 3 more scans for <strong>$4.99</strong> or save with a bigger pack.</p>
+      <p id="paywallLeadText" class="muted">Get the full report: every missing keyword, all fixes, the structure checklist, the job ad reality check and a written summary.</p>
 
-      <div class="pricing-options">
-        <button class="pricing-btn" data-buy="3" type="button">
-          <span class="pb-main"><span>3 scans</span><b>$4.99</b></span>
-          <span class="pb-sub"><span>$1.66 per scan</span></span>
-        </button>
-        <button class="pricing-btn popular" data-buy="15" type="button">
-          <span class="pb-main"><span>15 scans</span><b>$12.99</b></span>
-          <span class="pb-sub"><span>$0.87 per scan</span><span class="deal-pill popular">Most popular · Save 48%</span></span>
-        </button>
-        <button class="pricing-btn" data-buy="25" type="button">
-          <span class="pb-main"><span>25 scans</span><b>$17.99</b></span>
-          <span class="pb-sub"><span>$0.72 per scan</span><span class="deal-pill best">Best value · Save 57%</span></span>
-        </button>
-      </div>
+      <!-- Options are built by updatePricingUI() in script.js -->
+      <div class="pricing-options" id="paywallOptions"></div>
       <p class="secure-note small">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-        One-time payment · You'll finish on Stripe's secure checkout, then come right back
+        One-time payment · Secure checkout by Stripe · Your report comes right back
       </p>
     </div>
   </div>
