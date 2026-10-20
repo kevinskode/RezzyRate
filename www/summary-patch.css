@@ -1,0 +1,86 @@
+/* ============================================================
+   Rezzy Rate: scannable Overall Summary
+   Append to style.css. Uses the existing :root tokens.
+   ============================================================ */
+
+.os-v2 { display: grid; gap: 10px; }
+
+.os-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.os-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.os-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+.os-verdict { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--text-2); }
+.os-tip { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+.os-sub {
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); margin-top: 2px;
+}
+.os-v2 .pill-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Status chips */
+.os-chip {
+  flex: none; font-size: 12px; font-weight: 600; line-height: 1;
+  padding: 5px 9px; border-radius: 999px; border: 1px solid;
+}
+.os-chip.good { color: var(--ok);   background: var(--ok-bg);   border-color: var(--ok-line); }
+.os-chip.warn { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-line); }
+.os-chip.bad  { color: var(--bad);  background: var(--bad-bg);  border-color: var(--bad-line); }
+
+/* Overall score */
+.os-overall {
+  grid-template-columns: auto 1fr; align-items: center; gap: 18px;
+  background: var(--brand-50); border-color: var(--brand-100);
+}
+.os-score { display: grid; grid-template-columns: auto auto; align-items: baseline; justify-content: start; }
+.os-score-num { font-size: 40px; font-weight: 800; line-height: 1; color: var(--brand-700); letter-spacing: -0.03em; }
+.os-score-max { font-size: 15px; font-weight: 600; color: var(--muted); margin-left: 2px; }
+.os-score-rank {
+  grid-column: 1 / -1; margin-top: 6px; justify-self: start;
+  font-size: 12px; font-weight: 700; color: var(--brand); background: var(--surface);
+  border: 1px solid var(--brand-100); border-radius: 999px; padding: 4px 9px;
+}
+.os-bars { display: grid; gap: 7px; }
+.os-bar { display: grid; grid-template-columns: 82px 1fr 40px; align-items: center; gap: 8px; font-size: 13px; }
+.os-bar-label { color: var(--text-2); font-weight: 500; }
+.os-bar-val { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.os-bar-track { height: 7px; background: var(--surface); border-radius: 999px; overflow: hidden; }
+.os-bar-fill { display: block; height: 100%; border-radius: inherit; }
+.os-bar-fill.good { background: var(--ok); }
+.os-bar-fill.warn { background: #F59E0B; }
+.os-bar-fill.bad  { background: var(--bad); }
+
+/* Polish checklist */
+.os-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.os-checks li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2); }
+.os-ico {
+  flex: none; width: 18px; height: 18px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 11px; font-weight: 800;
+}
+.os-checks li.ok  .os-ico { background: var(--ok-bg);   color: var(--ok); }
+.os-checks li.fix .os-ico { background: var(--warn-bg); color: var(--warn); }
+
+/* Next steps */
+.os-next { border-left: 3px solid var(--brand); }
+.os-steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 8px; }
+.os-steps li {
+  counter-increment: step; position: relative; padding-left: 30px;
+  font-size: 14px; line-height: 1.5; color: var(--text-2);
+}
+.os-steps li::before {
+  content: counter(step); position: absolute; left: 0; top: 1px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--brand); color: #fff; font-size: 11.5px; font-weight: 700;
+  display: grid; place-items: center;
+}
+
+@media (max-width: 480px) {
+  .os-overall { grid-template-columns: 1fr; gap: 12px; }
+  .os-bar { grid-template-columns: 74px 1fr 36px; }
+}

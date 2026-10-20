@@ -711,21 +711,122 @@ function generateOverallSummary(result, fre, ghost, resumeText, jdText){
     ? `Structure wise, you’re missing ${missingSections.join(', ')}. Adding those headers helps recruiters (and ATS) find the essentials fast.`
     : `Your structure covers the common sections — nice foundation.`;
 
-  const paragraphs = [
-    `**Overall:** Your resume scores <b>${result.total}/100</b> (${rank}). That combines ATS keyword alignment (${result.breakdown.ats_keywords}/40), professionalism (${result.breakdown.professionalism}/35), section structure (${result.breakdown.structure}/15), and readability (${result.breakdown.readability}/10).`,
-    `**Keyword fit:** Coverage sits at <b>${covPct}%</b>. ${kwHint} ${presentPreview.length ? `Strong overlaps include: ${presentPreview.join(', ')}.` : ''}`,
-    `**Professional polish:** ${impactTip} ${passiveTip} ${bulletsTip}`,
-    `**Readability:** Flesch score is <b>${fre}</b>, which maps to "${readLabel}". ${readNote}`,
-    `**Structure:** ${structureNote}`,
-    ghost ? `**Job ad reality check:** ${ghostNote} ${ghost.next ? `Next move: ${ghost.next}` : ''}` : '',
-    `**What to do next:** Pick 2–3 bullets in your most recent role and tie them to the job’s language (especially the missing keywords). Add one quantified improvement per bullet — time saved, accuracy improved, revenue influenced, costs reduced. Keep each bullet single-idea, ~1–2 lines, and lead with an action verb (Built, Automated, Forecasted, Reduced).`
-  ].filter(Boolean);
+  const b = result.breakdown;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const toneOf = (val, max) => { const r = val / max; return r >= 0.8 ? 'good' : r >= 0.5 ? 'warn' : 'bad'; };
+  const TONE_LABEL = { good: 'Strong', warn: 'Improve', bad: 'Fix first' };
+  const chip = (t, text) => `<span class="os-chip ${t}">${text || TONE_LABEL[t]}</span>`;
+  const pills = (arr, cls) => arr.map(k => `<span class="pill ${cls}">${esc(k)}</span>`).join('');
+  const check = (ok, text) => `<li class="${ok ? 'ok' : 'fix'}"><span class="os-ico" aria-hidden="true">${ok ? '✓' : '!'}</span>${text}</li>`;
+  const bar = (label, val, max) => {
+    const t = toneOf(val, max);
+    return `<div class="os-bar">
+      <span class="os-bar-label">${label}</span>
+      <span class="os-bar-track"><span class="os-bar-fill ${t}" style="width:${Math.round((val / max) * 100)}%"></span></span>
+      <span class="os-bar-val">${val}/${max}</span>
+    </div>`;
+  };
+  const card = (title, chipHTML, verdict, body = '') => `
+    <section class="os-card">
+      <div class="os-card-head"><span class="os-title">${title}</span>${chipHTML}</div>
+      ${verdict ? `<p class="os-verdict">${verdict}</p>` : ''}
+      ${body}
+    </section>`;
 
-  return styleSummaryLeads(`
-    <div class="overall-summary">
-      ${paragraphs.map(p => `<p>${p}</p>`).join('')}
-    </div>
-  `);
+  const cards = [];
+
+  // 1. Overall
+  cards.push(`
+    <section class="os-card os-overall">
+      <div class="os-score">
+        <span class="os-score-num">${result.total}</span><span class="os-score-max">/100</span>
+        <span class="os-score-rank">${esc(rank)}</span>
+      </div>
+      <div class="os-bars">
+        ${bar('Keywords', b.ats_keywords, 40)}
+        ${bar('Polish', b.professionalism, 35)}
+        ${bar('Structure', b.structure, 15)}
+        ${bar('Readability', b.readability, 10)}
+      </div>
+    </section>`);
+
+  // 2. Keywords
+  const kwTotal = present.length + missing.length;
+  cards.push(card(
+    'Keyword fit',
+    chip(toneOf(b.ats_keywords, 40)),
+    missing.length
+      ? `<b>${present.length} of ${kwTotal}</b> job keywords matched (${covPct}%). Work in a few of the missing ones.`
+      : `No obvious keyword gaps for this post.`,
+    `${missing.length ? `<div class="os-sub">Add</div><div class="pill-wrap">${pills(missingPreview, 'bad')}</div>` : ''}
+     ${presentPreview.length ? `<div class="os-sub">Matched</div><div class="pill-wrap">${pills(presentPreview, 'good')}</div>` : ''}`
+  ));
+
+  // 3. Polish
+  cards.push(card(
+    'Professional polish',
+    chip(toneOf(b.professionalism, 35)),
+    '',
+    `<ul class="os-checks">
+      ${check(p.numbers >= 3, p.numbers >= 3 ? `${p.numbers} measurable results` : `Only ${p.numbers} numbers. Aim for 3–5`)}
+      ${check(p.passive <= 3, p.passive <= 3 ? 'Active voice' : `${p.passive} passive phrases. Switch to action verbs`)}
+      ${check(p.bullets >= 5, p.bullets >= 5 ? 'Healthy bullet count' : 'Add a few bullets to your latest role')}
+    </ul>`
+  ));
+
+  // 4. Readability
+  const readTone = toneOf(b.readability, 10);
+  cards.push(card(
+    'Readability',
+    chip(readTone),
+    `Flesch score <b>${fre}</b> · ${esc(readLabel)}`,
+    readTone !== 'good'
+      ? `<p class="os-tip">Aim for 12–18 words per sentence and one idea per bullet.</p>`
+      : ''
+  ));
+
+  // 5. Structure
+  cards.push(card(
+    'Structure',
+    chip(missingSections.length && toneOf(b.structure, 15) === 'good' ? 'warn' : toneOf(b.structure, 15)),
+    missingSections.length ? 'Missing sections recruiters look for:' : 'All the common sections are covered.',
+    missingSections.length ? `<div class="pill-wrap">${pills(missingSections, 'bad')}</div>` : ''
+  ));
+
+  // 6. Job ad reality check
+  if (ghost) {
+    const gTone = ghost.band === 'good' ? 'good' : ghost.band === 'warn' ? 'warn' : 'bad';
+    const gText = {
+      good: 'Looks active. Worth applying.',
+      warn: 'Mixed signals. Apply, but confirm the process.',
+      bad: 'May be a placeholder or evergreen post.'
+    }[gTone];
+    cards.push(card(
+      'Job ad reality check',
+      chip(gTone, `${ghost.score}% real`),
+      gText,
+      gTone !== 'good'
+        ? `<p class="os-tip">Ask about the timeline, hiring manager, interview stages, and whether it's a backfill.</p>`
+        : ''
+    ));
+  }
+
+  // 7. What to do next
+  const steps = [
+    missing.length
+      ? `Rewrite 2–3 recent bullets using <b>${missingPreview.slice(0, 3).map(esc).join(', ')}</b>.`
+      : `Mirror the job's exact phrasing in 2–3 recent bullets.`,
+    `Add one number per bullet: time saved, accuracy, revenue, or cost.`,
+    `Keep bullets to 1–2 lines and start with a verb (Built, Automated, Reduced).`
+  ];
+  if (missingSections.length) steps.push(`Add a <b>${esc(missingSections[0])}</b> section.`);
+  cards.push(`
+    <section class="os-card os-next">
+      <div class="os-card-head"><span class="os-title">What to do next</span></div>
+      <ol class="os-steps">${steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    </section>`);
+
+  return `<div class="overall-summary os-v2">${cards.join('')}</div>`;
 }
 
 /* ==================== Premium lock overlay helper ==================== */
