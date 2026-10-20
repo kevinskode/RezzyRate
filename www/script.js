@@ -1559,34 +1559,48 @@ function renderSimilarJobs(jobs = [], profile = { skills: [] }) {
 
   if (meta) meta.textContent = `${ranked.length} live posting${ranked.length === 1 ? "" : "s"}, ranked by fit`;
 
-  grid.innerHTML = ranked.map(j => {
+  const ico = {
+    pin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+    cash: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>',
+    brief: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  };
+  const hues = [250, 200, 165, 330, 20, 280, 140, 45];
+
+  grid.innerHTML = ranked.map((j, i) => {
     const d = (j.desc || "").replace(/\s+/g, " ").trim();
     const snippet = d.length > 200 ? d.slice(0, 200).replace(/\s+\S*$/, "") + "…" : d;
     const m = j._m;
     const band = m.score >= 70 ? "good" : m.score >= 45 ? "warn" : "low";
     const sal = _salary(j);
     const when = _ago(j.created);
+    const isNew = Date.now() - (Date.parse(j.created) || 0) < 3 * 864e5;
+    const company = j.company || "Company not listed";
+    const initials = (company.match(/\b[A-Za-z0-9]/g) || ["?"]).slice(0, 2).join("").toUpperCase();
+    const hue = hues[[...company].reduce((h, c) => h + c.charCodeAt(0), 0) % hues.length];
     return `
-      <article class="job-card">
+      <article class="job-card band-${band}" style="--i:${i}; --hue:${hue}">
+        ${i === 0 && band !== "low" ? `<span class="job-ribbon">★ Top match</span>` : ""}
         <div class="job-top">
+          <div class="job-avatar" aria-hidden="true">${escapeHTML(initials)}</div>
           <div class="job-head">
             <h4 class="job-title">${escapeHTML(j.title || "Untitled role")}</h4>
-            <div class="job-company">${escapeHTML(j.company || "Company not listed")}</div>
+            <div class="job-company">${escapeHTML(company)}${isNew ? ` <span class="job-new">New</span>` : ""}</div>
           </div>
-          <div class="job-match ${band}" title="How closely this posting matches your resume">
-            <b>${m.score}%</b><span>match</span>
+          <div class="job-match ${band}" style="--p:${m.score}" title="How closely this posting matches your resume">
+            <b>${m.score}<small>%</small></b><span>match</span>
           </div>
         </div>
         <div class="job-meta">
-          ${j.location ? `<span class="badge-mini">📍 ${escapeHTML(j.location)}</span>` : ""}
-          ${sal ? `<span class="badge-mini">${escapeHTML(sal)}</span>` : ""}
-          ${j.contract_time ? `<span class="badge-mini">${escapeHTML(j.contract_time.replace("_", "-"))}</span>` : ""}
-          ${when ? `<span class="badge-mini">${escapeHTML(when)}</span>` : ""}
+          ${j.location ? `<span class="badge-mini">${ico.pin}${escapeHTML(j.location)}</span>` : ""}
+          ${sal ? `<span class="badge-mini sal">${ico.cash}${escapeHTML(sal)}</span>` : ""}
+          ${j.contract_time ? `<span class="badge-mini">${ico.brief}${escapeHTML(j.contract_time.replace("_", "-"))}</span>` : ""}
+          ${when ? `<span class="badge-mini">${ico.clock}${escapeHTML(when)}</span>` : ""}
         </div>
         ${snippet ? `<p class="job-line">${escapeHTML(snippet)}</p>` : ""}
         ${m.hits.length ? `<div class="job-skills">${m.hits.slice(0, 5).map(s => `<span class="chip mini ok">${escapeHTML(s)}</span>`).join("")}</div>` : ""}
         <div class="job-footer">
-          <a class="job-btn brand" href="${escapeHTML(safeUrl(j.url))}" target="_blank" rel="noopener nofollow">View posting ↗</a>
+          <a class="job-btn brand" href="${escapeHTML(safeUrl(j.url))}" target="_blank" rel="noopener nofollow">View posting <span class="job-arrow" aria-hidden="true">→</span></a>
         </div>
       </article>`;
   }).join("");
