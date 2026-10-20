@@ -397,8 +397,8 @@ function friendlyFixes(result, fre){
     p === 'med'  ? '<span class="pill p-med">Worth doing</span>' :
                    '<span class="pill p-low">Nice to have</span>';
   const addTip = (priority, title, body) =>
-    tips.push(`<li>
-      <div class="fix-row">${tag(priority)}<span class="fix-title">${title}</span></div>
+    tips.push(`<li class="fix fix-${priority}">
+      <div class="fix-row"><span class="fix-title">${title}</span>${tag(priority)}</div>
       <p class="fix-body">${body}</p>
     </li>`);
   if (missing.length){
@@ -624,209 +624,102 @@ function jobRealitySectionHTML(ghost) {
   const donut = donutSVG(realness, `${realness}`, { band });
   const labelClass = band === 'good' ? 'good' : band === 'warn' ? 'warn' : 'bad';
 
-  const li = (icon, r) => `<li class="ghost-li">
-      <div class="fix-row"><span class="pill ${icon==='✅'?'good':'bad'}">${icon}</span>
-      <span class="fix-title">${r.title}</span></div>
-      ${r.snippet ? `<p class="fix-body"><em>“${r.snippet}”</em></p>` : ``}
+  const li = (ok, r) => `<li class="sig ${ok ? 'ok' : 'flag'}">
+      <span class="sig-ico" aria-hidden="true">${ok ? '✓' : '!'}</span>
+      <div><span class="sig-title">${r.title}</span>
+      ${r.snippet ? `<q class="sig-quote">${escapeHTML(r.snippet)}</q>` : ``}</div>
     </li>`;
 
-  const posList = reasonsPos.slice(0,5).map(r => li('✅', r)).join('');
-  const negList = reasonsNeg.slice(0,5).map(r => li('⚠️', r)).join('');
-
-  const summaryChips = `
-  <div class="stat-chips" role="list">
-    <span class="stat-chip" role="listitem"><b>${realness}%</b><span>Realness</span></span>
-    <span class="stat-chip" role="listitem"><b>${ghostiness}/100</b><span>Ghostiness</span></span>
-    <span class="stat-chip" role="listitem"><b>${confLabel}</b><span>Confidence</span></span>
-    <span class="stat-chip" role="listitem"><b>${reasonsPos.length}</b><span>Hiring signals</span></span>
-    <span class="stat-chip" role="listitem"><b>${reasonsNeg.length}</b><span>Red flags</span></span>
-  </div>`;
+  const posList = reasonsPos.slice(0,5).map(r => li(true, r)).join('');
+  const negList = reasonsNeg.slice(0,5).map(r => li(false, r)).join('');
 
   return `
     <div class="ghost-wrap">
-      <div class="results-head" style="margin-bottom:8px">
-        <div class="score-block">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-            <div class="rating ${labelClass}" aria-label="Ghost likelihood">${label}</div>
-            ${donut}
-          </div>
-          <div>
-            <div class="helper">This shows how “real” the ad looks. Higher is better.</div>
-            ${summaryChips}
-          </div>
+      <div class="ghost-head">
+        ${donut}
+        <div>
+          <span class="rating ${labelClass}">${label}</span>
+          <p class="ghost-sub">How “real” this job ad looks (higher is better). Confidence: <b>${confLabel}</b>.</p>
         </div>
       </div>
-
-      <h4 class="card-title" style="margin:8px 0 6px">Why this rating</h4>
-      <ul class="list-tight list-mini">
-        ${negList}${posList || `<li class="ghost-li"><div class="fix-row"><span class="pill p-med">Note</span><span class="fix-title">Not many explicit hiring signals found</span></div></li>`}
-      </ul>
-
-      <h4 class="card-title" style="margin:10px 0 6px">Next step</h4>
-      <p class="helper" style="margin:0">${next}</p>
+      <div class="sig-cols">
+        <div>
+          <h4 class="sub-h">Hiring signals <span class="count ok">${reasonsPos.length}</span></h4>
+          <ul class="sig-list">${posList || `<li class="sig none">No clear hiring signals found</li>`}</ul>
+        </div>
+        <div>
+          <h4 class="sub-h">Red flags <span class="count flag">${reasonsNeg.length}</span></h4>
+          <ul class="sig-list">${negList || `<li class="sig none">No red flags found</li>`}</ul>
+        </div>
+      </div>
+      <p class="callout"><b>What to do:</b> ${next}</p>
     </div>
   `;
 }
 
-/* ==================== Overall Summary ==================== */
-function generateOverallSummary(result, fre, ghost, resumeText, jdText){
-  const rank = classifyScore(result.total);
-  const covPct  = Math.round((result.coverage||0)*100);
-  const present = result.presentKeywords || [];
-  const missing = result.missingKeywords || [];
-  const missingPreview = missing.slice(0, 10);
-  const presentPreview = present.slice(0, 12);
-  const read10 = result.breakdown.readability;
-  const readLabel = gradeReadability(read10);
+/* ==================== Game plan + writing quality ==================== */
+const toneOf = (val, max) => { const r = max ? val / max : 0; return r >= 0.8 ? 'good' : r >= 0.5 ? 'warn' : 'bad'; };
+const TONE_LABEL = { good: 'Strong', warn: 'Improve', bad: 'Fix first' };
+const statusChip = (tone, text) => `<span class="rsec-status ${tone}">${text || TONE_LABEL[tone]}</span>`;
 
-  const presentSections = Object.entries(result.sectionPresence).filter(([,v])=>v).map(([k])=>k);
-  const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
-
-  const ghostNote = ghost ? (() => {
-    const tone =
-      ghost.band === 'good' ? "looks active and worth applying to" :
-      ghost.band === 'warn' ? "has mixed signals—apply, but clarify timing and process" :
-                              "may be a placeholder or ‘evergreen’ post—proceed thoughtfully";
-    return `The job ad reality check lands at ${ghost.score}% realness (${ghost.label}). In plain English: it ${tone}.`;
-  })() : "";
-
-  const kwHint = missing.length
-    ? `You’re already aligned on ${present.length} of ${present.length + missing.length} keywords. If you can naturally weave in even a few of the missing terms — like ${missingPreview.join(', ')} — your ATS score should lift.`
-    : `Nice: there aren’t obvious keyword gaps for this post. Keep mirroring the job’s exact phrasing where it feels natural.`;
-
-  const p = result.profDetails;
-  const impactTip = p.numbers >= 3
-    ? `Good use of measurable impact (${p.numbers} data points).`
-    : `Try to add clearer impact (aim for 3–5 concrete numbers).`;
-  const passiveTip = p.passive > 3
-    ? `I noticed ${p.passive} passive constructions — swapping to active verbs will help.`
-    : `Voice reads mostly active, which keeps your accomplishments punchy.`;
-  const bulletsTip = p.bullets < 5
-    ? `Consider a few more bullets in your most recent role so each result stands on its own.`
-    : `Bullet density looks healthy — it’s skimmable.`;
-
-  const readNote = `Readability translates to a ${read10}/10 (“${readLabel}”). For most roles, shorter sentences (about 12–18 words) and one idea per bullet help both humans and ATS.`;
-
-  const structureNote = missingSections.length
-    ? `Structure wise, you’re missing ${missingSections.join(', ')}. Adding those headers helps recruiters (and ATS) find the essentials fast.`
-    : `Your structure covers the common sections — nice foundation.`;
-
+function buildGamePlan(result, ghost){
   const b = result.breakdown;
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const toneOf = (val, max) => { const r = val / max; return r >= 0.8 ? 'good' : r >= 0.5 ? 'warn' : 'bad'; };
-  const TONE_LABEL = { good: 'Strong', warn: 'Improve', bad: 'Fix first' };
-  const chip = (t, text) => `<span class="os-chip ${t}">${text || TONE_LABEL[t]}</span>`;
-  const pills = (arr, cls) => arr.map(k => `<span class="pill ${cls}">${esc(k)}</span>`).join('');
-  const check = (ok, text) => `<li class="${ok ? 'ok' : 'fix'}"><span class="os-ico" aria-hidden="true">${ok ? '✓' : '!'}</span>${text}</li>`;
-  const bar = (label, val, max) => {
-    const t = toneOf(val, max);
-    return `<div class="os-bar">
-      <span class="os-bar-label">${label}</span>
-      <span class="os-bar-track"><span class="os-bar-fill ${t}" style="width:${Math.round((val / max) * 100)}%"></span></span>
-      <span class="os-bar-val">${val}/${max}</span>
-    </div>`;
-  };
-  const card = (title, chipHTML, verdict, body = '') => `
-    <section class="os-card">
-      <div class="os-card-head"><span class="os-title">${title}</span>${chipHTML}</div>
-      ${verdict ? `<p class="os-verdict">${verdict}</p>` : ''}
-      ${body}
-    </section>`;
+  const missing = result.missingKeywords || [];
+  const missingSections = Object.entries(result.sectionPresence).filter(([,v])=>!v).map(([k])=>k);
+  const areas = [
+    { name: 'Keywords',    val: b.ats_keywords,    max: 40 },
+    { name: 'Polish',      val: b.professionalism, max: 35 },
+    { name: 'Structure',   val: b.structure,       max: 15 },
+    { name: 'Readability', val: b.readability,     max: 10 },
+  ].sort((x, y) => y.val / y.max - x.val / x.max);
+  const best = areas[0], worst = areas[areas.length - 1];
 
-  const cards = [];
+  const summary = worst.val / worst.max >= 0.8
+    ? `Every area is in good shape. Your edge now comes from tailoring each application to the job.`
+    : `Your strongest area is <b>${best.name}</b> (${best.val}/${best.max}). The biggest gain is in <b>${worst.name}</b> (${worst.val}/${worst.max}), so start there.`;
 
-  // 1. Overall
-  cards.push(`
-    <section class="os-card os-overall">
-      <div class="os-score">
-        <span class="os-score-num">${result.total}</span><span class="os-score-max">/100</span>
-        <span class="os-score-rank">${esc(rank)}</span>
-      </div>
-      <div class="os-bars">
-        ${bar('Keywords', b.ats_keywords, 40)}
-        ${bar('Polish', b.professionalism, 35)}
-        ${bar('Structure', b.structure, 15)}
-        ${bar('Readability', b.readability, 10)}
-      </div>
-    </section>`);
-
-  // 2. Keywords
-  const kwTotal = present.length + missing.length;
-  cards.push(card(
-    'Keyword fit',
-    chip(toneOf(b.ats_keywords, 40)),
-    missing.length
-      ? `<b>${present.length} of ${kwTotal}</b> job keywords matched (${covPct}%). Work in a few of the missing ones.`
-      : `No obvious keyword gaps for this post.`,
-    `${missing.length ? `<div class="os-sub">Add</div><div class="pill-wrap">${pills(missingPreview, 'bad')}</div>` : ''}
-     ${presentPreview.length ? `<div class="os-sub">Matched</div><div class="pill-wrap">${pills(presentPreview, 'good')}</div>` : ''}`
-  ));
-
-  // 3. Polish
-  cards.push(card(
-    'Professional polish',
-    chip(toneOf(b.professionalism, 35)),
-    '',
-    `<ul class="os-checks">
-      ${check(p.numbers >= 3, p.numbers >= 3 ? `${p.numbers} measurable results` : `Only ${p.numbers} numbers. Aim for 3–5`)}
-      ${check(p.passive <= 3, p.passive <= 3 ? 'Active voice' : `${p.passive} passive phrases. Switch to action verbs`)}
-      ${check(p.bullets >= 5, p.bullets >= 5 ? 'Healthy bullet count' : 'Add a few bullets to your latest role')}
-    </ul>`
-  ));
-
-  // 4. Readability
-  const readTone = toneOf(b.readability, 10);
-  cards.push(card(
-    'Readability',
-    chip(readTone),
-    `Flesch score <b>${fre}</b> · ${esc(readLabel)}`,
-    readTone !== 'good'
-      ? `<p class="os-tip">Aim for 12–18 words per sentence and one idea per bullet.</p>`
-      : ''
-  ));
-
-  // 5. Structure
-  cards.push(card(
-    'Structure',
-    chip(missingSections.length && toneOf(b.structure, 15) === 'good' ? 'warn' : toneOf(b.structure, 15)),
-    missingSections.length ? 'Missing sections recruiters look for:' : 'All the common sections are covered.',
-    missingSections.length ? `<div class="pill-wrap">${pills(missingSections, 'bad')}</div>` : ''
-  ));
-
-  // 6. Job ad reality check
-  if (ghost) {
-    const gTone = ghost.band === 'good' ? 'good' : ghost.band === 'warn' ? 'warn' : 'bad';
-    const gText = {
-      good: 'Looks active. Worth applying.',
-      warn: 'Mixed signals. Apply, but confirm the process.',
-      bad: 'May be a placeholder or evergreen post.'
-    }[gTone];
-    cards.push(card(
-      'Job ad reality check',
-      chip(gTone, `${ghost.score}% real`),
-      gText,
-      gTone !== 'good'
-        ? `<p class="os-tip">Ask about the timeline, hiring manager, interview stages, and whether it's a backfill.</p>`
-        : ''
-    ));
-  }
-
-  // 7. What to do next
   const steps = [
     missing.length
-      ? `Rewrite 2–3 recent bullets using <b>${missingPreview.slice(0, 3).map(esc).join(', ')}</b>.`
+      ? `Rewrite 2–3 recent bullets using <b>${missing.slice(0, 3).map(escapeHTML).join(', ')}</b>.`
       : `Mirror the job's exact phrasing in 2–3 recent bullets.`,
-    `Add one number per bullet: time saved, accuracy, revenue, or cost.`,
-    `Keep bullets to 1–2 lines and start with a verb (Built, Automated, Reduced).`
+    result.profDetails.numbers < 3
+      ? `Add a number to your best bullets: time saved, accuracy, revenue or cost.`
+      : `Keep bullets to 1–2 lines and start each with a verb (Built, Automated, Reduced).`,
   ];
-  if (missingSections.length) steps.push(`Add a <b>${esc(missingSections[0])}</b> section.`);
-  cards.push(`
-    <section class="os-card os-next">
-      <div class="os-card-head"><span class="os-title">What to do next</span></div>
-      <ol class="os-steps">${steps.map(s => `<li>${s}</li>`).join('')}</ol>
-    </section>`);
+  if (missingSections.length) steps.push(`Add a <b>${escapeHTML(missingSections[0])}</b> section.`);
+  if (ghost && ghost.band !== 'good') steps.push(`Before applying, confirm the job is active: ask about the timeline and hiring manager.`);
 
-  return `<div class="overall-summary os-v2">${cards.join('')}</div>`;
+  return `
+    <section class="plan">
+      <div class="plan-head">
+        <span class="plan-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg></span>
+        <h3>Your game plan</h3>
+      </div>
+      <p class="plan-sum">${summary}</p>
+      <ol class="plan-steps">${steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    </section>`;
+}
+
+function writingQualityHTML(result, fre){
+  const p = result.profDetails;
+  const readLabel = gradeReadability(result.breakdown.readability);
+  const check = (ok, text) => `<li class="sig ${ok ? 'ok' : 'flag'}"><span class="sig-ico" aria-hidden="true">${ok ? '✓' : '!'}</span><span>${text}</span></li>`;
+  const goodLen = p.words >= 300 && p.words <= 950;
+  return `
+    <div class="wq-stats">
+      <div class="metric"><b>${fre}</b><span>Flesch score</span></div>
+      <div class="metric"><b>${p.words}</b><span>words</span></div>
+      <div class="metric"><b>${p.bullets}</b><span>bullets</span></div>
+    </div>
+    <p class="wq-read">Readability: <b>${escapeHTML(readLabel)}</b>${fre < 60 ? '. Aim for 60+ with 12–18 word sentences and one idea per bullet.' : '.'}</p>
+    <ul class="sig-list">
+      ${check(p.numbers >= 3, p.numbers >= 3 ? `${p.numbers} measurable results` : `Only ${p.numbers} numbers. Aim for 3–5 concrete wins`)}
+      ${check(p.passive <= 3, p.passive <= 3 ? 'Mostly active voice' : `${p.passive} passive phrases. Switch to action verbs`)}
+      ${check(p.bullets >= 5, p.bullets >= 5 ? 'Healthy bullet count' : 'Add a few bullets to your latest role')}
+      ${check(goodLen, goodLen ? 'Good length for a one-pager' : p.words < 300 ? 'A bit short. Aim for 400–700 words' : 'On the long side. Tighten it up')}
+      ${check(!p.longLines, !p.longLines ? 'No overly long lines' : `${p.longLines} line(s) over ~160 characters`)}
+      ${check(p.capsWords <= 6 && !p.exclam, p.capsWords <= 6 && !p.exclam ? 'Calm, professional tone' : 'Cut the ALL CAPS and exclamation marks')}
+    </ul>`;
 }
 
 /* ==================== Premium lock overlay helper ==================== */
@@ -1017,11 +910,13 @@ function analyze(){
           <b>${d.val}/${d.max}</b>
         </div>
         <div class="bar"><div class="bar-fill" style="width:${pctW}%"></div></div>
+        <span class="kpi-note">${TONE_LABEL[band]}</span>
       </div>`;
   }).join('');
 
-  const sectionPills = Object.entries(result.sectionPresence)
-    .map(([name,isOn])=>`<span class="pill ${isOn?'good':'bad'}">${isOn?'✓':'✕'} ${name}</span>`).join('');
+  const sectionGrid = `<ul class="sec-grid">${Object.entries(result.sectionPresence)
+    .map(([name,isOn])=>`<li class="sig ${isOn?'ok':'miss'}"><span class="sig-ico" aria-hidden="true">${isOn?'✓':'✕'}</span>${name}</li>`).join('')}</ul>`
+    + (missingSections.length ? `<p class="callout">Add <b>${missingSections.join(', ')}</b> headings so recruiters and ATS find the essentials fast.</p>` : '');
 
   const fixList = friendlyFixes(result, fre);
   const fixes = fixList.join('')
@@ -1029,7 +924,7 @@ function analyze(){
 
   const ghost = analyzeGhostJob(jd, resume);
   const ghostHTML = jobRealitySectionHTML(ghost);
-  const summaryHTML = generateOverallSummary(result, fre, ghost, resume, jd);
+  const planHTML = buildGamePlan(result, ghost);
 
   const band = scoreBand(result.total);
   const verdict = {
@@ -1056,28 +951,36 @@ function analyze(){
       </div>
     </section>`;
 
-  const section = (key, title, meta, body) => `
-    <section class="rsec" data-section="${key}">
-      <header class="rsec-head"><h3>${title}</h3>${meta ? `<span class="rsec-meta">${meta}</span>` : ''}</header>
+  // Collapsible: the header's status chip gives the takeaway without opening it
+  const section = (key, title, status, body, open = false) => `
+    <details class="rsec" data-section="${key}"${open ? ' open' : ''}>
+      <summary class="rsec-head"><h3>${title}</h3>${status}<span class="chev" aria-hidden="true"></span></summary>
       <div class="rsec-body">${body}</div>
-    </section>`;
+    </details>`;
 
   const ACRO = new Set(['sql','etl','aws','gcp','api','apis','bi','crm','erp','kpi','kpis','seo','sem','ui','ux','qa','hr','it','ai','ml','sap','css','html','php','saas','b2b','b2c','cpa','pmp','gaap','vba','sas']);
   const kw = k => escapeHTML(ACRO.has(String(k).toLowerCase()) ? String(k).toUpperCase() : String(k).charAt(0).toUpperCase() + String(k).slice(1));
   const kwTotal = present.length + missing.length;
+  const kwTone = toneOf(result.breakdown.ats_keywords, 40);
   const keywordsBody = `
-    <div class="kw-summary">
-      <div class="metric"><b>${present.length}</b><span>matched</span></div>
-      <div class="metric"><b>${missing.length}</b><span>missing</span></div>
-      <div class="metric"><b>${covPct}%</b><span>coverage</span></div>
+    <div class="cov ${kwTone}">
+      <div class="cov-top"><b>${covPct}%</b><span>of the job’s keywords are on your resume (${present.length} of ${kwTotal})</span></div>
+      <div class="bar"><div class="bar-fill" style="width:${covPct}%"></div></div>
     </div>
-    <h4 class="sub-h">Missing, so add these if they apply to you</h4>
-    <div class="pill-wrap">${missing.map(k=>`<span class="pill bad">${kw(k)}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
-    <h4 class="sub-h">Already on your resume</h4>
-    <div class="pill-wrap">${present.map(k=>`<span class="pill good">${kw(k)}</span>`).join('') || '<span class="muted">No matches yet</span>'}</div>
+    <h4 class="sub-h">Add these if they apply to you <span class="count flag">${missing.length}</span></h4>
+    <div class="pill-wrap">${missing.map(k=>`<span class="pill bad">+ ${kw(k)}</span>`).join('') || '<span class="pill good">No gaps detected</span>'}</div>
+    <h4 class="sub-h">Already on your resume <span class="count ok">${present.length}</span></h4>
+    <div class="pill-wrap">${present.map(k=>`<span class="pill good">✓ ${kw(k)}</span>`).join('') || '<span class="muted">No matches yet</span>'}</div>
     ${result.extractedKeywords.length ? `<details class="more"><summary>All keywords we pulled from the job post</summary><div class="pill-wrap">${result.extractedKeywords.map(k=>`<span class="pill">${kw(k)}</span>`).join('')}</div></details>` : ''}`;
 
-  const readLine = `<p class="muted small" style="margin:0 0 10px">${gradeReadability(result.breakdown.readability)} · ${bullets} bullets · ${numbersUsed} metrics · ${passiveHits} passive phrases</p>`;
+  const readLine = `<div class="fix-stats"><span><b>${numbersUsed}</b> metrics</span><span><b>${bullets}</b> bullets</span><span><b>${passiveHits}</b> passive phrases</span></div>`;
+  const quickWins = fixList.filter(f => f.includes('fix-high')).length;
+  const fixesStatus = statusChip(quickWins ? 'warn' : 'good', quickWins ? `${quickWins} quick win${quickWins === 1 ? '' : 's'}` : `${fixList.length} tips`);
+  const FIXES_SHOWN = 3;
+  const fixesBody = readLine + `<ul class="list-tight">${fixList.slice(0, FIXES_SHOWN).join('') || fixes}</ul>`
+    + (fixList.length > FIXES_SHOWN ? `<details class="more"><summary>Show ${fixList.length - FIXES_SHOWN} more fix${fixList.length - FIXES_SHOWN === 1 ? '' : 'es'}</summary><ul class="list-tight">${fixList.slice(FIXES_SHOWN).join('')}</ul></details>` : '');
+  const secCount = Object.keys(result.sectionPresence).length;
+  const writingTone = toneOf(result.breakdown.professionalism + result.breakdown.readability, 45);
 
   let sectionsHTML = '';
   if (lockAdvanced) {
@@ -1097,9 +1000,9 @@ function analyze(){
         </div>
       </div>`;
     // Top fix #1 is free, which shows the value of the rest
-    sectionsHTML += section('fixes', 'Top fixes', `${fixList.length} found`,
+    sectionsHTML += section('fixes', 'Top fixes', fixesStatus,
       readLine + `<ul class="list-tight">${fixList.find(f => !f.includes('missing keywords')) || fixList[0] || fixes}</ul>` +
-      (hiddenFixes ? `<div class="more-locked"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>${hiddenFixes} more fix${hiddenFixes===1?'':'es'} in the full report <button type="button" class="link-btn" data-buy="report">Unlock</button></div>` : ''));
+      (hiddenFixes ? `<div class="more-locked"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>${hiddenFixes} more fix${hiddenFixes===1?'':'es'} in the full report <button type="button" class="link-btn" data-buy="report">Unlock</button></div>` : ''), true);
     // Show the first two missing keywords for real: a specific teaser converts better than a count
     // Lead with recognizable skills (HubSpot, SQL…) over generic words, using their proper spelling
     const known = new Map(KNOWN_SKILLS.map(k => [k.toLowerCase(), k]));
@@ -1112,13 +1015,15 @@ function analyze(){
       : `<span class="tease-kw">Missing: ${teaseKw.map(k => `<span class="pill bad">${known.has(String(k).toLowerCase()) ? escapeHTML(k) : kw(k)}</span>`).join(' ')}${moreKw > 0 ? ` <b>+ ${moreKw} more</b>` : ''}</span>Your resume covers ${present.length} of ${kwTotal} keywords from this job.`, 'pills');
     sectionsHTML += lockedSection('structure', 'Structure checklist', 'See which core sections (experience, skills, summary and more) are present or missing.', 'pills');
     if (ghost) sectionsHTML += lockedSection('ghost', 'Job ad reality check', 'See how “real” this job post looks, with hiring signals and red flags called out.');
-    sectionsHTML += lockedSection('summary', 'Summary & next steps', 'A plain-English write-up of your strengths, gaps and exactly what to do next.');
+    sectionsHTML += lockedSection('summary', 'Your game plan', 'A plain-English read on your strongest area, your biggest gap and exactly what to do next, plus a writing quality check.');
   } else {
-    sectionsHTML += section('keywords', 'Keyword match', kwTotal ? `${present.length}/${kwTotal} matched` : '', keywordsBody);
-    sectionsHTML += section('fixes', 'Top fixes', `${fixList.length} found`, readLine + `<ul class="list-tight">${fixes}</ul>`);
-    sectionsHTML += section('structure', 'Structure checklist', '', `<div class="pill-wrap">${sectionPills}</div>`);
-    if (ghostHTML) sectionsHTML += section('ghost', 'Job ad reality check', '', ghostHTML);
-    sectionsHTML += section('summary', 'Summary & next steps', '', summaryHTML);
+    sectionsHTML += planHTML;
+    sectionsHTML += section('fixes', 'Top fixes', fixesStatus, fixesBody, true);
+    sectionsHTML += section('keywords', 'Keyword match', kwTotal ? statusChip(kwTone, `${present.length}/${kwTotal} matched`) : '', keywordsBody);
+    sectionsHTML += section('structure', 'Structure checklist',
+      statusChip(missingSections.length ? (missingSections.length > 2 ? 'bad' : 'warn') : 'good', `${presentSections.length}/${secCount} sections`), sectionGrid);
+    sectionsHTML += section('writing', 'Writing quality', statusChip(writingTone), writingQualityHTML(result, fre));
+    if (ghostHTML) sectionsHTML += section('ghost', 'Job ad reality check', statusChip(ghost.band, `${ghost.score}% real`), ghostHTML);
   }
 
   const sampleBanner = isSample ? `
