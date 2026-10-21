@@ -1224,6 +1224,16 @@ function toast(message, ms = 4200){
   __toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }
 
+/* Contact: copy the support address */
+document.getElementById('btnCopyEmail')?.addEventListener('click', async e => {
+  const btn = e.currentTarget, email = btn.dataset.email;
+  try { await navigator.clipboard.writeText(email); }
+  catch { toast(`Email us at ${email}`); return; }
+  btn.textContent = 'Copied ✓';
+  toast('Email address copied.');
+  setTimeout(() => { btn.textContent = 'Copy email'; }, 2000);
+});
+
 const SAMPLE_RESUME = `JOHN DOE
 Detroit, MI • john.doe@email.com • (313) 555-1212
 
